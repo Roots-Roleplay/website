@@ -1608,16 +1608,18 @@ function renderDetailCollage(items, seed = '', detailItem = null, category = sta
 	collage.classList.add('detail-hero-mirror');
 
 	const resolvedCategory = category || state.currentCategory;
-	const title = detailItem ? CATEGORY_CONFIG[resolvedCategory]?.getTitle(detailItem) : '';
-	const tagline = detailItem ? CATEGORY_CONFIG[resolvedCategory]?.getTagline(detailItem) : '';
-	const heroImage = detailItem ? getHeroCardImage(detailItem, resolvedCategory) : '';
-	const heroLogo = detailItem ? getHeroCardLogo(detailItem, resolvedCategory) : '';
+        const title = detailItem ? CATEGORY_CONFIG[resolvedCategory]?.getTitle(detailItem) : '';
+        const tagline = detailItem ? CATEGORY_CONFIG[resolvedCategory]?.getTagline(detailItem) : '';
+        const heroImage = detailItem ? getHeroCardImage(detailItem, resolvedCategory) : '';
+        const heroLogo = detailItem ? getHeroCardLogo(detailItem, resolvedCategory) : '';
 
-	spawnDetailHeroMirror(collage, {
-		category: resolvedCategory,
-		heroImage: heroImage || pickRandomCharacterImage(),
-		heroLogo
-	});
+        spawnDetailHeroMirror(collage, {
+                category: resolvedCategory,
+                heroImage: heroImage || pickRandomCharacterImage(),
+                heroLogo,
+                title,
+                tagline
+        });
 	updateChoiceButtons();
 	requestAnimationFrame(() => alignCollageToMedia());
 }
@@ -1905,94 +1907,214 @@ function alignCollageToMedia() {
 }
 
 function spawnDetailHeroMirror(container, context = {}) {
-	if (!container) return;
-	container.innerHTML = '';
+        if (!container) return;
+        container.innerHTML = '';
 
-	const {
-		category = state.currentCategory,
-		heroImage = '',
-		heroLogo = ''
-	} = context;
+        const {
+                category = state.currentCategory,
+                heroImage = '',
+                heroLogo = '',
+                title = '',
+                tagline = ''
+        } = context;
 
-	container.dataset.category = category;
+        container.dataset.category = category;
+        container.classList.toggle('detail-hero-mirror--illegal', category === 'illegal');
+        container.classList.toggle('detail-hero-mirror--legal', category !== 'illegal');
 
-	// Background character lines (reuse floating logo stripes but scoped here)
-	const stripeConfigs = [
-		{ modifier: 'bg-polaroid-stripe--mirror-back', count: 18, rotate: '26deg', duration: '138s', delay: '-18s', top: '-34%', right: '74%', zIndex: 1, curve: -1.1 },
-		{ modifier: 'bg-polaroid-stripe--mirror-mid-left', count: 16, rotate: '22deg', duration: '124s', delay: '-32s', top: '-18%', right: '58%', zIndex: 2, curve: -0.4 },
-		{ modifier: 'bg-polaroid-stripe--mirror-center', count: 18, rotate: '18deg', duration: '116s', delay: '-46s', top: '-24%', right: '38%', zIndex: 3, curve: 0.1 },
-		{ modifier: 'bg-polaroid-stripe--mirror-mid-right', count: 16, rotate: '20deg', duration: '128s', delay: '-58s', top: '-12%', right: '22%', zIndex: 2, curve: 0.9 },
-		{ modifier: 'bg-polaroid-stripe--mirror-front', count: 14, rotate: '16deg', duration: '142s', delay: '-72s', top: '4%', right: '8%', zIndex: 4, curve: 1.4 }
-	];
+        const stripesHost = document.createElement('div');
+        stripesHost.className = 'detail-hero-mirror__stripes';
+        container.appendChild(stripesHost);
 
-	const pool = RANDOM_CHARACTER_IMAGES.slice();
-	// Shuffle pool
-	for (let i = pool.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[pool[i], pool[j]] = [pool[j], pool[i]];
-	}
-	let cursor = 0;
-	const pullNextImage = () => {
-		if (cursor >= pool.length) {
-			// reshuffle and wrap
-			for (let i = pool.length - 1; i > 0; i--) {
-				const j = Math.floor(Math.random() * (i + 1));
-				[pool[i], pool[j]] = [pool[j], pool[i]];
-			}
-			cursor = 0;
-		}
-		const src = pool[cursor++];
-		return { src, alt: getCharacterAltFromSrc(src) };
-	};
+        // Background character lines (reuse floating logo stripes but scoped here)
+        const stripeConfigs = [
+                { modifier: 'bg-polaroid-stripe--mirror-back', count: 18, rotate: '26deg', duration: '138s', delay: '-18s', top: '-34%', right: '74%', zIndex: 1, curve: -1.1 },
+                { modifier: 'bg-polaroid-stripe--mirror-mid-left', count: 16, rotate: '22deg', duration: '124s', delay: '-32s', top: '-18%', right: '58%', zIndex: 2, curve: -0.4 },
+                { modifier: 'bg-polaroid-stripe--mirror-center', count: 18, rotate: '18deg', duration: '116s', delay: '-46s', top: '-24%', right: '38%', zIndex: 3, curve: 0.1 },
+                { modifier: 'bg-polaroid-stripe--mirror-mid-right', count: 16, rotate: '20deg', duration: '128s', delay: '-58s', top: '-12%', right: '22%', zIndex: 2, curve: 0.9 },
+                { modifier: 'bg-polaroid-stripe--mirror-front', count: 14, rotate: '16deg', duration: '142s', delay: '-72s', top: '4%', right: '8%', zIndex: 4, curve: 1.4 }
+        ];
 
-	const createPolaroid = (emphasis = false, curveOffset = 0) => {
-		const figure = document.createElement('figure');
-		figure.className = 'bg-polaroid';
-		if (emphasis) figure.classList.add('bg-polaroid--highlight');
-		figure.setAttribute('aria-hidden', 'true');
-		const tilt = (Math.random() * 6 - 3).toFixed(2);
-		const offset = curveOffset.toFixed(2);
-		const scale = (0.95 + Math.random() * 0.08).toFixed(2);
-		figure.style.setProperty('--bg-polaroid-tilt', `${tilt}deg`);
-		figure.style.setProperty('--bg-polaroid-offset', `${offset}%`);
-		figure.style.setProperty('--bg-polaroid-scale', scale);
-		const img = document.createElement('img');
-		img.className = 'bg-polaroid__image';
-		const { src } = pullNextImage();
-		img.src = src;
-		img.alt = '';
-		img.loading = 'lazy';
-		img.decoding = 'async';
-		img.setAttribute('aria-hidden', 'true');
-		figure.appendChild(img);
-		return figure;
-	};
+        const pool = RANDOM_CHARACTER_IMAGES.slice();
+        // Shuffle pool
+        for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        let cursor = 0;
+        const pullNextImage = () => {
+                if (cursor >= pool.length) {
+                        // reshuffle and wrap
+                        for (let i = pool.length - 1; i > 0; i--) {
+                                const j = Math.floor(Math.random() * (i + 1));
+                                [pool[i], pool[j]] = [pool[j], pool[i]];
+                        }
+                        cursor = 0;
+                }
+                const src = pool[cursor++];
+                return { src, alt: getCharacterAltFromSrc(src) };
+        };
 
-	stripeConfigs.forEach((config, index) => {
-		const stripe = document.createElement('div');
-		stripe.className = `bg-polaroid-stripe ${config.modifier}`;
-		stripe.style.setProperty('--bg-stripe-rotate', `-${config.rotate}`); // mirror angle
-		if (typeof config.top === 'string') stripe.style.top = config.top;
-		if (typeof config.right === 'string') stripe.style.right = config.right;
-		stripe.style.zIndex = String(config.zIndex || 0);
+        const createPolaroid = (emphasis = false, curveOffset = 0) => {
+                const figure = document.createElement('figure');
+                figure.className = 'bg-polaroid';
+                if (emphasis) figure.classList.add('bg-polaroid--highlight');
+                figure.setAttribute('aria-hidden', 'true');
+                const tilt = (Math.random() * 6 - 3).toFixed(2);
+                const offset = curveOffset.toFixed(2);
+                const scale = (0.95 + Math.random() * 0.08).toFixed(2);
+                figure.style.setProperty('--bg-polaroid-tilt', `${tilt}deg`);
+                figure.style.setProperty('--bg-polaroid-offset', `${offset}%`);
+                figure.style.setProperty('--bg-polaroid-scale', scale);
+                const img = document.createElement('img');
+                img.className = 'bg-polaroid__image';
+                const { src } = pullNextImage();
+                img.src = src;
+                img.alt = '';
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.setAttribute('aria-hidden', 'true');
+                figure.appendChild(img);
+                return figure;
+        };
 
-		const inner = document.createElement('div');
-		inner.className = 'bg-polaroid-stripe__inner';
-		inner.style.setProperty('--bg-line-duration', config.duration);
-		inner.style.setProperty('--bg-line-delay', config.delay);
+        stripeConfigs.forEach((config, index) => {
+                const stripe = document.createElement('div');
+                stripe.className = `bg-polaroid-stripe ${config.modifier}`;
+                stripe.style.setProperty('--bg-stripe-rotate', `-${config.rotate}`); // mirror angle
+                if (typeof config.top === 'string') stripe.style.top = config.top;
+                if (typeof config.right === 'string') stripe.style.right = config.right;
+                stripe.style.zIndex = String(config.zIndex || 0);
 
-		const polaroids = [];
-		for (let i = 0; i < config.count; i += 1) {
-			const emphasis = index === 1 && (i % Math.ceil(config.count / 4) === 0);
-			const midpoint = (config.count - 1) / 2;
-			const curveOffset = config.curve ? (i - midpoint) * config.curve : 0;
-			polaroids.push(createPolaroid(emphasis, curveOffset));
-		}
-		polaroids.forEach((n) => inner.appendChild(n));
-		polaroids.forEach((n) => inner.appendChild(n.cloneNode(true)));
-		stripe.appendChild(inner);
-		container.appendChild(stripe);
-	});
+                const inner = document.createElement('div');
+                inner.className = 'bg-polaroid-stripe__inner';
+                inner.style.setProperty('--bg-line-duration', config.duration);
+                inner.style.setProperty('--bg-line-delay', config.delay);
+
+                const polaroids = [];
+                for (let i = 0; i < config.count; i += 1) {
+                        const emphasis = index === 1 && (i % Math.ceil(config.count / 4) === 0);
+                        const midpoint = (config.count - 1) / 2;
+                        const curveOffset = config.curve ? (i - midpoint) * config.curve : 0;
+                        polaroids.push(createPolaroid(emphasis, curveOffset));
+                }
+                polaroids.forEach((n) => inner.appendChild(n));
+                polaroids.forEach((n) => inner.appendChild(n.cloneNode(true)));
+                stripe.appendChild(inner);
+                stripesHost.appendChild(stripe);
+        });
+
+        const foreground = document.createElement('div');
+        foreground.className = 'detail-hero-mirror__foreground';
+        container.appendChild(foreground);
+
+        const heroCard = document.createElement('article');
+        heroCard.className = `detail-hero-card detail-hero-card--${category === 'illegal' ? 'illegal' : 'legal'}`;
+        heroCard.dataset.category = category;
+
+        const cardBackdrop = document.createElement('span');
+        cardBackdrop.className = 'detail-hero-card__backdrop';
+        cardBackdrop.setAttribute('aria-hidden', 'true');
+        heroCard.appendChild(cardBackdrop);
+
+        if (heroImage) {
+                const image = document.createElement('img');
+                image.className = 'detail-hero-card__image';
+                image.src = heroImage;
+                image.alt = title ? `${title} – Charaktervisualisierung` : '';
+                image.loading = 'lazy';
+                image.decoding = 'async';
+                heroCard.appendChild(image);
+        }
+
+        const emblem = document.createElement('span');
+        emblem.className = 'detail-hero-card__emblem';
+        emblem.setAttribute('aria-hidden', 'true');
+        heroCard.appendChild(emblem);
+
+        if (heroLogo) {
+                const logo = document.createElement('img');
+                logo.className = 'detail-hero-card__logo';
+                logo.src = heroLogo;
+                logo.alt = title ? `${title} Logo` : 'Logo';
+                logo.loading = 'lazy';
+                logo.decoding = 'async';
+                heroCard.appendChild(logo);
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'detail-hero-card__overlay';
+
+        const overlayLabel = document.createElement('span');
+        overlayLabel.className = 'detail-hero-card__label';
+        overlayLabel.textContent = category === 'illegal' ? 'Illegaler Weg' : 'Legaler Weg';
+        overlay.appendChild(overlayLabel);
+
+        const overlayTitle = document.createElement('h3');
+        overlayTitle.className = 'detail-hero-card__title';
+        overlayTitle.textContent = title || 'Roots Roleplay';
+        overlay.appendChild(overlayTitle);
+
+        if (tagline) {
+                const overlaySubtitle = document.createElement('p');
+                overlaySubtitle.className = 'detail-hero-card__subtitle';
+                overlaySubtitle.textContent = tagline;
+                overlay.appendChild(overlaySubtitle);
+        }
+
+        heroCard.appendChild(overlay);
+        foreground.appendChild(heroCard);
+
+        const cta = document.createElement('section');
+        cta.className = 'detail-hero-cta';
+
+        const taglineGroup = document.createElement('div');
+        taglineGroup.className = 'detail-hero-cta__tagline';
+
+        const accent = document.createElement('span');
+        accent.className = 'detail-hero-cta__accent';
+        accent.textContent = category === 'illegal' ? 'ILLEGALER WEG' : 'LEGALER WEG';
+        taglineGroup.appendChild(accent);
+
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'detail-hero-cta__title';
+        titleEl.textContent = title || 'Wähle deinen Weg';
+        taglineGroup.appendChild(titleEl);
+
+        cta.appendChild(taglineGroup);
+
+        const description = document.createElement('p');
+        description.className = 'detail-hero-cta__description';
+        description.textContent = tagline || 'Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte.';
+        cta.appendChild(description);
+
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'hero-choice detail-hero-cta__buttons';
+
+        const buttonConfigs = [
+                { label: 'Legal', choice: 'legal', className: '' },
+                { label: 'Illegal', choice: 'illegal', className: 'hero-choice__btn--illegal' },
+                { label: 'Regelwerk', link: 'https://rootsroleplay.de/regelwerk', className: 'hero-choice__btn--rules' },
+                { label: 'Whitelist', link: 'https://rootsroleplay.de/whitelist', className: 'hero-choice__btn--whitelist' }
+        ];
+
+        buttonConfigs.forEach((config) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `hero-choice__btn ${config.className || ''}`.trim();
+                button.textContent = config.label;
+                if (config.choice) {
+                        button.dataset.choice = config.choice;
+                }
+                if (config.link) {
+                        button.dataset.link = config.link;
+                }
+                wireChoiceButton(button, { autoOpenDetail: false });
+                buttonGroup.appendChild(button);
+        });
+
+        cta.appendChild(buttonGroup);
+        foreground.appendChild(cta);
 }
 
 function spawnDetailPolaroids(container) {
