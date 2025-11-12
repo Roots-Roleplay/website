@@ -1,0 +1,269 @@
+{
+  "companies": [
+    {
+      "id": "admin",
+      "displayName": "San Andreas Administration",
+      "title": "San Andreas Admin – Für einen Staat, der funktioniert.",
+      "image": "public/lore/roots_cityadmins.png",
+      "description": "San Andreas wächst, verändert sich – und braucht Menschen, die den Überblick behalten. Administrator San Andreas ist das Rückgrat der öffentlichen Verwaltung: hier werden Abläufe koordiniert, Prozesse gestaltet und Strukturen geschaffen, die das tägliche Leben im ganzen Staat am Laufen halten.\n\nHier arbeiten keine Politiker, sondern Praktiker. Menschen, die Verantwortung übernehmen, organisieren und anpacken – in der Stadt, auf dem Land, im Büro oder direkt auf der Straße. Von Genehmigungen über Bürgeranliegen bis hin zu öffentlichen Projekten: hier zählt jedes Detail, jede Entscheidung und jeder Einsatz.\n\nGesucht werden Charaktere mit Verstand, Ordnungssinn und einem kühlen Kopf, wenn's hektisch wird. Ob in der Verwaltung, im Bauwesen, in der Öffentlichkeitsarbeit oder im Bürgerservice – jede Aufgabe trägt dazu bei, dass San Andreas funktioniert. Hier zählt kein Titel, sondern Zuverlässigkeit. Kein Status, sondern Engagement.",
+      "videos": [
+        {
+          "youtubeId": "6owGtoSGR7U",
+          "buyUrl": "https://shmannworks.tebex.io/package/6283325"
+        }
+      ]
+    },
+    {
+      "id": "aldente",
+      "displayName": "Al Dente",
+      "title": "Al Dente – Wo Loyalität serviert wird.",
+      "description": "Ein Ort, an dem gutes Essen und feine Etikette nur die Oberfläche sind.\n\nIm Al Dente trifft italienische Eleganz auf die stille Kunst des Einflusses. Edle Stoffe, warme Beleuchtung, Gläser, die im Rhythmus vertrauter Gespräche klingen – hier geht es nicht nur um Pasta und Wein, sondern um Präsenz, Klasse und Haltung.\n\nDas Restaurant steht für mehr als Genuss. Es ist Treffpunkt, Bühne und Prüfstein zugleich. Jeder Tisch erzählt eine eigene Geschichte, jedes Wort kann Gewicht haben. Hier wird nicht gehetzt – hier wird verhandelt, gelächelt, entschieden.\n\nGesucht werden Menschen mit Stil, Disziplin und Gespür für Atmosphäre.\n\nOb Gastgeber, Küchenchef, Servicekraft oder kreativer Kopf – wer hier arbeitet, versteht, dass das Al Dente mehr ist als ein Arbeitsplatz. Es ist eine Bühne, auf der Charakter zählt.\n\nBuon appetito.",
+      "videos": [
+        {
+          "youtubeId": "bp_AmI7a4ww",
+          "buyUrl": "https://shop.tstudio3d.com/package/6549958"
+        }
+      ]
+    },
+    {
+      "id": "ambulance",
+      "displayName": "S.A.M.S.",
+      "title": "S.A.M.S. – Leben retten, wenn Sekunden zählen.",
+      "description": "Wenn andere zurückweichen, beginnt hier die Arbeit.\n\nDas San Andreas Medical Service ist mehr als ein Notfalldienst – es ist das Herz des Staates, das schlägt, wenn alles andere stillsteht.\n\nVom Unfall auf der Route 68 bis zum Einsatz in der City – hier zählt jede Entscheidung, jede Bewegung, jede Sekunde.\n\nDu trägst Verantwortung, triffst Entscheidungen unter Druck und bleibst ruhig, wenn der Rest in Panik gerät.\n\nGesucht werden Charaktere mit Empathie, Fokus und Nerven aus Stahl.\n\nOb Sanitäter, Notarzt oder Einsatzleitung – hier geht's nicht um Prestige, sondern um Leben.",
+      "videos": [
+        {
+          "youtubeId": "ecCvu_BzxgY",
+          "buyUrl": "https://kiiya.tebex.io/package/6629013"
+        },
+        {
+          "youtubeId": "Q0gHZ0OwECA",
+          "buyUrl": "https://shop.tstudio3d.com/package/6775989"
+        },
+        {
+          "youtubeId": "aTf-8IX_WoA",
+          "buyUrl": "https://shop.tstudio3d.com/package/6140117"
+        }
+      ]
+    },
+    {
+      "id": "bikes",
+      "displayName": "Motorcycles Custom",
+      "title": "Motor Cycles Custom – Zwei Räder. Ein Versprechen.",
+      "description": "Mitten in Little Seoul schlägt das Herz der Biker-Szene. Motor Cycles Custom ist kein Showroom für Schönwetterfahrer – hier riecht es nach Benzin, Metall und Freiheit. Egal ob Chopper, Cruiser oder Sportbike – jedes Motorrad bekommt hier denselben Respekt, dieselbe Hingabe und denselben Dreck unter den Fingernägeln.\n\nHier wird nicht geplaudert, hier wird gearbeitet – ehrlich, direkt und mit Liebe zum Detail. Ob Reparatur, Umbau oder Tuning – jedes Bike erzählt seine eigene Geschichte, und hier sorgt man dafür, dass sie weitergeht. Der Ton ist rau, aber herzlich. Ein Ort, an dem man sich die Hände schmutzig macht, den Kaffee schwarz trinkt – und weiß, dass man dazugehört.\n\nGesucht werden Charaktere mit Leidenschaft, technischem Können und einem offenen Ohr für die Szene. Ob Schrauber, Verkäufer oder einfach jemand, der Bikes im Blut hat – hier zählt kein Auftreten, sondern Authentizität",
+      "videos": [
+        {
+          "youtubeId": "4CuEewf2gDo",
+          "buyUrl": "https://apollo-developments.tebex.io/package/5112882"
+        },
+        {
+          "youtubeId": "HscEVqIJ1Nk",
+          "buyUrl": "https://apollo-developments.tebex.io/package/5754568"
+        }
+      ]
+    },
+    {
+      "id": "blockbudz",
+      "displayName": "Block Budz",
+      "title": "Blockbudz Weedshop – Aus der Hood, für die Hood.",
+      "description": "Mitten in der Southside, zwischen Graffiti, Bass und Straßenleben, liegt Block Budz – der Laden, den jeder kennt und dem jeder vertraut. Hier geht's nicht um große Marken oder Show – hier zählt Geschmack, Qualität und der Vibe. Ehrlich, laut, direkt. Block Budz ist mehr als ein Weedshop. Es ist Treffpunkt, Rückzugsort und Sprachrohr der Nachbarschaft. Wer hier reinkommt, kennt entweder jemanden – oder geht mit neuen Kontakten wieder raus. Zwischen Blüten, Blättchen und Beats läuft der Alltag ein bisschen langsamer, aber dafür echter. Das Sortiment? Von klassischem OG Kush bis modernen Strains, Edibles, Papers und allem, was dazugehört. Keine Spielerei, nur das Beste, was die Straße zu bieten hat – mit Respekt, Style und Know-how. Gesucht werden Menschen mit Charakter, Charme und einem echten Draht zur Community. Ob Verkäufer/in, Grow-Berater/in oder kreativer Kopf – bei Block Budz zählt, wer du bist, nicht was auf deinem Ausweis steht.",
+      "videos": [
+        {
+          "youtubeId": "ZTITTbbic9c",
+          "buyUrl": "https://shop.tstudio3d.com/package/6974269"
+        }
+      ]
+    },
+    {
+      "id": "burgershot",
+      "displayName": "Burger Shot",
+      "title": "Burgershot – Fleisch. Fett. Freiheit.",
+      "description": "Zwischen Del Perro und Little Seoul steht das, was Amerika wirklich ausmacht: ein Grill, der nie kalt wird, Neonlicht, das nie ausgeht, und der Geruch von Frittenfett, der sich in jede Uniform frisst.\n\nHier wird nicht fein gekocht – hier wird gebrutzelt, geschwitzt und serviert, was nach Freiheit schmeckt: doppelt belegt, zu laut verpackt und mit einem Lächeln, das nach Überstunden riecht. Burgershot ist kein Ort für Gourmets, sondern für Charaktere, die wissen, dass Geschmack manchmal einfach nur laut sein muss.\n\nZwischen Bestellnummern und quietschenden Tabletts entsteht hier echter Alltag – roh, ehrlich, chaotisch.\n\nUnd wenn die Schlange bis auf den Parkplatz reicht, ist das kein Stress. Das ist Erfolg, mit extra Käse.\n\nGesucht werden Menschen mit Energie, Humor und Hunger.\n\nOb hinterm Grill, an der Kasse oder mit neuen Ideen für den Laden – hier zählt Einsatz, nicht Etikette.",
+      "videos": [
+        {
+          "youtubeId": "hBQO2JlJmro",
+          "buyUrl": "https://shop.tstudio3d.com/package/5956096"
+        }
+      ]
+    },
+    {
+      "id": "caseys",
+      "displayName": "Casey's Diner",
+      "title": "Casey´s Diner – Ein Stück Americana an der Route 68.",
+      "description": "Zwischen Tankstellen, Staub und der endlosen Straße liegt ein Ort, der die Zeit vergessen hat.\n\nRote Ledersitze, klirrende Tassen, das leise Surren der alten Jukebox – hier schmeckt der Kaffee nach Geschichten und die Pancakes nach Zuhause.\n\nDas Casey's Diner ist kein Ort für Eile. Hier halten Trucker, Streifenpolizisten, Biker und Nachteulen an, um kurz zu vergessen, wie schnell die Welt draußen dreht. Zwischen Frühstückstellern und Neonlicht entsteht das, was echte Diners ausmacht: ehrliche Gespräche, rauer Charme, und ein Hauch von Melancholie.\n\nGesucht werden Charaktere mit Herz, Humor und dem richtigen Maß an Gelassenheit.\n\nOb du hinterm Tresen stehst, am Grill arbeitest oder einfach das Diner wieder zum Leben erweckst – wichtig ist nur eins: Du verstehst, dass Casey's mehr ist als ein Arbeitsplatz. Es ist ein Gefühl.",
+      "videos": [
+        {
+          "youtubeId": "ecCvu_BzxgY",
+          "buyUrl": "https://kiiya.tebex.io/package/6629013"
+        }
+      ]
+    },
+    {
+      "id": "church",
+      "displayName": "Rockford Church",
+      "title": "Rockford Church – Mehr als nur Beichten",
+      "description": "Du suchst einen Job mit Sinn? Vielleicht bist du der Grund, warum man hier betet.\n\nDie alte Kirche in Rockford steht noch. Irgendwie. Zwischen Heiligenstatuen mit Sprung in der Fassade, staubigen Bänken und flackerndem Kerzenlicht hat sich mehr als nur Gott eingenistet. Hier spuken Gerüchte. Und manchmal mehr.\n\nDu bist kein klassischer Pfarrer? Gut. Rockford sucht keine Engel.\n\nOb abgehalfterter Priester mit Vergangenheit, verlorene Seele auf der Suche nach Erlösung oder einfach jemand, der weiß, wie man Türen abschließt, wenn's draußen wieder unruhig wird – die Church ist offen für alle, aber nicht für alles.\n\nVielleicht wird sie wieder ein Ort der Hoffnung. Vielleicht ein geheimer Treffpunkt für zwielichtige Geschäfte unter frommem Deckmantel. Vielleicht ein Zentrum für einsame Seelen – oder für okkulte Praktiken bei Kerzenschein. Wer weiß?\n\nDu gibst Rockford Church ihre neue Richtung. Ob sanft wie ein Gebet oder hart wie eine Beichte bei Gewitter.",
+      "videos": [
+        {
+          "youtubeId": "tlpeNmoVVp0",
+          "buyUrl": "https://shop.tstudio3d.com/package/6488375"
+        }
+      ]
+    },
+    {
+      "id": "doj",
+      "displayName": "DOJ",
+      "title": "Anwälte gesucht – Für Recht. Für Ordnung. Für San Andreas.",
+      "description": "In einer Stadt, in der täglich neue Geschichten geschrieben werden, braucht es Menschen, die sie richtig deuten können.\n\nAnwälte sind die Stimme der Vernunft im Chaos, die letzte Linie zwischen Freiheit und Urteil – und manchmal das einzige, was zwischen einem Mandanten und dem Gefängnistor steht.\n\nHier zählt kein Charme, sondern Können. Kein Titel, sondern Haltung.\n\nDu kennst das Gesetz, verstehst die Lücken und weißt, wann man reden – und wann man schweigen muss. Ob im Gerichtssaal oder im vertraulichen Gespräch: Du bist da, wenn Worte Leben verändern.\n\nGesucht werden Anwältinnen und Anwälte, die Verantwortung übernehmen, Argumente schärfen und sich auch in schwierigen Fällen nicht beugen.\n\nMenschen, die für Gerechtigkeit brennen – oder zumindest wissen, wie man sie durchsetzt.",
+      "videos": [
+        {
+          "youtubeId": "6owGtoSGR7U",
+          "buyUrl": "https://shmannworks.tebex.io/package/6283325"
+        }
+      ]
+    },
+    {
+      "id": "larrys",
+      "displayName": "Larry's Auto",
+      "title": "Larry´s Car & Repair – Wo Kraft auf Charakter trifft.",
+      "description": "In Harmony, dort wo der Asphalt langsam in Staub übergeht, steht Larry's Cars & Repair – die Adresse im Norden, wenn's ums Grobe, Laute und Ehrliche geht.\n\nHier rollen keine Sportwagen vom Band, hier entstehen Maschinen mit Seele.\n\nOb Offroader, Musclecar oder SUV – bei Larry's bekommt man, was man wirklich braucht: Leistung, Haltbarkeit und Handwerk ohne Schnickschnack.\n\nZwischen Werkzeug, Werkbank und Motorbrummen herrscht noch die alte Schule – der Ton rau, die Hände dreckig, das Ergebnis solide.\n\nWer hier arbeitet, weiß: Ein guter Wagen erzählt Geschichten. Und ein ehrlicher Schrauber schreibt sie weiter.\n\nGesucht werden Charaktere mit Know-how, Humor und einem Herz für echte Maschinen.\n\nOb Mechaniker/in, Verkäufer/in oder einfach jemand, der anpackt, wenn andere zögern – hier zählt Einsatz, nicht Etikette.",
+      "videos": [
+        {
+          "youtubeId": "ecCvu_BzxgY",
+          "buyUrl": "https://kiiya.tebex.io/package/6629013"
+        }
+      ]
+    },
+    {
+      "id": "leapfrog",
+      "displayName": "Leapfrog Cafe",
+      "title": "Leapfrog Café – Klein. Süß. Unverwechselbar.",
+      "description": "Direkt am Mirror Park See versteckt sich ein Ort, an dem die Zeit langsamer läuft und der Duft von frisch gebackenem Gebäck den Tag bestimmt.\n\nDas Leapfrog Café ist keine Kette, kein Trend – es ist ein Gefühl. Warm, freundlich, ehrlich. Hier zählt nicht der Umsatz, sondern das Lächeln beim ersten Schluck Kaffee.\n\nZwischen hellen Holztischen, kleinen Pflanzen und der Aussicht aufs Wasser entsteht ein Raum für Gespräche, Geschichten und kleine Pausen vom Chaos der Stadt. Die Speisen sind einfach, aber mit Liebe gemacht – und süßer, als man erwartet.\n\nGesucht werden Menschen mit Herz, Kreativität und einem Gespür für Atmosphäre.\n\nOb Barista, Bäckerin oder Gastgeber – wer hier arbeitet, sorgt dafür, dass das Café mehr ist als ein Ort. Es ist ein Zufluchtsort.",
+      "videos": [
+        {
+          "youtubeId": "oS7j7fdL5oM",
+          "buyUrl": "https://shop.tstudio3d.com/package/6389667"
+        }
+      ]
+    },
+    {
+      "id": "news",
+      "displayName": "Weazel News",
+      "title": "Weazel News – Wahrheit hat kein Drehbuch.",
+      "description": "Mitten in der Stadt, zwischen Blaulicht, Chaos und Schlagzeilen, steht Weazel News – das Sprachrohr einer Welt, die sich ständig verändert.\n\nHier geht's nicht um Likes oder Show, sondern um Geschichten. Um Wahrheit. Um Mut.\n\nReporter, Redakteure, Fotografen, Kameraleute – sie alle teilen denselben Nervenkitzel: rausgehen, wo's brennt, und das zeigen, was andere lieber verschweigen.\n\nOb politische Skandale, Straßengespräche oder Live-Berichte vom Ort des Geschehens – Weazel News ist da, wo die Story passiert.\n\nAber Pressefreiheit heißt auch Verantwortung.\n\nHier wird nicht nur berichtet – hier wird Haltung gezeigt. Zwischen Mikrofonen und Meinungen, Kameras und Konsequenzen entsteht das, was die Stadt verbindet: Information.\n\nGesucht werden Charaktere mit Neugier, Mut und Wortgewandtheit.\n\nMenschen, die wissen, wie man Fragen stellt, ohne Angst vor Antworten.",
+      "videos": [
+        {
+          "youtubeId": "kZe_u7E4FaY",
+          "buyUrl": "https://patoche-mapping.tebex.io/package/5078528"
+        },
+        {
+          "youtubeId": "4PfguJA9CxE",
+          "buyUrl": "https://unclejust.tebex.io/package/4805269"
+        }
+      ]
+    },
+    {
+      "id": "pearls",
+      "displayName": "Pearls Resort",
+      "title": "Pearls Resort – Ein Refugium zwischen Palmen & Träumen",
+      "description": "Ein Ort, an dem Zeit sich biegt und Erinnerungen im Sonnenuntergang verschwimmen.\n\nWeiße Sandstrände, azurblaues Meer und das sanfte Rauschen der Wellen, das durch offene Fenster zieht und salzige Luft mitbringt. Vom Pooldeck bis zur Lounge atmet alles Ruhe, Eleganz und die Leichtigkeit des Augenblicks.\n\nHier ist kein Platz für Eile. Statt Champagner und Trubel findet man stilvolle Rückzugsorte — Lounges mit weichen Sofas, Terrassen mit Blick auf Palmen, schimmerndes Wasser, das Geschichten im Licht erzählt. Jeder Moment ist hier eine Einladung zum Durchatmen, zum Ankommen, zum Loslassen.\n\nPearls Resort bedeutet mehr als Wohlfühlen – es bedeutet, sich fallen lassen zu dürfen.\n\nEin Rückzugsort für jene, die Stil nicht tragen, sondern leben. Für Gespräche bei Kerzenschein, Sommernächte unter dem Sternenzelt und Musik, die mehr fließt als spielt. Hier wird der Alltag leise ausgeblendet – und der Moment zur Hauptsache.\n\nGesucht werden Charaktere mit Eleganz im Schritt und Tiefe im Blick.\n\nOb Gastgeber/in, Concierge, Lounge-Manager/in oder kreative Seele – wichtig ist, dass du verstehst: Hier zählt, wie du lebst, nicht nur, was du tust.",
+      "videos": [
+        {
+          "youtubeId": "F7FOkTu-5pA",
+          "buyUrl": "https://shop.tstudio3d.com/package/6961109"
+        }
+      ]
+    },
+    {
+      "id": "pier76",
+      "displayName": "Pier76",
+      "title": "Pier76 Autohaus und Club – Mehr Motor, mehr Momente.",
+      "description": "Im Osten von Vinewood, genauer gesagt in La Mesa, liegt kein gewöhnliches Autohaus. Pier76 verbindet Käuferraum, Werkstatt und Clubfläche – hier endet ein Besuch nicht nach dem Kauf.\n\nIm Showroom stehen Wagen, die glänzen und fragen, ob du bereit bist. In der Werkstatt wird geschraubt – nicht nur an Pistons, sondern an Träumen. Und später zieht das Licht gedimmt in den Clubbereich: Motorgeräusche gegen Bass, Chrom gegen Neon.\n\nOb du ein neues Fahrzeug suchst, ein Klassiker im Aufbau hast oder einfach Teil der Szene werden willst – hier bekommt jeder seinen Platz:\n\nBesucher, die den Wagen wählen.\n\nSchrauber, die hinter die Kulissen schauen wollen.\n\nCharaktere, die wissen, dass ein Auto nicht einfach fährt – es lebt.\n\nGesucht werden Menschen mit Drive, Stil und Connections.\n\nOb Verkäufer/in, Werkstattleiter/in oder Club-Koordinator/in – hier zählt nicht nur Technik, sondern auch Haltung.",
+      "videos": [
+        {
+          "youtubeId": "zvEoCK5e3Og",
+          "buyUrl": "https://shop.tstudio3d.com/package/6739602"
+        }
+      ]
+    },
+    {
+      "id": "police",
+      "displayName": "Police",
+      "title": "POLICE DEPARTMENT – Beschützen. Dienen. Durchsetzen.",
+      "image": "public/lore/roots_lspd.png",
+      "description": "Das Police Department steht an vorderster Front, wenn San Andreas ins Chaos kippt.\n\nZwischen Sirenen, Blaulicht und Verantwortung braucht es Menschen, die Haltung zeigen – und bereit sind, dorthin zu gehen, wo andere wegsehen.\n\nHier zählt nicht, wie laut du bist, sondern wie standhaft.\n\nVon der Streife über Ermittlungen bis hin zur Einsatzleitung – jedes Detail, jede Entscheidung, jeder Moment kann den Unterschied machen.\n\nDu arbeitest mit Regeln, aber auch mit Instinkt. Mit Mut, aber ohne Arroganz.\n\nGesucht werden Charaktere mit Disziplin, Loyalität und Verstand.\n\nOb Rookie, Ermittler oder erfahrener Officer – hier steht Teamgeist über Ego."
+    },
+    {
+      "id": "reds",
+      "displayName": "Red's Customs",
+      "title": "Red´s Custom Car´s – Wo Jetnoise auf Motorklang trifft.",
+      "description": "Direkt am Flughafen, dort wo der Asphalt noch nach Kerosin riecht, steht Red's Tunershop – eine Mischung aus Präzision, Leidenschaft und purer Power.\n\nHier treffen Highspeed und Handwerk aufeinander, hier wird geschraubt, bis selbst die Triebwerke neidisch werden.\n\nOb Turbo, Bodykit oder Komplettumbau – bei Red's geht's nicht um Standard. Es geht um das Maximum. Jeder Wagen, der hier reinkommt, verlässt die Halle mit Charakter, Haltung und einer ganz eigenen Geschichte.\n\nDer Shop ist mehr als nur Werkstatt.\n\nEr ist Treffpunkt für die Szene – ein Ort, an dem Schrauber, Fahrer und Enthusiasten zusammenkommen, um Ideen auszutauschen, Motoren aufzudrehen und den Asphalt zum Leben zu bringen. Zwischen Werkzeuglärm und Flugzeugdröhnen entsteht hier eine Atmosphäre, die man nicht erklären kann – man muss sie fühlen.\n\nGesucht werden Charaktere mit Benzin im Blut, Technik im Kopf und Leidenschaft im Herzen.\n\nOb Mechaniker, Verkäufer oder einfach jemand, der Autos nicht nur sieht, sondern versteht – Red's sucht echte Macher.",
+      "videos": [
+        {
+          "youtubeId": "mvB1CsFdw6o",
+          "buyUrl": "https://shop.tstudio3d.com/package/6544992"
+        }
+      ]
+    },
+    {
+      "id": "sheriff",
+      "displayName": "Sheriff's Office",
+      "title": "SHERIFF'S DEPARTMENT – Gesetz. Ehre. Land.",
+      "description": "Abseits der Großstadt, zwischen Feldern, Bergen und Staub, sorgt das Sheriff's Department für Recht und Ordnung im Norden.\n\nHier kennt man Namen statt Aktennummern, und Hilfe kommt nicht aus einer Zentrale, sondern oft aus dem eigenen Pickup.\n\nDer Job ist härter, der Ton direkter, aber der Zusammenhalt echt.\n\nOb auf den Highways, in Blaine County oder in kleinen Gemeinden – du stehst nicht nur für das Gesetz, sondern für Vertrauen.\n\nGesucht werden Charaktere mit Verantwortungsbewusstsein, Erfahrung und Rückgrat.\n\nMenschen, die verstehen, dass Dienst hier mehr bedeutet als ein Abzeichen – nämlich Präsenz, Mut und Menschlichkeit.",
+      "videos": [
+        {
+          "youtubeId": "ecCvu_BzxgY",
+          "buyUrl": "https://kiiya.tebex.io/package/6629013"
+        }
+      ]
+    },
+    {
+      "id": "smokeys",
+      "displayName": "Smokey's",
+      "title": "Smokey´s Weedshop – Zwischen Schatten & Duft",
+      "description": "Hier dreht sich alles um eines – gutes Weed, ehrlicher Genuss und das perfekte High.\n\nZwischen dichten Aromen, gläsernen Vitrinen und leiser Musik findest du hier kein Chaos, sondern Kultur. Smokey's ist kein Hinterhofladen – es ist das Zuhause für Kenner, Genießer und die, die's werden wollen.\n\nTee, Lollis, Muffins – hier bekommst du alles, was du brauchst, um den Kopf zu lüften oder den Tag zu zähmen. Jede Sorte erzählt ihre eigene Geschichte, jedes Produkt ist handverlesen, geprüft und mit Liebe präsentiert.\n\nSmokey's steht für Qualität, Transparenz und Respekt – vor dem Produkt, vor der Szene und vor dem Moment.\n\nKein Stress, kein billiger Vibe. Nur ehrliches Weed und Menschen, die wissen, was sie tun.\n\nGesucht werden Charaktere mit Feingefühl, Know-how und Leidenschaft für Cannabis.\n\nOb Verkäufer/in, Berater/in oder kreativer Kopf für das Konzept – hier zählt nicht nur Wissen, sondern Einstellung.",
+      "videos": [
+        {
+          "youtubeId": "GEwmdrYZjJc",
+          "buyUrl": "https://shop.tstudio3d.com/package/6457306"
+        }
+      ]
+    },
+    {
+      "id": "taxi",
+      "displayName": "Downtown Cab Co",
+      "title": "Downtown Cab Co. – Immer unterwegs. Immer bereit.",
+      "description": "Am Great Ocean Highway in Del Perro steht das Symbol für Bewegung – gelbe Wagen, flackernde Schilder, Funkgeräte, die nie still sind.\n\nDowntown Cab Co. ist mehr als nur ein Taxiunternehmen – es ist das Rückgrat der Stadt. Wenn alles schläft, rollen hier noch die Reifen.\n\nEgal ob Eile, Not oder Nachtschicht – wer anruft, bekommt eine Fahrt, und wer hier arbeitet, kennt jede Abkürzung zwischen Chaos und Skyline.\n\nVom schnellen Airport-Transfer bis zur Fahrt durchs Ungewisse: Hier wird gefahren, was kommt – Tag für Tag, Stunde für Stunde.\n\nGesucht werden Fahrer und Charaktere, die wissen, was Straßen bedeuten.\n\nMenschen mit Orientierungssinn, Witz und einem Händchen für Gespräche – oder Schweigen, wenn's drauf ankommt.",
+      "videos": [
+        {
+          "youtubeId": "14CULHM3GNQ",
+          "buyUrl": "https://shop.tstudio3d.com/package/5986959"
+        }
+      ]
+    },
+    {
+      "id": "tuner",
+      "displayName": "Tunershop La Mesa",
+      "title": "Tunershop La Mesa – Deine Bühne fürs Auto-Handwerk.",
+      "description": "Zwischen den Industriehallen von La Mesa liegt ein Ort, der mehr nach Herzschlag als nach Werkstatt klingt.\n\nHier riecht es nach Gummi, Öl und Ehrgeiz – und genau so soll es sein. Tunershop La Mesa ist kein einfacher Arbeitsplatz, sondern ein Treffpunkt für all jene, die wissen, dass jedes Fahrzeug seine eigene Persönlichkeit hat – und dass man sie nur mit Leidenschaft zum Vorschein bringt.\n\nOb Leistung oder Optik, Alltag oder Rennstrecke – hier wird jedes Projekt ernst genommen. Vom simplen Umbau bis zum kompromisslosen Tuning-Monster.\n\nIn den Hallen von La Mesa wird nicht nur repariert, sondern perfektioniert: Abgasanlagen werden neu gedacht, Lackierungen zu Kunstwerken, Setups bis ins letzte Detail abgestimmt.\n\nAber es geht nicht nur um Maschinen.\n\nDer Tunershop ist auch Treffpunkt der Szene – ein Ort, an dem Benzingespräche in Freundschaften münden, Ideen geteilt und Grenzen verschoben werden. Hier trifft der Schrauber auf den Designer, der Racer auf den Träumer.\n\nManchmal läuft Musik aus alten Lautsprechern, manchmal nur das Brummen eines Motors – und beides klingt nach Zuhause.\n\nGesucht werden Menschen mit Leidenschaft, Präzision und Charakter.\n\nOb erfahrener Mechaniker, junger Schrauber mit Vision oder einfach jemand, der weiß, wie man aus einem Wagen ein Statement macht – hier zählt Hingabe, nicht Herkunft.",
+      "videos": [
+        {
+          "youtubeId": "DAwlscvTTKs",
+          "buyUrl": "https://shop.tstudio3d.com/package/6963670"
+        }
+      ]
+    },
+    {
+      "id": "yellowjack",
+      "displayName": "Yellow Jack",
+      "title": "Yellow Jack – Seit 1876. Härter als der Highway.",
+      "description": "Ein echter Laden braucht keine Werbung – nur einen Ruf. Und der Yellow Jack hat seinen seit fast 150 Jahren.\n\nAn der staubigen Route 68, zwischen verbrannter Erde und verblassten Schildern, steht er noch immer: windschief, knarzend, ehrlich. Der Tresen ist aus echtem Holz, das Bier kommt kalt, der Empfang eher wortkarg. Aber bleib lang genug – und der Yellow Jack redet mit dir. In Knacklauten, Gitarrenriffs und Whiskeyhalbsätzen.\n\nSeit 1876 ist der Yellow Jack mehr als nur Bar und Motel:\n\nEr ist Zuflucht, Durchgangsort, Heimat auf Zeit. Hier sitzen Cowboys neben Bikern, Söldner neben Träumern, Locals neben Leuten, die nie sagen, warum sie hier sind.\n\nGesucht werden keine Mitarbeiter. Gesucht wird Seele:\n\nDie Barkeeperin mit Lederhaut und Herz. Der abgeranzte Musiker, der sich in der Ecke festgespielt hat. Der Ex-Sheriff, der jetzt lieber Drinks mixt als Regeln macht. Oder der Typ, der sagt, er sei nur auf der Durchreise – aber sein Truck steht hier seit Wochen.\n\nDu willst den Yellow Jack in eine staubige Livebar mit echter Countrymusik verwandeln? Einen geheimen Treffpunkt für zwielichtige Deals? Oder einfach ein Relikt, das sich gegen den Lauf der Zeit stellt?",
+      "videos": [
+        {
+          "youtubeId": "BrT9NP18c28",
+          "buyUrl": "https://meffle3d.tebex.io/package/6490286"
+        }
+      ]
+    }
+  ]
+}
+

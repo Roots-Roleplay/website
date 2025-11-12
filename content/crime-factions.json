@@ -1,0 +1,57 @@
+{
+  "factions": [
+    {
+      "id": "ballas",
+      "title": "Ballas",
+      "tagline": "Purple Runs The Block.",
+      "videoId": "BrT9NP18c28",
+      "image": "public/crime/crime_ballas.png",
+      "content": "Die Ballas sind eine der berüchtigtsten Street Gangs in Los Santos. Mit ihrer charakteristischen lila Farbe haben sie sich einen Namen in den Straßen gemacht.\n\nSie kontrollieren mehrere Territorien und sind bekannt für ihre kompromisslose Herangehensweise. Loyalität und Respekt stehen bei den Ballas an erster Stelle.\n\nVon Drogenhandel bis zu Schutzgelderpressung – die Ballas haben ihre Finger in vielen kriminellen Aktivitäten. Wer mit ihnen arbeitet, muss bereit sein, alles zu geben.\n\nDie Hierarchie ist klar definiert: Jedes Mitglied kennt seinen Platz und seine Aufgaben. Zusammenhalt wird großgeschrieben, Verrat wird nicht toleriert.",
+      "thumbnails": [
+        "public/characters/admin_character.png",
+        "public/characters/aldente_character.png",
+        "public/characters/aod_character.png"
+      ]
+    },
+    {
+      "id": "lost",
+      "title": "The Lost MC",
+      "tagline": "Loyalty Above All.",
+      "videoId": "F7FOkTu-5pA",
+      "image": "public/crime/crime_lost.png",
+      "content": "The Lost MC ist ein Motorradclub mit einer langen und blutigen Geschichte. Die Brüderschaft steht über allem – für die Lost ist der Club Familie.\n\nMit ihren charakteristischen Kutten und den dröhnenden Maschinen sind sie eine Macht, mit der man rechnen muss. Sie leben nach ihrem eigenen Kodex, fernab von Gesetzen und Konventionen.\n\nIhre Geschäfte reichen von Waffenhandel bis zu illegalen Rennen. Wer dem Club beitritt, schwört ewige Treue. Die Brüder haben sich gegenseitig den Rücken frei – immer.\n\nRespekt muss man sich verdienen, aber wer einmal als Brother akzeptiert wurde, gehört zur Familie. The Lost vergessen nichts und vergeben selten.",
+      "thumbnails": [
+        "public/characters/bikes_character.png",
+        "public/characters/burgershot_character.png",
+        "public/characters/caseys_character.png"
+      ]
+    },
+    {
+      "id": "madrazo",
+      "title": "Madrazo Family",
+      "tagline": "Eleganz. Macht. Madrazo.",
+      "videoId": "ecCvu_BzxgY",
+      "image": "public/crime/crime_madrazo.png",
+      "content": "Die Madrazo Familie ist Synonym für Macht und Einfluss in Los Santos. Mit mexikanischen Wurzeln haben sie ein Imperium aufgebaut, das weit über die Stadtgrenzen hinausreicht.\n\nEleganz und Brutalität gehen bei den Madrazos Hand in Hand. Nach außen geschäftsmännisch und gepflegt, nach innen knallhart und kompromisslos.\n\nIhre Operationen sind hochprofessionell: Geldwäsche, Drogenhandel, Immobiliengeschäfte – alles läuft über die Familie. Jeder Schritt ist kalkuliert, jede Entscheidung strategisch.\n\nFür die Madrazos zählt nur Erfolg. Wer sich ihnen in den Weg stellt, verschwindet – diskret und effizient. Familie ist alles, aber das Geschäft kommt zuerst.",
+      "thumbnails": [
+        "public/characters/church_character.png",
+        "public/characters/doj_character.png",
+        "public/characters/larrys_character.png"
+      ]
+    },
+    {
+      "id": "rednecks",
+      "title": "Rednecks",
+      "tagline": "Dirty Boots. Dirty Deals.",
+      "videoId": "BrT9NP18c28",
+      "image": "public/crime/crime_rednecks.png",
+      "content": "Die Rednecks sind die ursprünglichen Outlaws von Blaine County. Fernab der Stadtlichter haben sie ihre eigenen Regeln etabliert – und die sind simpel: Survival of the fittest.\n\nMit ihren Trucks, Waffen und einem Haufen Attitude kontrollieren sie das ländliche Hinterland. Methamphetamin-Produktion, Waffenschmuggel und illegale Schnapsbrennereien sind ihr täglich Brot.\n\nDie Rednecks mögen rustikal wirken, aber unterschätzt sie nicht. Hinter der Fassade des einfachen Landlebens verbirgt sich ein knallhartes kriminelles Netzwerk.\n\nHier draußen gelten andere Gesetze. Die Cops kommen selten vorbei, und wenn doch, kennt man die richtigen Verstecke. Das Land ist ihr Territorium – und sie verteidigen es mit allem, was sie haben.",
+      "thumbnails": [
+        "public/characters/leapfrog_character.png",
+        "public/characters/news_character.png",
+        "public/characters/pearls_character.png"
+      ]
+    }
+  ]
+}
+

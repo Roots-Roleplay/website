@@ -1,0 +1,21 @@
+{
+  "name": "roots-roleplay",
+  "version": "2.0.0",
+  "description": "Roots Roleplay website - optimized static version",
+  "scripts": {
+    "start": "npx serve -l 3000",
+    "serve": "npx serve -l 3000",
+    "dev": "npx serve -l 3000"
+  },
+  "keywords": ["roleplay", "website", "static"],
+  "license": "MIT"
+}
+
+
+
+
+
+
+
+
+
