@@ -209,14 +209,33 @@ const CRIME_CHARACTER_IMAGES_ARRAY = [
 
 // Crime shuffle images
 const CRIME_SHUFFLE_IMAGES = (() => {
+	// Only images from public/crime_shuffle folder (25 images total)
 	const knownFiles = [
-		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
-		'csacas.png', 'daw.png', 'dwa.png', 'fva.png', 'ges.png', 'gse.png',
-		'hed.png', 'jyd.png', 'kitt.png', 'qeeweq.png', 'qeweqw.png', 'qewqe.png',
-		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png',
-		'crime_aod_character.png', 'crime_ballas_character.png', 'crime_fightclub_character.png',
-		'crime_lost_character.png', 'crime_madrazo_character.png', 'crime_pit_character.png',
-		'crime_rednecks_character.png'
+		'addad.png',
+		'afdwdar.png',
+		'agrwrq.png',
+		'awd.png',
+		'awfaqrf.png',
+		'bfd.png',
+		'csacas.png',
+		'daw.png',
+		'dwa.png',
+		'fva.png',
+		'ges.png',
+		'gse.png',
+		'hed.png',
+		'jyd.png',
+		'kitt.png',
+		'qeeweq.png',
+		'qeweqw.png',
+		'qewqe.png',
+		'qweeq.png',
+		'rhtrh.png',
+		'sffeefws.png',
+		'wad.png',
+		'waewq.png',
+		'wda.png',
+		'yk.png'
 	];
 	return knownFiles.map(file => `public/crime_shuffle/${file}`);
 })();
@@ -327,8 +346,8 @@ async function loadContent() {
 			showGuidelines: true
 		};
 		
-		// Combine: intro image card, einleitung card, then nogos, then guidelines card
-		state.nogos = [introImageCard, ...(einleitungCard ? [einleitungCard] : []), ...nogosCards, guidelinesCard];
+		// Combine: einleitung card, intro image card, then nogos, then guidelines card
+		state.nogos = [...(einleitungCard ? [einleitungCard] : []), introImageCard, ...nogosCards, guidelinesCard];
 
 		// Inject a shuffling placeholder card at the front of the illegal rail
 		const illegalMysteryCard = {
@@ -601,29 +620,79 @@ function createHeroCard(item, index, category) {
 	const buildIllegalPlaceholder = () => {
 		// Illegal shuffle: use only crime_shuffle
 		const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
-		// Ensure exactly 8 characters
+		// Ensure exactly 8 characters - always create 8 cells
 		const faceCount = 8;
 		// Get exactly 8 unique images (or as many as available if pool is smaller)
 		const requestedCount = Math.min(faceCount, illegalShufflePool.length);
-		const faces = getUniqueRandomImages(illegalShufflePool, requestedCount);
-		// Use all faces we got (should be exactly requestedCount)
-		const grid = faces
-			.map((src) => {
-				const normalizedSrc = normalizeAssetPath(src);
+		let faces = getUniqueRandomImages(illegalShufflePool, requestedCount);
+		// If we got fewer than 8, try to get more unique ones
+		if (faces.length < faceCount && illegalShufflePool.length >= faceCount) {
+			const used = new Set(faces.map(f => normalizeAssetPath(f)));
+			const remaining = illegalShufflePool.filter(img => !used.has(normalizeAssetPath(img)));
+			const needed = faceCount - faces.length;
+			if (remaining.length >= needed) {
+				const additional = getUniqueRandomImages(remaining, needed);
+				faces = [...faces, ...additional];
+			}
+		}
+		// Always create exactly 8 cells with proper error handling
+		// Ensure we have exactly 8 unique images
+		const usedSrcs = new Set();
+		const finalFaces = [];
+		
+		// First, add all faces we got
+		faces.forEach(face => {
+			const normalized = normalizeAssetPath(face);
+			if (!usedSrcs.has(normalized)) {
+				finalFaces.push(normalized);
+				usedSrcs.add(normalized);
+			}
+		});
+		
+		// Fill up to 8 with additional unique images
+		while (finalFaces.length < faceCount && illegalShufflePool.length > 0) {
+			const available = illegalShufflePool
+				.map(normalizeAssetPath)
+				.filter(src => !usedSrcs.has(src));
+			
+			if (available.length === 0) {
+				// If we've exhausted all unique images, break
+				break;
+			}
+			
+			const additional = available[Math.floor(Math.random() * available.length)];
+			finalFaces.push(additional);
+			usedSrcs.add(additional);
+		}
+		
+		// Build grid HTML - always create 8 cells
+		const gridCells = [];
+		for (let index = 0; index < faceCount; index++) {
+			if (index < finalFaces.length) {
+				const normalizedSrc = finalFaces[index];
 				const alt = getCharacterAltFromSrc(normalizedSrc);
-				return `
+				gridCells.push(`
 					<div class="illegal-placeholder__cell">
-						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true" onerror="this.parentElement.style.display='none'">
+						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true">
 					</div>
-				`;
-			})
-			.join('');
+				`);
+			} else {
+				// This shouldn't happen if we have enough images, but create empty cell as fallback
+				gridCells.push(`
+					<div class="illegal-placeholder__cell">
+						<img class="illegal-placeholder__image" src="" alt="" loading="lazy" aria-hidden="true" style="display: none;">
+					</div>
+				`);
+			}
+		}
+		
+		const grid = gridCells.join('');
 
 		return `
 			<span class="hero-card__backdrop" aria-hidden="true"></span>
 			<div class="illegal-placeholder">
 				<div class="illegal-placeholder__stage">
-					<div class="illegal-placeholder__grid" data-count="${faces.length}">${grid}</div>
+					<div class="illegal-placeholder__grid" data-count="${faceCount}">${grid}</div>
 				</div>
 				<div class="illegal-placeholder__controls">
 					<button class="split-shuffle" type="button" aria-label="Neue Crew mischen"><span class="split-shuffle__icon">✦</span><span class="split-shuffle__text">Dich</span></button>
@@ -687,7 +756,7 @@ function createHeroCard(item, index, category) {
 						<svg class="hero-card__discord-icon" width="32" height="32" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
 							<path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
 						</svg>
-						<span class="hero-card__discord-text">Lese die Guidelines auf Discord</span>
+						<span class="hero-card__discord-text">Lese die Guidelines auf unserem Discord</span>
 					</a>
 				</div>`;
 				
@@ -837,6 +906,77 @@ function createHeroCard(item, index, category) {
 	// Add interactive grid splitting effect for placeholder card
 	if (isPlaceholder) {
 		card.style.setProperty('--card-logo', 'none');
+		
+		// Add error handlers for illegal placeholder images after DOM insertion
+		if (category === 'illegal') {
+			setTimeout(() => {
+				const grid = card.querySelector('.illegal-placeholder__grid');
+				if (grid) {
+					const images = Array.from(grid.querySelectorAll('.illegal-placeholder__image'));
+					const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+					
+					images.forEach((img, index) => {
+						let retryCount = 0;
+						const maxRetries = 10;
+						
+						const handleError = () => {
+							// Get all currently used images (excluding empty/broken ones)
+							const allImages = Array.from(grid.querySelectorAll('.illegal-placeholder__image'));
+							const usedSrcs = new Set();
+							allImages.forEach(i => {
+								if (i.src && i.src !== img.src && i.complete && i.naturalHeight > 0) {
+									const normalized = normalizeAssetPath(i.src);
+									usedSrcs.add(normalized);
+								}
+							});
+							
+							// Find an unused image from the pool
+							const available = illegalShufflePool
+								.map(normalizeAssetPath)
+								.filter(src => {
+									const normalized = normalizeAssetPath(src);
+									return !usedSrcs.has(normalized);
+								});
+							
+							if (available.length > 0 && retryCount < maxRetries) {
+								retryCount++;
+								const retrySrc = normalizeAssetPath(available[Math.floor(Math.random() * available.length)]);
+								img.src = retrySrc;
+								img.alt = getCharacterAltFromSrc(retrySrc);
+								img.style.display = '';
+								img.style.visibility = 'visible';
+							} else if (retryCount >= maxRetries && available.length > 0) {
+								// After max retries, still try to get a unique one
+								const fallbackSrc = normalizeAssetPath(available[0]);
+								img.src = fallbackSrc;
+								img.alt = getCharacterAltFromSrc(fallbackSrc);
+								img.style.display = '';
+								img.style.visibility = 'visible';
+							}
+						};
+						
+						img.onerror = handleError;
+						
+						// Check if image failed to load initially or is empty
+						if (!img.src || img.src === '' || !img.complete || img.naturalHeight === 0) {
+							// Trigger error handler to get a valid image
+							setTimeout(() => {
+								if (!img.src || img.src === '' || !img.complete || img.naturalHeight === 0) {
+									handleError();
+								}
+							}, 100);
+						}
+						
+						// Also check after a longer delay to catch slow-loading images
+						setTimeout(() => {
+							if (!img.complete || img.naturalHeight === 0) {
+								handleError();
+							}
+						}, 500);
+					});
+				}
+			}, 100);
+		}
 	}
 
 	// Auto-size text in nogo description cards to fit perfectly
@@ -898,11 +1038,22 @@ function createHeroCard(item, index, category) {
 				shuffleBtn.disabled = true;
 				shuffleBtn.classList.add('is-rolling');
 				
-				// Get unique images for final result
-				const imageCount = getImages().length;
+				// Get unique images for final result - always use 8, not current count
+				const imageCount = 8;
 				// Illegal shuffle: use only crime_shuffle
 				const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
-				const finalImages = getUniqueRandomImages(illegalShufflePool, imageCount);
+				// Ensure we get exactly 8 unique images
+				let finalImages = getUniqueRandomImages(illegalShufflePool, Math.min(imageCount, illegalShufflePool.length));
+				// If we got fewer than 8, try to get more unique ones
+				if (finalImages.length < imageCount && illegalShufflePool.length >= imageCount) {
+					const used = new Set(finalImages.map(f => normalizeAssetPath(f)));
+					const remaining = illegalShufflePool.filter(img => !used.has(normalizeAssetPath(img)));
+					const needed = imageCount - finalImages.length;
+					if (remaining.length >= needed) {
+						const additional = getUniqueRandomImages(remaining, needed);
+						finalImages = [...finalImages, ...additional];
+					}
+				}
 				let finalImageIndex = 0;
 				
 				// Track images used during animation to prevent duplicates
@@ -951,21 +1102,31 @@ function createHeroCard(item, index, category) {
 							if (!spin._usedFinalImages) {
 								spin._usedFinalImages = new Set();
 							}
-							// Find next unused image from final set
-							let src = null;
-							let attempts = 0;
-							while (!src && attempts < finalImages.length * 2) {
-								if (finalImageIndex < finalImages.length) {
-									const candidate = normalizeAssetPath(finalImages[finalImageIndex]);
+							// Use images by index to ensure no duplicates - each image gets a unique one
+							// Ensure we have exactly 8 images
+							if (index < 8) {
+								let src = null;
+								// First try: use the pre-selected image at this index
+								if (index < finalImages.length) {
+									const candidate = normalizeAssetPath(finalImages[index]);
 									if (!spin._usedFinalImages.has(candidate)) {
 										src = candidate;
 										spin._usedFinalImages.add(src);
-										finalImageIndex++;
-									} else {
-										finalImageIndex++;
 									}
-								} else {
-									// If we've exhausted finalImages, find any unused from pool
+								}
+								// If that was already used, find next available from finalImages
+								if (!src) {
+									for (let i = 0; i < finalImages.length; i++) {
+										const candidate = normalizeAssetPath(finalImages[i]);
+										if (!spin._usedFinalImages.has(candidate)) {
+											src = candidate;
+											spin._usedFinalImages.add(src);
+											break;
+										}
+									}
+								}
+								// Last resort: find any unused from pool
+								if (!src) {
 									const remainingPool = illegalShufflePool.filter(imgPath => {
 										const normalized = normalizeAssetPath(imgPath);
 										return !spin._usedFinalImages.has(normalized);
@@ -973,30 +1134,42 @@ function createHeroCard(item, index, category) {
 									if (remainingPool.length > 0) {
 										src = normalizeAssetPath(remainingPool[Math.floor(Math.random() * remainingPool.length)]);
 										spin._usedFinalImages.add(src);
-									} else {
-										break; // No more unique images available
 									}
 								}
-								attempts++;
-							}
-							if (src) {
-								const alt = getCharacterAltFromSrc(src);
-								img.src = src;
-								img.alt = alt;
-								// Retry with different image if current one fails
-								img.onerror = () => {
-									spin._usedFinalImages.delete(src);
-									// Find an unused image from final set
-									const remainingFinalImages = finalImages.filter(finalImg => {
-										const normalized = normalizeAssetPath(finalImg);
-										return !spin._usedFinalImages.has(normalized);
-									});
-									if (remainingFinalImages.length > 0) {
-										const retrySrc = normalizeAssetPath(remainingFinalImages[0]);
-										spin._usedFinalImages.add(retrySrc);
-										img.src = retrySrc;
-									}
-								};
+								
+								if (src) {
+									const alt = getCharacterAltFromSrc(src);
+									img.src = src;
+									img.alt = alt;
+									img.style.display = '';
+									// Retry with different image if current one fails
+									img.onerror = () => {
+										spin._usedFinalImages.delete(src);
+										// Find an unused image from final set
+										const remainingFinalImages = finalImages.filter(finalImg => {
+											const normalized = normalizeAssetPath(finalImg);
+											return !spin._usedFinalImages.has(normalized);
+										});
+										if (remainingFinalImages.length > 0) {
+											const retrySrc = normalizeAssetPath(remainingFinalImages[0]);
+											spin._usedFinalImages.add(retrySrc);
+											img.src = retrySrc;
+											img.alt = getCharacterAltFromSrc(retrySrc);
+										} else {
+											// Last resort: find any unused from pool
+											const remainingPool = illegalShufflePool.filter(imgPath => {
+												const normalized = normalizeAssetPath(imgPath);
+												return !spin._usedFinalImages.has(normalized);
+											});
+											if (remainingPool.length > 0) {
+												const retrySrc = normalizeAssetPath(remainingPool[Math.floor(Math.random() * remainingPool.length)]);
+												spin._usedFinalImages.add(retrySrc);
+												img.src = retrySrc;
+												img.alt = getCharacterAltFromSrc(retrySrc);
+											}
+										}
+									};
+								}
 							}
 						}
 					});
@@ -4207,3 +4380,4 @@ if (document.readyState === 'loading') {
 } else {
 	init();
 }
+

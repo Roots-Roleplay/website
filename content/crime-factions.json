@@ -44,6 +44,23 @@
       "buyUrl": "https://kiiya.tebex.io/package/6685064",
       "image": "public/crime/crime_pit.png",
       "content": "Tief unter den Lichtern von Los Santos, mitten in La Mesa, gibt es einen Ort, den man nicht auf Karten findet – aber jeder kennt, der was zu verlieren hat.\n\nThe Pit ist kein Fitnessstudio, kein Boxverein und schon gar kein Sport.\n\nHier regieren Schweiß, Blut und Stolz.\n\nKeine Regeln. Kein Schutz. Kein Zurück.\n\nManchmal zwei, manchmal viele – im Kreis, im Chaos, unter Licht und Staub.\n\nHier geht es nicht um Trophäen, sondern um Respekt, um Ehre und um den Willen, stehen zu bleiben, wenn alle anderen schon liegen.\n\nDer Club ist roh, laut und ehrlich.\n\nSchöne Frauen, wütende Männer, schnelle Wetten und ein Publikum, das jeden Treffer spürt. Manche kommen, um zuzusehen. Andere, um sich zu beweisen.\n\nDoch keiner geht hier unverändert raus – The Pit bricht jeden, auf die eine oder andere Weise."
+    },
+    {
+      "id": "aod",
+      "title": "Angels of Death",
+      "tagline": "Angels Forever, Forever Angels.",
+      "videos": [
+        {
+          "youtubeId": "4CuEewf2gDo",
+          "buyUrl": "https://apollo-developments.tebex.io/package/5112882"
+        },
+        {
+          "youtubeId": "HscEVqIJ1Nk",
+          "buyUrl": "https://apollo-developments.tebex.io/package/5754568"
+        }
+      ],
+      "image": "public/crime/crime_aod.png",
+      "content": "Die Angels of Death Motorcycle Club (AoD MC) gehören zu den bekanntesten und zugleich gefürchtetsten Motorradclubs im Grand Theft Auto-Universum. Sie verkörpern die klassische 1%-Bikerkultur, wie sie aus amerikanischen Legenden hervorgegangen ist – eine Welt aus Freiheit, Gewalt, Loyalität und Gesetzlosigkeit. Im Laufe der GTA-Reihe haben die Angels of Death eine bedeutende Rolle gespielt, insbesondere als Gegenspieler des rivalisierenden Motorradclubs The Lost MC.\n\nDer Ursprung der Angels of Death liegt in den 1960er oder 1970er Jahren. In den Spielen werden sie als landesweit organisierter Motorradclub dargestellt, der in mehreren US-Bundesstaaten aktiv ist. Ihr Hauptsitz befindet sich in Liberty City, wo sie eine der ältesten und einflussreichsten Bikerorganisationen der Region bilden. Ihr Erkennungszeichen ist ein geflügelter Totenkopf auf rotem Hintergrund, der ihre Clubfarben Rot und Schwarz symbolisiert. Das Motto der Gang lautet \"Angels Forever, Forever Angels\" – ein Ausdruck absoluter Loyalität und unerschütterlicher Zugehörigkeit, wie man sie auch bei realen Outlaw-Clubs findet.\n\nLange Zeit war es still um die Angels of Death. Ihre Strukturen verschwanden weitgehend aus San Andreas, und nur wenige glaubten, dass sie je wieder eine Rolle spielen würden. Doch eines Tages fasste eine kleine Gruppe entschlossener Männer den Entschluss, dem Ruf der AoD erneut zu folgen und den Club wieder zum Leben zu erwecken.\n\nIn Harmony wagten sie ihre ersten Schritte, angeführt von einem erfolgreichen Geschäftsmann, der den Geist des alten Clubs wiederbeleben wollte. Schon bald verlagerten sie ihre Aktivitäten in die Stadt, um dort ein neues Territorium aufzubauen. Verstrickt in Drogenhandel, Waffenexport und das schillernde Nachtleben, gelang es ihnen, ihre Macht langsam, aber stetig zu erweitern.\n\nAuf dem Höhepunkt ihres Einflusses gerieten sie schließlich ins Visier der Executive. Von nun an bestand ihr Leben aus einem stetigen Katz-und-Maus-Spiel mit den Behörden – dem Sheriff's Department und dem Police Department. Ihr Ruf als brutale und skrupellose Bikergruppe eilte ihnen voraus und machte ihr Leben zugleich schwerer. Trotz aller Schwierigkeiten hielten sie an ihren Prinzipien fest und versuchten, im Schutz des Nachtlebens zu überleben und ihre Geschäfte aufrechtzuerhalten.\n\nSchließlich entstanden zwei Chapter des Clubs: eines in Harmony und eines im Tequi-la-la in Los Santos. Beide Abteilungen gingen ihren eigenen Geschäften nach, blieben jedoch durch ihre gemeinsame Geschichte, ihr Blut und ihr Zeichen – den geflügelten Totenkopf – für immer miteinander verbunden."
     }
   ]
 }
