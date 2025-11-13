@@ -48,7 +48,13 @@ const CATEGORY_CONFIG = {
 		getContent: (item) => item.description || '',
 		getMedia: (item) => {
 			if (Array.isArray(item.videos) && item.videos.length > 0 && item.videos[0].youtubeId) {
-				return { type: 'video', youtubeId: item.videos[0].youtubeId };
+				return { 
+					type: 'video', 
+					youtubeId: item.videos[0].youtubeId,
+					buyUrl: item.videos[0].buyUrl || null,
+					allVideos: item.videos,
+					videoIndex: 0
+				};
 			}
 
 			if (item.image) {
@@ -64,8 +70,25 @@ const CATEGORY_CONFIG = {
 		getTagline: (item) => item.tagline || '',
 		getContent: (item) => item.content || '',
 		getMedia: (item) => {
+			// Check for videos array first (like legal items)
+			if (Array.isArray(item.videos) && item.videos.length > 0 && item.videos[0].youtubeId) {
+				return { 
+					type: 'video', 
+					youtubeId: item.videos[0].youtubeId,
+					buyUrl: item.videos[0].buyUrl || item.buyUrl || null,
+					allVideos: item.videos,
+					videoIndex: 0
+				};
+			}
+			// Fallback to videoId property
 			if (item.videoId) {
-				return { type: 'video', youtubeId: item.videoId };
+				return { 
+					type: 'video', 
+					youtubeId: item.videoId,
+					buyUrl: item.buyUrl || null,
+					allVideos: null,
+					videoIndex: 0
+				};
 			}
 			if (item.image) {
 				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.title || 'Crew' };
@@ -107,6 +130,45 @@ const MAX_COLLAGE_ITEMS = Math.max(...COLLAGE_LAYOUTS.map((layout) => layout.len
 const COLLAGE_SIZE_SCALE = 0.79;
 
 const RANDOM_CHARACTER_IMAGES = Array.from({ length: 100 }, (_, index) => `public/characters_random/${index + 1}.png`);
+
+// Crime character images - add new images here as they're added to the folder
+const CRIME_CHARACTER_IMAGES = [
+	'public/characters_crime/11.png',
+	'public/characters_crime/12.png',
+	'public/characters_crime/13.png',
+	'public/characters_crime/14.png',
+	'public/characters_crime/15.png',
+	'public/characters_crime/16.png',
+	'public/characters_crime/17.png',
+	'public/characters_crime/20.png',
+	'public/characters_crime/21.png',
+	'public/characters_crime/23.png',
+	'public/characters_crime/24.png',
+	'public/characters_crime/25.png',
+	'public/characters_crime/29.png',
+	'public/characters_crime/30.png',
+	'public/characters_crime/35.png',
+	'public/characters_crime/36.png',
+	'public/characters_crime/37.png',
+	'public/characters_crime/38.png',
+	'public/characters_crime/40.png',
+	'public/characters_crime/84.png',
+	'public/characters_crime/84awd.png',
+	'public/characters_crime/91.png',
+	'public/characters_crime/92.png'
+];
+
+// Helper function to get unique random images from pool
+function getUniqueRandomImages(pool, count) {
+	const shuffled = [...pool];
+	// Fisher-Yates shuffle
+	for (let i = shuffled.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+	}
+	// Return unique images up to the requested count
+	return shuffled.slice(0, Math.min(count, shuffled.length));
+}
 
 function pickRandomCharacterImage() {
 	return RANDOM_CHARACTER_IMAGES[Math.floor(Math.random() * RANDOM_CHARACTER_IMAGES.length)];
@@ -166,7 +228,7 @@ async function loadContent() {
 		};
 		state.crimeFactions = [illegalMysteryCard, ...state.crimeFactions];
 
-		// Inject a non-interactive placeholder card at the front of the legal rail
+		// Inject a shuffling placeholder card at the front of the legal rail
 		const legalMysteryCard = {
 			id: 'mystery',
 			displayName: 'Dein Weg',
@@ -368,7 +430,20 @@ function renderHeroCards(dataset, category = state.currentCategory) {
 	const initialIndex = clampHeroIndex(state.currentIndex);
 	state.currentIndex = initialIndex;
 	const initialAlign = initialIndex === 0 ? 'start' : 'center';
-	focusHeroRailIndex(initialIndex, { smooth: false, align: initialAlign });
+	
+	// Use double requestAnimationFrame to ensure layout is complete
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			const stack = getHeroRail();
+			if (stack) {
+				// Reset to 0 first
+				stack.scrollLeft = 0;
+				// Always call focusHeroRailIndex to ensure highlighting works
+				focusHeroRailIndex(initialIndex, { smooth: false, align: initialAlign });
+			}
+		});
+	});
+	
 	setupHeroRailControls();
 }
 
@@ -396,13 +471,8 @@ function createHeroCard(item, index, category) {
 		: '';
 
 	const buildIllegalPlaceholder = () => {
-		const pool = RANDOM_CHARACTER_IMAGES.slice();
-		for (let i = pool.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[pool[i], pool[j]] = [pool[j], pool[i]];
-		}
-		const faceCount = 12;
-		const faces = pool.slice(0, faceCount);
+		const faceCount = Math.min(12, CRIME_CHARACTER_IMAGES.length);
+		const faces = getUniqueRandomImages(CRIME_CHARACTER_IMAGES, faceCount);
 		const grid = faces
 			.map((src) => {
 				const alt = getCharacterAltFromSrc(src);
@@ -467,9 +537,21 @@ function createHeroCard(item, index, category) {
 
 			const getCells = () => Array.from(grid.querySelectorAll('.illegal-placeholder__cell'));
 			const getImages = () => Array.from(grid.querySelectorAll('.illegal-placeholder__image'));
-			const randomImage = () => {
-				const src = pickRandomCharacterImage();
-				return { src, alt: getCharacterAltFromSrc(src) };
+			
+			// Track used images to prevent duplicates
+			let usedImages = new Set();
+			const getAvailableImages = () => {
+				const currentImages = getImages().map(img => img.src);
+				usedImages = new Set(currentImages);
+				return CRIME_CHARACTER_IMAGES.filter(img => !usedImages.has(img));
+			};
+			
+			const getRandomUniqueImage = (availablePool) => {
+				if (availablePool.length === 0) {
+					// If all images are used, reset and use all images
+					return CRIME_CHARACTER_IMAGES[Math.floor(Math.random() * CRIME_CHARACTER_IMAGES.length)];
+				}
+				return availablePool[Math.floor(Math.random() * availablePool.length)];
 			};
 
 			const clearSelection = () => {
@@ -484,12 +566,31 @@ function createHeroCard(item, index, category) {
 				clearSelection();
 				shuffleBtn.disabled = true;
 				shuffleBtn.classList.add('is-rolling');
+				
+				// Get unique images for final result
+				const imageCount = getImages().length;
+				const finalImages = getUniqueRandomImages(CRIME_CHARACTER_IMAGES, imageCount);
+				let finalImageIndex = 0;
+				
 				let step = 0;
 				const spin = () => {
-					getImages().forEach((img) => {
-						const { src, alt } = randomImage();
-						img.src = src;
-						img.alt = alt;
+					const availablePool = getAvailableImages();
+					getImages().forEach((img, index) => {
+						// During animation, use random images
+						// On final step, use the pre-selected unique images
+						if (step < cadence.length - 1) {
+							const src = getRandomUniqueImage(availablePool);
+							const alt = getCharacterAltFromSrc(src);
+							img.src = src;
+							img.alt = alt;
+						} else {
+							// Final step: use unique images
+							const src = finalImages[finalImageIndex % finalImages.length];
+							const alt = getCharacterAltFromSrc(src);
+							img.src = src;
+							img.alt = alt;
+							finalImageIndex++;
+						}
 					});
 					step++;
 					if (step < cadence.length) {
@@ -509,7 +610,11 @@ function createHeroCard(item, index, category) {
 		}
 	} else if (isPlaceholder && category === 'legal' && !item?.isHint) {
 		const maxLevels = 3; // initial grid + two deeper splits (64 max panels)
-		const getRandomCharacterImage = () => pickRandomCharacterImage();
+		// Combine both crime and random character images for legal section
+		const legalCharacterPool = [...CRIME_CHARACTER_IMAGES, ...RANDOM_CHARACTER_IMAGES];
+		const getRandomCharacterImage = () => {
+			return legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)];
+		};
 		const getRandomCharacterAlt = (src) => getCharacterAltFromSrc(src);
 
 		const wireGridHover = () => {};
@@ -673,7 +778,12 @@ function focusHeroRailIndex(index, { smooth = true, pulse = false, align = 'cent
 
 	let targetLeft;
 	if (align === 'start') {
-		targetLeft = Math.max(0, card.offsetLeft);
+		// If index is 0, always scroll to 0, otherwise use card position
+		if (clamped === 0) {
+			targetLeft = 0;
+		} else {
+			targetLeft = Math.max(0, card.offsetLeft);
+		}
 	} else {
 		targetLeft = Math.max(0, card.offsetLeft - (stack.clientWidth - card.clientWidth) / 2);
 	}
@@ -986,13 +1096,26 @@ function initHeroRailRandom() {
 				const pulse = isFinal || step > totalSteps - 3;
 				jumpHeroRailToIndex(index, { smooth: step !== 0, pulse, align: 'center' });
 				if (isFinal) {
-					tagHeroCard(index, 'hero-card--random-lock', 1120);
+					const finalIndex = targetIndex; // Use the targetIndex variable
+					tagHeroCard(finalIndex, 'hero-card--random-lock', 1120);
 					document.body.classList.add('is-random-lock');
 					const revealTimeout = setTimeout(() => {
 						document.body.classList.remove('is-random-rolling');
 						document.body.classList.add('is-random-reveal');
-						highlightHeroCard(index);
+						highlightHeroCard(finalIndex);
 						setTimeout(() => document.body.classList.remove('is-random-reveal'), 900);
+						
+						// Open the detail page after reveal animation
+						setTimeout(() => {
+							const finalDataset = getDataset(state.currentCategory);
+							if (finalDataset && finalDataset.length > 0 && finalIndex < finalDataset.length) {
+								const selectedItem = finalDataset[finalIndex];
+								// Only open if it's not a placeholder
+								if (!selectedItem.placeholder) {
+									openDetail(state.currentCategory, finalIndex);
+								}
+							}
+						}, 1000); // Delay to let reveal animation complete
 					}, Math.min(460, delay + 160));
 					state.heroRandomSpinTimeouts.push(revealTimeout);
 				} else {
@@ -1086,7 +1209,9 @@ function spawnFloatingLogos() {
 		return array;
 	};
 
-	const pool = shuffleArray(RANDOM_CHARACTER_IMAGES.slice());
+	// Combine both crime and random character images for polaroids
+	const combinedPool = [...CRIME_CHARACTER_IMAGES, ...RANDOM_CHARACTER_IMAGES];
+	const pool = shuffleArray(combinedPool.slice());
 	let cursor = 0;
 	const pullNextImage = () => {
 		if (cursor >= pool.length) {
@@ -1183,33 +1308,33 @@ function spawnFloatingLogos() {
 }
 
 function handleCardTiltMove(e) {
-	const cards = document.querySelectorAll('.hero-card');
-	cards.forEach((card) => {
-		const rect = card.getBoundingClientRect();
-		const inBounds = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
-		if (!inBounds) return;
-		const cx = rect.left + rect.width / 2;
-		const cy = rect.top + rect.height / 2;
-		const dx = (e.clientX - cx) / rect.width; // -0.5..0.5
-		const dy = (e.clientY - cy) / rect.height;
-		const stack = card.closest('.hero-card-stack');
-		const max = stack && stack.classList.contains('as-rail') ? 4 : 8;
-		card.style.setProperty('--tiltY', `${(-dx * max).toFixed(2)}deg`);
-		card.style.setProperty('--tiltX', `${(dy * max).toFixed(2)}deg`);
-	});
+    const cards = document.querySelectorAll('.hero-card, .detail-hero-card');
+    cards.forEach((card) => {
+        const rect = card.getBoundingClientRect();
+        const inBounds = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+        if (!inBounds) return;
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = (e.clientX - cx) / rect.width; // -0.5..0.5
+        const dy = (e.clientY - cy) / rect.height;
+        const stack = card.closest('.hero-card-stack');
+        const max = stack && stack.classList.contains('as-rail') ? 4 : 8;
+        card.style.setProperty('--tiltY', `${(-dx * max).toFixed(2)}deg`);
+        card.style.setProperty('--tiltX', `${(dy * max).toFixed(2)}deg`);
+    });
 }
 
 function resetCardTilt(e) {
-	const target = e?.target;
-	if (target && target.classList && target.classList.contains('hero-card')) {
-		target.style.setProperty('--tiltX', '0deg');
-		target.style.setProperty('--tiltY', '0deg');
-		return;
-	}
-	document.querySelectorAll('.hero-card').forEach((card) => {
-		card.style.setProperty('--tiltX', '0deg');
-		card.style.setProperty('--tiltY', '0deg');
-	});
+    const target = e?.target;
+    if (target && target.classList && (target.classList.contains('hero-card') || target.classList.contains('detail-hero-card'))) {
+        target.style.setProperty('--tiltX', '0deg');
+        target.style.setProperty('--tiltY', '0deg');
+        return;
+    }
+    document.querySelectorAll('.hero-card, .detail-hero-card').forEach((card) => {
+        card.style.setProperty('--tiltX', '0deg');
+        card.style.setProperty('--tiltY', '0deg');
+    });
 }
 
 // Hold-to-open removed; function kept as a no-op to preserve references
@@ -1218,6 +1343,20 @@ function attachHoldHandler() {}
 // ==================== DETAIL OVERLAY ====================
 
 function openDetail(category, index) {
+	const detailBg = document.getElementById('detailDynamicBg');
+	if (detailBg) {
+		// Spawn flying logos for legal category, fog and damage for illegal
+		if (category !== 'illegal') {
+			// Clear any fog/damage effects first
+			detailBg.querySelectorAll('.fog-container, .crime-damage-container').forEach(el => el.remove());
+			spawnDetailFlyingLogos(detailBg);
+		} else {
+			// Clear any flying logos first
+			detailBg.querySelectorAll('.detail-flying-logo').forEach(el => el.remove());
+			spawnFogEffect(detailBg);
+			spawnCrimeDamage(detailBg);
+		}
+	}
 	const config = CATEGORY_CONFIG[category];
 	if (!config) return;
 
@@ -1227,9 +1366,22 @@ function openDetail(category, index) {
 	const safeIndex = Math.max(0, Math.min(dataset.length - 1, index));
 	const item = dataset[safeIndex];
 	if (!item) return;
+	
+	// Don't open detail page for placeholder items
+	if (item.placeholder) return;
 
 	state.currentCategory = category;
 	state.currentIndex = safeIndex;
+	
+	// Add class to crime-detail for illegal category
+	const detailEl = document.getElementById('detailOverlay') || document.querySelector('.crime-detail');
+	if (detailEl) {
+		if (category === 'illegal') {
+			detailEl.classList.add('is-illegal');
+		} else {
+			detailEl.classList.remove('is-illegal');
+		}
+	}
 
 	renderDetail(item, category);
 	updateDetailNav();
@@ -1243,16 +1395,89 @@ function renderDetail(item, category) {
 
 	const titleEl = document.getElementById('detailTitle');
 	const taglineEl = document.getElementById('detailTagline');
-	const contentEl = document.getElementById('detailContent');
+	const contentEl = document.querySelector('#detailContent .content-text-body');
+	const logoEl = document.getElementById('detailCompanyLogo');
 
 	if (titleEl) titleEl.textContent = config.getTitle(item);
-	if (taglineEl) taglineEl.textContent = config.getTagline(item);
+	if (taglineEl) {
+		const tagline = config.getTagline(item);
+		if (tagline) {
+			taglineEl.textContent = tagline;
+			taglineEl.style.display = 'block';
+			// Scale tagline to fit on one line
+			setTimeout(() => {
+				scaleTaglineToFit(taglineEl);
+			}, 100);
+		} else {
+			taglineEl.style.display = 'none';
+		}
+	}
 	if (contentEl) contentEl.innerHTML = formatParagraphs(config.getContent(item));
+	
+	// Set company logo (hide for illegal category)
+	if (logoEl) {
+		if (category === 'illegal') {
+			logoEl.style.display = 'none';
+		} else {
+			const logoSrc = getHeroCardLogo(item, category);
+			if (logoSrc) {
+				logoEl.src = logoSrc;
+				logoEl.alt = config.getTitle(item) + ' Logo';
+				logoEl.style.display = 'block';
+			} else {
+				logoEl.style.display = 'none';
+			}
+		}
+	}
+	
+	// Set company character (hide for illegal category)
+	const characterEl = document.getElementById('detailCharacter');
+	if (characterEl) {
+		if (category === 'illegal') {
+			characterEl.style.display = 'none';
+		} else {
+			const characterSrc = getHeroCardImage(item, category);
+			if (characterSrc) {
+				characterEl.src = characterSrc;
+				characterEl.alt = config.getTitle(item) + ' Character';
+				characterEl.style.display = 'block';
+			} else {
+				characterEl.style.display = 'none';
+			}
+		}
+	}
 
 	renderDetailMedia(item, category);
 
     const collageItems = config.buildCollage(item, category);
     renderDetailCollage(collageItems, item.id || config.getTitle(item), item, category);
+    const heroImage = getHeroCardImage(item, category);
+    const heroLogo = getHeroCardLogo(item, category);
+    const title = CATEGORY_CONFIG[category].getTitle(item);
+    const tagline = CATEGORY_CONFIG[category].getTagline(item);
+    mountInlineHeroCard({ category, heroImage, heroLogo, title, tagline });
+}
+
+function mountInlineHeroCard({ category = state.currentCategory, heroImage = '', heroLogo = '', title = '', tagline = '' } = {}) {
+    const left = document.querySelector('.crime-detail-left');
+    if (!left) return;
+    const media = document.getElementById('detailMedia');
+    if (!media) return;
+    let row = left.querySelector('.detail-media-row');
+    if (!row) {
+        row = document.createElement('div');
+        row.className = 'detail-media-row';
+        const parent = media.parentElement || left;
+        if (parent) parent.insertBefore(row, media);
+        row.appendChild(media);
+    }
+    const existing = row.querySelector('.detail-inline-hero');
+    if (existing) existing.remove();
+    const card = document.createElement('article');
+    card.className = `detail-hero-card detail-hero-card--${category === 'illegal' ? 'illegal' : 'legal'} detail-inline-hero`;
+    card.dataset.category = category;
+    
+    row.appendChild(card);
 }
 
 function renderDetailMedia(item, category) {
@@ -1268,7 +1493,10 @@ function renderDetailMedia(item, category) {
 	if (media.type === 'video' && media.youtubeId) {
 		mountDetailVideoPlayer({
 			youtubeId: media.youtubeId,
-			title: config.getTitle(item)
+			title: config.getTitle(item),
+			buyUrl: media.buyUrl || null,
+			allVideos: media.allVideos || null,
+			videoIndex: media.videoIndex || 0
 		});
 	} else if (media.type === 'image' && media.src) {
 		const img = document.createElement('img');
@@ -1350,7 +1578,7 @@ function destroyDetailVideoPlayer() {
 	state.detailVideo = null;
 }
 
-function mountDetailVideoPlayer({ youtubeId, title }) {
+function mountDetailVideoPlayer({ youtubeId, title, buyUrl, allVideos = null, videoIndex = 0 }) {
 	const container = document.getElementById('detailMedia');
 	if (!container || !youtubeId) return;
 
@@ -1360,15 +1588,24 @@ function mountDetailVideoPlayer({ youtubeId, title }) {
 	host.id = hostId;
 
 	container.appendChild(host);
-	const controls = buildDetailVideoControls();
+	const controls = buildDetailVideoControls(buyUrl, allVideos, videoIndex);
 	container.appendChild(controls.element);
 
+	// Get buyUrl from current video if multiple videos exist
+	let currentBuyUrl = buyUrl;
+	if (allVideos && allVideos.length > videoIndex && allVideos[videoIndex]) {
+		currentBuyUrl = allVideos[videoIndex].buyUrl || buyUrl || null;
+	}
+	
 	const detailVideoState = {
 		player: null,
 		playerHost: host,
 		wrapper: container,
 		currentVideoId: youtubeId,
 		currentTitle: title || '',
+		buyUrl: currentBuyUrl,
+		allVideos: allVideos || null,
+		currentVideoIndex: videoIndex,
 		hideTimer: null,
 		handlers: null,
 		controls,
@@ -1378,6 +1615,23 @@ function mountDetailVideoPlayer({ youtubeId, title }) {
 
 	state.detailVideo = detailVideoState;
 	wireDetailVideoControls(detailVideoState);
+	
+	// Always wire video navigation (buttons will be disabled if only one video)
+	if (controls.element._videoNav) {
+		const { prevBtn, nextBtn } = controls.element._videoNav;
+		
+		prevBtn.addEventListener('click', () => {
+			if (detailVideoState.allVideos && detailVideoState.allVideos.length > 1 && detailVideoState.currentVideoIndex > 0) {
+				switchDetailVideo(detailVideoState, -1);
+			}
+		});
+		
+		nextBtn.addEventListener('click', () => {
+			if (detailVideoState.allVideos && detailVideoState.allVideos.length > 1 && detailVideoState.currentVideoIndex < detailVideoState.allVideos.length - 1) {
+				switchDetailVideo(detailVideoState, 1);
+			}
+		});
+	}
 
 	const initialisePlayer = () => {
 		detailVideoState.player = new YT.Player(hostId, {
@@ -1402,7 +1656,118 @@ function mountDetailVideoPlayer({ youtubeId, title }) {
 	queueYouTubePlayerInit(initialisePlayer);
 }
 
-function buildDetailVideoControls() {
+function switchDetailVideo(detailVideoState, direction) {
+	if (!detailVideoState.allVideos || detailVideoState.allVideos.length <= 1) {
+		// Still update UI even if navigation is disabled
+		return;
+	}
+	
+	const newIndex = detailVideoState.currentVideoIndex + direction;
+	if (newIndex < 0 || newIndex >= detailVideoState.allVideos.length) return;
+	
+	const newVideo = detailVideoState.allVideos[newIndex];
+	if (!newVideo || !newVideo.youtubeId) return;
+	
+	// Update state
+	detailVideoState.currentVideoIndex = newIndex;
+	detailVideoState.currentVideoId = newVideo.youtubeId;
+	detailVideoState.buyUrl = newVideo.buyUrl || null;
+	
+	// Update video player
+	if (detailVideoState.player) {
+		try {
+			detailVideoState.player.loadVideoById(newVideo.youtubeId);
+		} catch (error) {
+			console.warn('Failed to switch video:', error);
+		}
+	}
+	
+	// Update UI
+	const controls = detailVideoState.controls?.element;
+	if (controls && controls._videoNav) {
+		const { prevBtn, nextBtn, counter } = controls._videoNav;
+		
+		// Update counter
+		if (counter) {
+			counter.textContent = `${newIndex + 1} / ${detailVideoState.allVideos.length}`;
+		}
+		
+		// Update button states
+		const videoCount = detailVideoState.allVideos ? detailVideoState.allVideos.length : 1;
+		prevBtn.disabled = videoCount <= 1 || newIndex === 0;
+		nextBtn.disabled = videoCount <= 1 || newIndex === videoCount - 1;
+	}
+	
+	// Update buy link
+	const buyBtn = controls?.querySelector('.video-buy-link');
+	if (buyBtn) {
+		if (detailVideoState.buyUrl) {
+			buyBtn.href = detailVideoState.buyUrl;
+			buyBtn.style.display = '';
+		} else {
+			buyBtn.style.display = 'none';
+		}
+	}
+	
+	// Show controls briefly
+	showDetailVideoControls(detailVideoState, { autoHide: true });
+}
+
+// Helper function to create SVG icons
+function createSVGIcon(type) {
+	const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+	svg.setAttribute('viewBox', '0 0 24 24');
+	svg.setAttribute('fill', 'none');
+	svg.setAttribute('stroke', 'currentColor');
+	svg.setAttribute('stroke-width', '2');
+	svg.setAttribute('stroke-linecap', 'round');
+	svg.setAttribute('stroke-linejoin', 'round');
+	
+	let path;
+	switch(type) {
+		case 'mute':
+			path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			path.setAttribute('d', 'M11 5L6 9H2v6h4l5 4V5z');
+			svg.appendChild(path);
+			const muteX1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+			muteX1.setAttribute('x1', '23');
+			muteX1.setAttribute('y1', '9');
+			muteX1.setAttribute('x2', '17');
+			muteX1.setAttribute('y2', '15');
+			svg.appendChild(muteX1);
+			const muteX2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+			muteX2.setAttribute('x1', '17');
+			muteX2.setAttribute('y1', '9');
+			muteX2.setAttribute('x2', '23');
+			muteX2.setAttribute('y2', '15');
+			svg.appendChild(muteX2);
+			break;
+		case 'unmute':
+			path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			path.setAttribute('d', 'M11 5L6 9H2v6h4l5 4V5z');
+			svg.appendChild(path);
+			const unmutePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			unmutePath.setAttribute('d', 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
+			svg.appendChild(unmutePath);
+			break;
+		case 'video':
+			path = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+			path.setAttribute('x', '2');
+			path.setAttribute('y', '6');
+			path.setAttribute('width', '18');
+			path.setAttribute('height', '12');
+			path.setAttribute('rx', '2');
+			svg.appendChild(path);
+			const videoPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			videoPath.setAttribute('d', 'm10 9 5 3-5 3V9z');
+			svg.appendChild(videoPath);
+			break;
+	}
+	
+	return svg;
+}
+
+function buildDetailVideoControls(buyUrl = null, allVideos = null, videoIndex = 0) {
 	const element = document.createElement('div');
 	element.className = 'video-controls';
 	element.id = 'detailVideoControls';
@@ -1416,7 +1781,7 @@ function buildDetailVideoControls() {
 	const muteIcon = document.createElement('span');
 	muteIcon.className = 'control-btn__icon';
 	muteIcon.setAttribute('aria-hidden', 'true');
-	muteIcon.textContent = '🔇';
+	muteIcon.appendChild(createSVGIcon('mute'));
 	muteBtn.appendChild(muteIcon);
 
 	const volumeWrapper = document.createElement('div');
@@ -1429,10 +1794,85 @@ function buildDetailVideoControls() {
 	volumeSlider.max = '100';
 	volumeSlider.step = '5';
 	volumeSlider.value = '0';
+	volumeSlider.style.setProperty('--volume-percent', '0%');
 	volumeSlider.setAttribute('aria-label', 'Lautstärke');
 
 	volumeWrapper.append(volumeSlider);
-	element.append(muteBtn, volumeWrapper);
+	
+	// Always add video counter and navigation (show 1/1 for single videos)
+	const videoCount = (allVideos && Array.isArray(allVideos) && allVideos.length > 0) ? allVideos.length : 1;
+	const currentIndex = Math.max(0, Math.min(videoIndex, videoCount - 1));
+	const videoNav = document.createElement('div');
+	videoNav.className = 'video-nav';
+	
+	// Previous video button
+	const prevBtn = document.createElement('button');
+	prevBtn.type = 'button';
+	prevBtn.className = 'video-nav-btn video-nav-btn--prev';
+	prevBtn.setAttribute('aria-label', 'Vorheriges Video');
+	prevBtn.innerHTML = '<span aria-hidden="true">‹</span>';
+	prevBtn.disabled = videoCount <= 1 || currentIndex === 0;
+	
+	// Video counter (always show, even for single videos)
+	const videoCounter = document.createElement('div');
+	videoCounter.className = 'video-counter';
+	videoCounter.setAttribute('aria-label', 'Video-Anzahl');
+	const counterIcon = document.createElement('span');
+	counterIcon.className = 'video-counter__icon';
+	counterIcon.appendChild(createSVGIcon('video'));
+	const counterText = document.createElement('span');
+	counterText.className = 'video-counter__text';
+	counterText.textContent = `${currentIndex + 1} / ${videoCount}`;
+	videoCounter.appendChild(counterIcon);
+	videoCounter.appendChild(counterText);
+	
+	// Next video button
+	const nextBtn = document.createElement('button');
+	nextBtn.type = 'button';
+	nextBtn.className = 'video-nav-btn video-nav-btn--next';
+	nextBtn.setAttribute('aria-label', 'Nächstes Video');
+	nextBtn.innerHTML = '<span aria-hidden="true">›</span>';
+	nextBtn.disabled = videoCount <= 1 || currentIndex === videoCount - 1;
+	
+	videoNav.appendChild(prevBtn);
+	videoNav.appendChild(videoCounter);
+	videoNav.appendChild(nextBtn);
+	
+	// Store references for later updates
+	element._videoNav = {
+		prevBtn,
+		nextBtn,
+		counter: videoCounter.querySelector('.video-counter__text')
+	};
+
+	// Add buy link button if buyUrl exists (use current video's buyUrl)
+	const currentBuyUrl = allVideos && allVideos.length > videoIndex && allVideos[videoIndex] 
+		? (allVideos[videoIndex].buyUrl || buyUrl) 
+		: buyUrl;
+	
+	let buyLinkWrapper = null;
+	if (currentBuyUrl) {
+		buyLinkWrapper = document.createElement('div');
+		buyLinkWrapper.className = 'video-buy-link-wrapper';
+		
+		const buyBtn = document.createElement('a');
+		buyBtn.href = currentBuyUrl;
+		buyBtn.target = '_blank';
+		buyBtn.rel = 'noopener noreferrer';
+		buyBtn.className = 'video-buy-link';
+		buyBtn.innerHTML = `
+			<span class="video-buy-link__icon">❤️</span>
+			<span class="video-buy-link__text">We love this Creator</span>
+		`;
+		
+		buyLinkWrapper.appendChild(buyBtn);
+	}
+	
+	// Append all elements in order: mute, volume, buy link (if exists), video nav (always)
+	const elementsToAppend = [muteBtn, volumeWrapper];
+	if (buyLinkWrapper) elementsToAppend.push(buyLinkWrapper);
+	elementsToAppend.push(videoNav);
+	element.append(...elementsToAppend);
 
 	return {
 		element,
@@ -1492,6 +1932,12 @@ function wireDetailVideoControls(detailVideoState) {
 		const volume = Number.isFinite(inputValue) ? clamp(inputValue, 0, 100) : 0;
 		const player = state.detailVideo?.player;
 		detailVideoState.lastVolume = volume > 0 ? volume : detailVideoState.lastVolume;
+		
+		// Update CSS variable for progress visualization
+		if (event?.target) {
+			event.target.style.setProperty('--volume-percent', `${volume}%`);
+		}
+		
 		if (player) {
 			try {
 				player.setVolume(volume);
@@ -1527,14 +1973,22 @@ function updateDetailVideoUi(detailVideoState, { muted, volume } = {}) {
 
 	if (typeof volume === 'number' && Number.isFinite(volume)) {
 		const clamped = clamp(Math.round(volume), 0, 100);
-		if (controls.volumeSlider) controls.volumeSlider.value = String(clamped);
+		if (controls.volumeSlider) {
+			controls.volumeSlider.value = String(clamped);
+			// Update CSS variable for progress visualization
+			controls.volumeSlider.style.setProperty('--volume-percent', `${clamped}%`);
+		}
 		if (clamped > 0) {
 			detailVideoState.lastVolume = clamped;
 		}
 	}
 
 	const isMuted = typeof muted === 'boolean' ? muted : Number(controls.volumeSlider?.value || 0) === 0;
-	if (controls.muteIcon) controls.muteIcon.textContent = isMuted ? '🔇' : '🔊';
+	if (controls.muteIcon) {
+		// Replace SVG icon based on mute state
+		controls.muteIcon.innerHTML = '';
+		controls.muteIcon.appendChild(createSVGIcon(isMuted ? 'mute' : 'unmute'));
+	}
 	if (controls.muteBtn) {
 		controls.muteBtn.setAttribute('aria-label', isMuted ? 'Ton einschalten' : 'Ton stummschalten');
 		controls.muteBtn.dataset.state = isMuted ? 'muted' : 'unmuted';
@@ -1635,7 +2089,7 @@ function queueCollageRealign() {
 
 function updateDetailNav() {
 	const dataset = getDataset(state.currentCategory);
-	const nav = document.getElementById('crimeNav');
+	const nav = document.getElementById('crimeDetailNav') || document.getElementById('crimeNav');
 	if (!nav) return;
 
 	if (!dataset || dataset.length <= 1) {
@@ -1644,22 +2098,115 @@ function updateDetailNav() {
 	}
 
 	nav.hidden = false;
-	const total = dataset.length;
-	const index = state.currentIndex;
-	const prevIndex = (index - 1 + total) % total;
-	const nextIndex = (index + 1) % total;
-
+	
+	// Filter out placeholder items for counting
+	const realItems = dataset.filter(item => !item.placeholder);
+	const total = realItems.length;
+	
 	const counter = document.getElementById('crimeNavCounter');
 	const nextTitle = document.getElementById('crimeNavNextTitle');
 	const prevTitle = document.getElementById('crimeNavPrevTitle');
-	const statusLabel = document.getElementById('crimeNavStatusLabel');
 	const prevBtn = document.getElementById('crimePrev');
 	const nextBtn = document.getElementById('crimeNext');
+	
+	// Calculate current position among real items only
+	const currentItem = dataset[state.currentIndex];
+	if (!currentItem || currentItem.placeholder) {
+		// If current item is placeholder, find nearest real item
+		let realIndex = 0;
+		for (let i = 0; i < dataset.length; i++) {
+			if (!dataset[i].placeholder) {
+				realIndex++;
+				if (i >= state.currentIndex) break;
+			}
+		}
+		if (counter) {
+			counter.textContent = `${realIndex} / ${total}`;
+		}
+		return;
+	}
+	
+	// Count how many real items come before current index
+	let realItemPosition = 0;
+	for (let i = 0; i <= state.currentIndex; i++) {
+		if (!dataset[i].placeholder) {
+			realItemPosition++;
+		}
+	}
+	
+	const index = state.currentIndex;
+	
+	// Find next non-placeholder item
+	let nextIndex = (index + 1) % dataset.length;
+	let nextAttempts = 0;
+	while (dataset[nextIndex] && dataset[nextIndex].placeholder && nextAttempts < dataset.length) {
+		nextIndex = (nextIndex + 1) % dataset.length;
+		nextAttempts++;
+	}
+	
+	// Find prev non-placeholder item
+	let prevIndex = (index - 1 + dataset.length) % dataset.length;
+	let prevAttempts = 0;
+	while (dataset[prevIndex] && dataset[prevIndex].placeholder && prevAttempts < dataset.length) {
+		prevIndex = (prevIndex - 1 + dataset.length) % dataset.length;
+		prevAttempts++;
+	}
 
-	if (counter) counter.textContent = `${index + 1} / ${total}`;
-	if (nextTitle) nextTitle.textContent = CATEGORY_CONFIG[state.currentCategory].getTitle(dataset[nextIndex]);
-	if (prevTitle) prevTitle.textContent = CATEGORY_CONFIG[state.currentCategory].getTitle(dataset[prevIndex]);
-	if (statusLabel) statusLabel.textContent = 'Weiter zu';
+	if (counter) {
+		counter.textContent = `${realItemPosition} / ${total}`;
+	}
+	
+	const nextTitleText = dataset[nextIndex] && !dataset[nextIndex].placeholder 
+		? CATEGORY_CONFIG[state.currentCategory].getTitle(dataset[nextIndex])
+		: '';
+	const prevTitleText = dataset[prevIndex] && !dataset[prevIndex].placeholder
+		? CATEGORY_CONFIG[state.currentCategory].getTitle(dataset[prevIndex])
+		: '';
+	
+	// Update next button logo (hide for illegal category)
+	const nextLogoEl = document.getElementById('crimeNavNextLogo');
+	if (nextLogoEl) {
+		if (state.currentCategory === 'illegal') {
+			nextLogoEl.style.display = 'none';
+		} else {
+			const nextLogo = getHeroCardLogo(dataset[nextIndex], state.currentCategory);
+			if (nextLogo) {
+				nextLogoEl.src = nextLogo;
+				nextLogoEl.alt = nextTitleText + ' Logo';
+				nextLogoEl.style.display = 'block';
+			} else {
+				nextLogoEl.style.display = 'none';
+			}
+		}
+	}
+	
+	// Update prev button logo (hide for illegal category)
+	const prevLogoEl = document.getElementById('crimeNavPrevLogo');
+	if (prevLogoEl) {
+		if (state.currentCategory === 'illegal') {
+			prevLogoEl.style.display = 'none';
+		} else {
+			const prevLogo = getHeroCardLogo(dataset[prevIndex], state.currentCategory);
+			if (prevLogo) {
+				prevLogoEl.src = prevLogo;
+				prevLogoEl.alt = prevTitleText + ' Logo';
+				prevLogoEl.style.display = 'block';
+			} else {
+				prevLogoEl.style.display = 'none';
+			}
+		}
+	}
+	
+	if (nextTitle) {
+		nextTitle.textContent = nextTitleText || '—';
+		nextTitle.style.display = nextTitleText ? 'block' : 'none';
+	}
+	
+	if (prevTitle) {
+		prevTitle.textContent = prevTitleText || '—';
+		prevTitle.style.display = prevTitleText ? 'block' : 'none';
+	}
+	
 	if (prevBtn) prevBtn.dataset.target = String(prevIndex);
 	if (nextBtn) nextBtn.dataset.target = String(nextIndex);
 }
@@ -1667,8 +2214,23 @@ function updateDetailNav() {
 function navigateDetail(direction = 1) {
 	const dataset = getDataset(state.currentCategory);
 	if (!dataset || dataset.length === 0) return;
-	const nextIndex = (state.currentIndex + direction + dataset.length) % dataset.length;
-	openDetail(state.currentCategory, nextIndex);
+	
+	// Skip placeholder items when navigating
+	let nextIndex = state.currentIndex;
+	let attempts = 0;
+	const maxAttempts = dataset.length; // Prevent infinite loop
+	
+	do {
+		nextIndex = (nextIndex + direction + dataset.length) % dataset.length;
+		attempts++;
+		// If we've checked all items and they're all placeholders, break
+		if (attempts >= maxAttempts) break;
+	} while (dataset[nextIndex] && dataset[nextIndex].placeholder && attempts < maxAttempts);
+	
+	// Only open if we found a non-placeholder item
+	if (dataset[nextIndex] && !dataset[nextIndex].placeholder) {
+		openDetail(state.currentCategory, nextIndex);
+	}
 }
 
 function showDetailOverlay() {
@@ -1879,15 +2441,10 @@ function alignCollageToMedia() {
 		const targetBottom = controlsRect ? controlsRect.bottom : contentRect.bottom;
 		const desiredHeight = Math.max(520, Math.round(targetBottom - mediaRect.top));
 
-		// For polaroid or mirror layout, don't add marginTop, let it flow naturally
-		if (collage.dataset.layoutMode === 'polaroids' || collage.dataset.layoutMode === 'mirror') {
-			collage.style.marginTop = '0px';
-		} else {
-			collage.style.marginTop = `${offsetTop}px`;
-		}
-		collage.style.height = `${desiredHeight}px`;
-		collage.style.minHeight = `${desiredHeight}px`;
-		collage.style.maxHeight = `${desiredHeight}px`;
+        collage.style.marginTop = `${offsetTop}px`;
+        collage.style.height = `${desiredHeight}px`;
+        collage.style.minHeight = `${desiredHeight}px`;
+        collage.style.maxHeight = `${desiredHeight}px`;
 
         // Apply layout based on mode
         if (collage.dataset.userModified !== '1') {
@@ -1909,212 +2466,291 @@ function alignCollageToMedia() {
 function spawnDetailHeroMirror(container, context = {}) {
         if (!container) return;
         container.innerHTML = '';
+        if (Array.isArray(container.__highlightTimers)) {
+                container.__highlightTimers.forEach((t) => clearTimeout(t));
+        }
+        container.__highlightTimers = [];
 
-        const {
-                category = state.currentCategory,
-                heroImage = '',
-                heroLogo = '',
-                title = '',
-                tagline = ''
-        } = context;
-
+        const { category = state.currentCategory } = context;
         container.dataset.category = category;
         container.classList.toggle('detail-hero-mirror--illegal', category === 'illegal');
         container.classList.toggle('detail-hero-mirror--legal', category !== 'illegal');
-
-        const stripesHost = document.createElement('div');
-        stripesHost.className = 'detail-hero-mirror__stripes';
-        container.appendChild(stripesHost);
-
-        // Background character lines (reuse floating logo stripes but scoped here)
-        const stripeConfigs = [
-                { modifier: 'bg-polaroid-stripe--mirror-back', count: 18, rotate: '26deg', duration: '138s', delay: '-18s', top: '-34%', right: '74%', zIndex: 1, curve: -1.1 },
-                { modifier: 'bg-polaroid-stripe--mirror-mid-left', count: 16, rotate: '22deg', duration: '124s', delay: '-32s', top: '-18%', right: '58%', zIndex: 2, curve: -0.4 },
-                { modifier: 'bg-polaroid-stripe--mirror-center', count: 18, rotate: '18deg', duration: '116s', delay: '-46s', top: '-24%', right: '38%', zIndex: 3, curve: 0.1 },
-                { modifier: 'bg-polaroid-stripe--mirror-mid-right', count: 16, rotate: '20deg', duration: '128s', delay: '-58s', top: '-12%', right: '22%', zIndex: 2, curve: 0.9 },
-                { modifier: 'bg-polaroid-stripe--mirror-front', count: 14, rotate: '16deg', duration: '142s', delay: '-72s', top: '4%', right: '8%', zIndex: 4, curve: 1.4 }
-        ];
-
-        const pool = RANDOM_CHARACTER_IMAGES.slice();
-        // Shuffle pool
-        for (let i = pool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        let cursor = 0;
-        const pullNextImage = () => {
-                if (cursor >= pool.length) {
-                        // reshuffle and wrap
-                        for (let i = pool.length - 1; i > 0; i--) {
-                                const j = Math.floor(Math.random() * (i + 1));
-                                [pool[i], pool[j]] = [pool[j], pool[i]];
-                        }
-                        cursor = 0;
-                }
-                const src = pool[cursor++];
-                return { src, alt: getCharacterAltFromSrc(src) };
-        };
-
-        const createPolaroid = (emphasis = false, curveOffset = 0) => {
-                const figure = document.createElement('figure');
-                figure.className = 'bg-polaroid';
-                if (emphasis) figure.classList.add('bg-polaroid--highlight');
-                figure.setAttribute('aria-hidden', 'true');
-                const tilt = (Math.random() * 6 - 3).toFixed(2);
-                const offset = curveOffset.toFixed(2);
-                const scale = (0.95 + Math.random() * 0.08).toFixed(2);
-                figure.style.setProperty('--bg-polaroid-tilt', `${tilt}deg`);
-                figure.style.setProperty('--bg-polaroid-offset', `${offset}%`);
-                figure.style.setProperty('--bg-polaroid-scale', scale);
-                const img = document.createElement('img');
-                img.className = 'bg-polaroid__image';
-                const { src } = pullNextImage();
-                img.src = src;
-                img.alt = '';
-                img.loading = 'lazy';
-                img.decoding = 'async';
-                img.setAttribute('aria-hidden', 'true');
-                figure.appendChild(img);
-                return figure;
-        };
-
-        stripeConfigs.forEach((config, index) => {
-                const stripe = document.createElement('div');
-                stripe.className = `bg-polaroid-stripe ${config.modifier}`;
-                stripe.style.setProperty('--bg-stripe-rotate', `-${config.rotate}`); // mirror angle
-                if (typeof config.top === 'string') stripe.style.top = config.top;
-                if (typeof config.right === 'string') stripe.style.right = config.right;
-                stripe.style.zIndex = String(config.zIndex || 0);
-
-                const inner = document.createElement('div');
-                inner.className = 'bg-polaroid-stripe__inner';
-                inner.style.setProperty('--bg-line-duration', config.duration);
-                inner.style.setProperty('--bg-line-delay', config.delay);
-
-                const polaroids = [];
-                for (let i = 0; i < config.count; i += 1) {
-                        const emphasis = index === 1 && (i % Math.ceil(config.count / 4) === 0);
-                        const midpoint = (config.count - 1) / 2;
-                        const curveOffset = config.curve ? (i - midpoint) * config.curve : 0;
-                        polaroids.push(createPolaroid(emphasis, curveOffset));
-                }
-                polaroids.forEach((n) => inner.appendChild(n));
-                polaroids.forEach((n) => inner.appendChild(n.cloneNode(true)));
-                stripe.appendChild(inner);
-                stripesHost.appendChild(stripe);
-        });
 
         const foreground = document.createElement('div');
         foreground.className = 'detail-hero-mirror__foreground';
         container.appendChild(foreground);
 
-        const heroCard = document.createElement('article');
-        heroCard.className = `detail-hero-card detail-hero-card--${category === 'illegal' ? 'illegal' : 'legal'}`;
-        heroCard.dataset.category = category;
+        const brandLogo = document.createElement('img');
+        brandLogo.className = 'hero-logo';
+        brandLogo.src = 'public/roots-roleplay.svg';
+        brandLogo.alt = 'Roots Roleplay';
+        brandLogo.loading = 'lazy';
+        brandLogo.decoding = 'async';
+        foreground.appendChild(brandLogo);
 
-        const cardBackdrop = document.createElement('span');
-        cardBackdrop.className = 'detail-hero-card__backdrop';
-        cardBackdrop.setAttribute('aria-hidden', 'true');
-        heroCard.appendChild(cardBackdrop);
-
-        if (heroImage) {
-                const image = document.createElement('img');
-                image.className = 'detail-hero-card__image';
-                image.src = heroImage;
-                image.alt = title ? `${title} – Charaktervisualisierung` : '';
-                image.loading = 'lazy';
-                image.decoding = 'async';
-                heroCard.appendChild(image);
-        }
-
-        const emblem = document.createElement('span');
-        emblem.className = 'detail-hero-card__emblem';
-        emblem.setAttribute('aria-hidden', 'true');
-        heroCard.appendChild(emblem);
-
-        if (heroLogo) {
-                const logo = document.createElement('img');
-                logo.className = 'detail-hero-card__logo';
-                logo.src = heroLogo;
-                logo.alt = title ? `${title} Logo` : 'Logo';
-                logo.loading = 'lazy';
-                logo.decoding = 'async';
-                heroCard.appendChild(logo);
-        }
-
-        const overlay = document.createElement('div');
-        overlay.className = 'detail-hero-card__overlay';
-
-        const overlayLabel = document.createElement('span');
-        overlayLabel.className = 'detail-hero-card__label';
-        overlayLabel.textContent = category === 'illegal' ? 'Illegaler Weg' : 'Legaler Weg';
-        overlay.appendChild(overlayLabel);
-
-        const overlayTitle = document.createElement('h3');
-        overlayTitle.className = 'detail-hero-card__title';
-        overlayTitle.textContent = title || 'Roots Roleplay';
-        overlay.appendChild(overlayTitle);
-
-        if (tagline) {
-                const overlaySubtitle = document.createElement('p');
-                overlaySubtitle.className = 'detail-hero-card__subtitle';
-                overlaySubtitle.textContent = tagline;
-                overlay.appendChild(overlaySubtitle);
-        }
-
-        heroCard.appendChild(overlay);
-        foreground.appendChild(heroCard);
-
-        const cta = document.createElement('section');
-        cta.className = 'detail-hero-cta';
-
-        const taglineGroup = document.createElement('div');
-        taglineGroup.className = 'detail-hero-cta__tagline';
-
-        const accent = document.createElement('span');
-        accent.className = 'detail-hero-cta__accent';
-        accent.textContent = category === 'illegal' ? 'ILLEGALER WEG' : 'LEGALER WEG';
-        taglineGroup.appendChild(accent);
-
-        const titleEl = document.createElement('h3');
-        titleEl.className = 'detail-hero-cta__title';
-        titleEl.textContent = title || 'Wähle deinen Weg';
-        taglineGroup.appendChild(titleEl);
-
-        cta.appendChild(taglineGroup);
-
-        const description = document.createElement('p');
-        description.className = 'detail-hero-cta__description';
-        description.textContent = tagline || 'Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte.';
-        cta.appendChild(description);
-
+        const content = document.createElement('div');
+        content.className = 'hero-left__content';
         const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'hero-choice detail-hero-cta__buttons';
-
-        const buttonConfigs = [
-                { label: 'Legal', choice: 'legal', className: '' },
-                { label: 'Illegal', choice: 'illegal', className: 'hero-choice__btn--illegal' },
-                { label: 'Regelwerk', link: 'https://rootsroleplay.de/regelwerk', className: 'hero-choice__btn--rules' },
-                { label: 'Whitelist', link: 'https://rootsroleplay.de/whitelist', className: 'hero-choice__btn--whitelist' }
+        buttonGroup.className = 'hero-choice';
+        buttonGroup.setAttribute('role', 'group');
+        buttonGroup.setAttribute('aria-label', 'Aktionen');
+        const buttons = [
+            { label: 'Regelwerk', className: 'hero-choice__btn--rules', dataset: { link: 'https://rootsroleplay.de/regelwerk' } },
+            { label: 'Whitelist', className: 'hero-choice__btn--whitelist', dataset: { link: 'https://rootsroleplay.de/whitelist' } }
         ];
-
-        buttonConfigs.forEach((config) => {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = `hero-choice__btn ${config.className || ''}`.trim();
-                button.textContent = config.label;
-                if (config.choice) {
-                        button.dataset.choice = config.choice;
-                }
-                if (config.link) {
-                        button.dataset.link = config.link;
-                }
-                wireChoiceButton(button, { autoOpenDetail: false });
-                buttonGroup.appendChild(button);
+        buttons.forEach((b) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `hero-choice__btn ${b.className}`.trim();
+            btn.textContent = b.label;
+            Object.keys(b.dataset).forEach((key) => { btn.dataset[key] = b.dataset[key]; });
+            wireChoiceButton(btn, { autoOpenDetail: false });
+            buttonGroup.appendChild(btn);
         });
+        content.appendChild(buttonGroup);
+        foreground.appendChild(content);
+}
 
-        cta.appendChild(buttonGroup);
-        foreground.appendChild(cta);
+function spawnDetailFlyingLogos(container) {
+	if (!container) return;
+	container.innerHTML = '';
+	
+	// Get all service-app logos from companies
+	const serviceAppLogos = state.companies
+		.filter(company => company && company.id && !company.placeholder)
+		.map(company => ({
+			id: company.id,
+			src: normalizeAssetPath(`public/service-app/${company.id}.png`),
+			alt: (company.displayName || company.title || company.id) + ' Logo'
+		}));
+	
+	if (serviceAppLogos.length === 0) return;
+	
+	// Create floating logos with random positions and animations - limit to 15 for performance
+	const logoCount = Math.min(serviceAppLogos.length * 2, 15);
+	const shuffledLogos = shuffleArray([...serviceAppLogos, ...serviceAppLogos]).slice(0, logoCount);
+	
+	// Stagger creation to avoid loading all at once
+	shuffledLogos.forEach((logo, index) => {
+		setTimeout(() => {
+			const logoEl = document.createElement('img');
+			logoEl.className = 'detail-flying-logo';
+			logoEl.alt = logo.alt;
+			logoEl.loading = 'lazy';
+			logoEl.decoding = 'async';
+			logoEl.setAttribute('aria-hidden', 'true');
+			
+			// Random position
+			const left = Math.random() * 100;
+			const top = Math.random() * 100;
+			const size = 40 + Math.random() * 60; // 40-100px
+			const duration = 20 + Math.random() * 30; // 20-50s
+			const delay = Math.random() * 5; // 0-5s delay
+			const direction = Math.random() > 0.5 ? 1 : -1;
+			
+			logoEl.style.left = `${left}%`;
+			logoEl.style.top = `${top}%`;
+			logoEl.style.width = `${size}px`;
+			logoEl.style.height = 'auto';
+			logoEl.style.opacity = '0.28';
+			logoEl.style.setProperty('--fly-duration', `${duration}s`);
+			logoEl.style.setProperty('--fly-delay', `${delay}s`);
+			logoEl.style.setProperty('--fly-direction', direction);
+			
+			// Set src after appending to reduce concurrent loads
+			container.appendChild(logoEl);
+			logoEl.src = logo.src;
+		}, index * 50); // Stagger by 50ms each
+	});
+}
+
+function spawnPoliceLights(container) {
+	if (!container) return;
+	
+	// Clear only police lights, keep rain
+	const existingLights = container.querySelectorAll('.police-light');
+	existingLights.forEach(light => light.remove());
+	
+	// Create multiple police light elements
+	const lightCount = 8; // Number of light sources
+	
+	for (let i = 0; i < lightCount; i++) {
+		const lightEl = document.createElement('div');
+		lightEl.className = 'police-light';
+		lightEl.setAttribute('aria-hidden', 'true');
+		
+		// Random position
+		const left = Math.random() * 100;
+		const top = Math.random() * 100;
+		const size = 200 + Math.random() * 300; // 200-500px
+		const delay = Math.random() * 2; // 0-2s delay
+		const isRed = i % 2 === 0; // Alternate between red and blue
+		
+		lightEl.style.left = `${left}%`;
+		lightEl.style.top = `${top}%`;
+		lightEl.style.width = `${size}px`;
+		lightEl.style.height = `${size}px`;
+		lightEl.style.setProperty('--light-delay', `${delay}s`);
+		lightEl.classList.add(isRed ? 'police-light--red' : 'police-light--blue');
+		
+		container.appendChild(lightEl);
+	}
+}
+
+function spawnRainEffect(container) {
+	if (!container) return;
+	
+	// Clear only rain, keep police lights
+	const existingRain = container.querySelectorAll('.rain-drop');
+	existingRain.forEach(drop => drop.remove());
+	
+	// Create rain container if it doesn't exist
+	let rainContainer = container.querySelector('.rain-container');
+	if (!rainContainer) {
+		rainContainer = document.createElement('div');
+		rainContainer.className = 'rain-container';
+		rainContainer.setAttribute('aria-hidden', 'true');
+		container.appendChild(rainContainer);
+	}
+	
+	// Create multiple rain drops
+	const dropCount = 150; // Number of rain drops
+	
+	for (let i = 0; i < dropCount; i++) {
+		const drop = document.createElement('div');
+		drop.className = 'rain-drop';
+		drop.setAttribute('aria-hidden', 'true');
+		
+		// Random properties
+		const left = Math.random() * 100; // 0-100%
+		const delay = Math.random() * 2; // 0-2s delay
+		const duration = 0.5 + Math.random() * 0.5; // 0.5-1s duration
+		const length = 10 + Math.random() * 20; // 10-30px length
+		const opacity = 0.3 + Math.random() * 0.4; // 0.3-0.7 opacity
+		
+		drop.style.left = `${left}%`;
+		drop.style.setProperty('--rain-delay', `${delay}s`);
+		drop.style.setProperty('--rain-duration', `${duration}s`);
+		drop.style.height = `${length}px`;
+		drop.style.opacity = opacity;
+		
+		rainContainer.appendChild(drop);
+	}
+}
+
+function spawnFogEffect(container) {
+	if (!container) return;
+	
+	// Clear all existing effects first (flying logos, etc.)
+	container.querySelectorAll('.detail-flying-logo').forEach(el => el.remove());
+	
+	// Clear only fog, keep other effects
+	const existingFog = container.querySelectorAll('.fog-layer');
+	existingFog.forEach(fog => fog.remove());
+	
+	// Create fog container if it doesn't exist
+	let fogContainer = container.querySelector('.fog-container');
+	if (!fogContainer) {
+		fogContainer = document.createElement('div');
+		fogContainer.className = 'fog-container';
+		fogContainer.setAttribute('aria-hidden', 'true');
+		container.appendChild(fogContainer);
+	}
+	
+	// Create multiple fog layers
+	const fogLayerCount = 8; // Number of fog layers
+	
+	for (let i = 0; i < fogLayerCount; i++) {
+		const fogLayer = document.createElement('div');
+		fogLayer.className = 'fog-layer';
+		fogLayer.setAttribute('aria-hidden', 'true');
+		
+		// Random properties
+		const size = 200 + Math.random() * 300; // 200-500px
+		const left = Math.random() * 120 - 10; // -10% to 110% for overflow
+		const top = Math.random() * 100; // 0-100%
+		const delay = Math.random() * 10; // 0-10s delay
+		const duration = 20 + Math.random() * 30; // 20-50s duration
+		const opacity = 0.15 + Math.random() * 0.15; // 0.15-0.3 opacity
+		const direction = Math.random() > 0.5 ? 1 : -1; // Left or right movement
+		
+		fogLayer.style.width = `${size}px`;
+		fogLayer.style.height = `${size}px`;
+		fogLayer.style.left = `${left}%`;
+		fogLayer.style.top = `${top}%`;
+		fogLayer.style.setProperty('--fog-delay', `${delay}s`);
+		fogLayer.style.setProperty('--fog-duration', `${duration}s`);
+		fogLayer.style.setProperty('--fog-direction', direction);
+		fogLayer.style.opacity = opacity;
+		
+		fogContainer.appendChild(fogLayer);
+	}
+}
+
+function spawnCrimeDamage(container) {
+	if (!container) return;
+	
+	// Clear only damage effects, keep other effects
+	const existingDamage = container.querySelectorAll('.crime-damage');
+	existingDamage.forEach(damage => damage.remove());
+	
+	// Create damage container if it doesn't exist
+	let damageContainer = container.querySelector('.crime-damage-container');
+	if (!damageContainer) {
+		damageContainer = document.createElement('div');
+		damageContainer.className = 'crime-damage-container';
+		damageContainer.setAttribute('aria-hidden', 'true');
+		container.appendChild(damageContainer);
+	}
+	
+	// Create crack lines
+	const crackCount = 6; // Number of cracks
+	
+	for (let i = 0; i < crackCount; i++) {
+		const crack = document.createElement('div');
+		crack.className = 'crime-damage crime-damage--crack';
+		crack.setAttribute('aria-hidden', 'true');
+		
+		// Random properties
+		const length = 50 + Math.random() * 150; // 50-200px
+		const angle = Math.random() * 360; // 0-360deg
+		const left = Math.random() * 100; // 0-100%
+		const top = Math.random() * 100; // 0-100%
+		const opacity = 0.2 + Math.random() * 0.3; // 0.2-0.5
+		
+		crack.style.width = `${length}px`;
+		crack.style.left = `${left}%`;
+		crack.style.top = `${top}%`;
+		crack.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+		crack.style.opacity = opacity;
+		
+		damageContainer.appendChild(crack);
+	}
+	
+	// Create blood splatters (subtle)
+	const splatterCount = 4; // Number of splatters
+	
+	for (let i = 0; i < splatterCount; i++) {
+		const splatter = document.createElement('div');
+		splatter.className = 'crime-damage crime-damage--splatter';
+		splatter.setAttribute('aria-hidden', 'true');
+		
+		// Random properties
+		const size = 20 + Math.random() * 40; // 20-60px
+		const left = Math.random() * 100; // 0-100%
+		const top = Math.random() * 100; // 0-100%
+		const rotation = Math.random() * 360; // 0-360deg
+		const opacity = 0.15 + Math.random() * 0.15; // 0.15-0.3
+		
+		splatter.style.width = `${size}px`;
+		splatter.style.height = `${size}px`;
+		splatter.style.left = `${left}%`;
+		splatter.style.top = `${top}%`;
+		splatter.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+		splatter.style.opacity = opacity;
+		
+		damageContainer.appendChild(splatter);
+	}
 }
 
 function spawnDetailPolaroids(container) {
@@ -2127,7 +2763,9 @@ function spawnDetailPolaroids(container) {
         { modifier: 'film-strip--four', count: 9, angle: '16deg', duration: '120s', delay: '-48s', top: '62%', shift: '60px', curve: 1.3 }
     ];
 
-    const pool = shuffleArray(RANDOM_CHARACTER_IMAGES.slice());
+    // Combine both crime and random character images for polaroids
+    const combinedPool = [...CRIME_CHARACTER_IMAGES, ...RANDOM_CHARACTER_IMAGES];
+    const pool = shuffleArray(combinedPool.slice());
     let cursor = 0;
     const pullNextImage = () => {
         if (cursor >= pool.length) {
@@ -2661,10 +3299,13 @@ function escapeHtml(str = '') {
 function formatParagraphs(text = '') {
 	const trimmed = text.trim();
 	if (!trimmed) return '';
-	return trimmed
-		.split(/\n{2,}/)
-		.map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`)
-		.join('');
+	// Combine all text into a single paragraph, replacing double newlines with single breaks
+	const singleParagraph = trimmed
+		.replace(/\n{2,}/g, ' ')
+		.replace(/\n/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+	return `<p>${escapeHtml(singleParagraph)}</p>`;
 }
 
 function createCollageItem(entry, category, index) {
@@ -2753,6 +3394,66 @@ function parseCompanyTitleParts(rawTitle = '', fallback = '') {
 	}
 	return { titleMain: text, tagline: '', fallback };
 }
+
+// ==================== TAGLINE SCALING ====================
+
+function scaleTaglineToFit(element) {
+	if (!element) return;
+	
+	// Find the content-text container (parent of parent)
+	const contentText = element.closest('.content-text');
+	if (!contentText) return;
+	
+	// Account for padding
+	const padding = 40; // Approximate padding from clamp(40px, 5vw, 56px)
+	const maxWidth = contentText.clientWidth - (padding * 2) - 20; // Extra margin
+	const maxFontSize = 22;
+	const minFontSize = 10;
+	
+	// Reset to max size first
+	element.style.fontSize = `${maxFontSize}px`;
+	
+	// Check if it fits
+	if (element.scrollWidth <= maxWidth) {
+		// It fits, use responsive sizing
+		element.style.fontSize = '';
+		return;
+	}
+	
+	// Binary search for the right font size
+	let low = minFontSize;
+	let high = maxFontSize;
+	let bestSize = minFontSize;
+	
+	for (let i = 0; i < 20; i++) {
+		const mid = (low + high) / 2;
+		element.style.fontSize = `${mid}px`;
+		
+		if (element.scrollWidth <= maxWidth) {
+			bestSize = mid;
+			low = mid + 0.5;
+		} else {
+			high = mid - 0.5;
+		}
+	}
+	
+	element.style.fontSize = `${bestSize}px`;
+}
+
+// ==================== RESIZE HANDLER ====================
+
+let resizeTimeout;
+function handleResize() {
+	clearTimeout(resizeTimeout);
+	resizeTimeout = setTimeout(() => {
+		const taglineEl = document.getElementById('detailTagline');
+		if (taglineEl && taglineEl.style.display !== 'none') {
+			scaleTaglineToFit(taglineEl);
+		}
+	}, 150);
+}
+
+window.addEventListener('resize', handleResize);
 
 // ==================== STARTUP ====================
 

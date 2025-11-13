@@ -6,6 +6,7 @@
 	<title>Roots Roleplay</title>
 	<meta name="description" content="Rooted in play">
 	<meta name="theme-color" content="#1f2127">
+	<link rel="icon" type="image/png" href="public/roots_R.png">
 	
 	<!-- Fonts -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +24,15 @@
 				<path d="M12 2a10 10 0 00-3.92 19.21c.62.11.85-.27.85-.6v-2.1c-3.46.75-4.18-1.67-4.18-1.67-.57-1.44-1.38-1.82-1.38-1.82-1.13-.78.09-.77.09-.77 1.26.09 1.92 1.3 1.92 1.3 1.11 1.92 2.9 1.36 3.61 1.04.11-.8.43-1.36.78-1.67-2.77-.32-5.69-1.38-5.69-6.15 0-1.36.51-2.47 1.3-3.34-.13-.33-.56-1.67.12-3.47 0 0 1.05-.33 3.45 1.29.99-.28 2.05-.42 3.11-.42s2.12.14 3.11.42c2.4-1.62 3.45-1.29 3.45-1.29.68 1.8.25 3.14.12 3.47.8.87 1.3 1.98 1.3 3.34 0 4.79-2.92 5.83-5.7 6.14.44.38.84 1.12.84 2.27v3.36c0 .33.22.71.86.59A10 10 0 0012 2z"/>
 			</svg>
 			<span>Teamspeak</span>
+		</a>
+		<a href="https://gaming.v10networks.com/saltychat" target="_blank" rel="noopener noreferrer" class="top-cta__btn saltychat-btn">
+			<svg class="top-cta__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+				<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+				<path d="M12 19v4"/>
+				<path d="M8 23h8"/>
+			</svg>
+			<span>SaltyChat</span>
 		</a>
 		<a href="fivem://connect/cfx.re/join/rootsroleplay" class="top-cta__btn fivem-btn">
 			<svg class="top-cta__icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -88,41 +98,62 @@
 	</main>
 
 	<!-- Detail View -->
-	<div class="crime-detail" id="detailOverlay">
-		<button class="crime-back" id="crimeBack" aria-label="Schließen">×</button>
+	<div id="detailOverlay" class="crime-detail">
+		<button class="crime-back" id="crimeBack" type="button" aria-label="Zurück zur Übersicht">
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<line x1="19" y1="12" x2="5" y2="12"></line>
+				<polyline points="12 19 5 12 12 5"></polyline>
+			</svg>
+		</button>
+
 		<div class="crime-detail-content">
-			<div class="crime-detail-left">
-				<h1 id="detailTitle"></h1>
-				<p id="detailTagline" class="tagline-text"></p>
-				<div class="crime-video" id="detailMedia"></div>
-				<div id="detailContent" class="content-text"></div>
-				<div class="crime-detail-nav" id="crimeNav" hidden>
-					<button class="crime-nav-btn" id="crimePrev" type="button" aria-label="Zurück">
-						<span class="crime-nav-btn-icon">‹</span>
-						<span class="crime-nav-btn-text">
-							<small>Zurück zu</small>
-							<span id="crimeNavPrevTitle">—</span>
-						</span>
-					</button>
+			<!-- Dynamic Character Background -->
+			<div id="detailDynamicBg" class="detail-dynamic-bg" aria-hidden="true"></div>
+			<div class="detail-content-wrapper">
+			<header class="detail-header">
+				<div class="detail-header-top">
+					<img id="detailCompanyLogo" src="" alt="" class="detail-company-logo" style="display: none;">
+					<h1 id="detailTitle"></h1>
+				</div>
+			</header>
+				<img id="detailCharacter" src="" alt="" class="detail-character" style="display: none;">
+
+				<div class="detail-main-content">
+					<div class="detail-media-row">
+						<div class="crime-video" id="detailMedia"></div>
+					</div>
+
+				<div class="content-text" id="detailContent">
+					<h2 class="content-text-title" id="detailTagline"></h2>
+					<div class="content-text-body">
+						<!-- Content will be loaded here -->
+					</div>
+				</div>
+				</div>
+
+				<nav class="crime-detail-nav" id="crimeDetailNav">
+				<button class="crime-nav-btn" id="crimePrev" type="button" aria-label="Zurück">
+					<img id="crimeNavPrevLogo" src="" alt="" class="crime-nav-btn-logo crime-nav-btn-logo--left" style="display: none;">
+					<span class="crime-nav-btn-text">
+						<small class="crime-nav-status-label">Zurück zu</small>
+						<span class="crime-nav-status-title" id="crimeNavPrevTitle">—</span>
+					</span>
+				</button>
+
 					<div class="crime-nav-status">
-						<span class="crime-nav-status-label" id="crimeNavStatusLabel">Weiter zu</span>
-						<span class="crime-nav-status-title" id="crimeNavNextTitle">—</span>
 						<span class="crime-nav-status-meta">
 							<span id="crimeNavCounter">0 / 0</span>
 						</span>
 					</div>
-					<button class="crime-nav-btn crime-nav-btn-primary" id="crimeNext" type="button" aria-label="Weiter">
-						<span class="crime-nav-btn-text">
-							<small>Als nächstes</small>
-							<span class="crime-nav-btn-cta">Weiter</span>
-						</span>
-						<span class="crime-nav-btn-icon">›</span>
-					</button>
-				</div>
-			</div>
-			<div class="crime-detail-right">
-				<!-- Mirrored hero composition container -->
-				<div id="detailCollage" class="detail-hero-mirror" aria-hidden="true"></div>
+
+				<button class="crime-nav-btn crime-nav-btn-primary" id="crimeNext" type="button" aria-label="Weiter">
+					<span class="crime-nav-btn-text">
+						<small class="crime-nav-status-label">Weiter zu</small>
+						<span class="crime-nav-status-title" id="crimeNavNextTitle">—</span>
+					</span>
+					<img id="crimeNavNextLogo" src="" alt="" class="crime-nav-btn-logo crime-nav-btn-logo--right" style="display: none;">
+				</button>
+				</nav>
 			</div>
 		</div>
 	</div>
