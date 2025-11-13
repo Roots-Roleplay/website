@@ -14,6 +14,7 @@ const HOLD_RESET_DELAY_MS = 220;
 const state = {
 	companies: [],
 	crimeFactions: [],
+	nogos: [],
 	currentCategory: 'legal',
 	currentIndex: 0,
 	heroCardsMounted: false,
@@ -96,6 +97,19 @@ const CATEGORY_CONFIG = {
 			return null;
 		},
 		buildCollage: buildCrimeCollage
+	},
+	regelwerk: {
+		getDataset: () => state.nogos,
+		getTitle: (item) => item.title || item.id,
+		getTagline: (item) => item.tagline || '',
+		getContent: (item) => item.content || '',
+		getMedia: (item) => {
+			if (item.image) {
+				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.title || 'Regelwerk' };
+			}
+			return null;
+		},
+		buildCollage: buildRegelwerkCollage
 	}
 };
 
@@ -129,34 +143,83 @@ const COLLAGE_LAYOUTS = [
 const MAX_COLLAGE_ITEMS = Math.max(...COLLAGE_LAYOUTS.map((layout) => layout.length));
 const COLLAGE_SIZE_SCALE = 0.79;
 
-const RANDOM_CHARACTER_IMAGES = Array.from({ length: 100 }, (_, index) => `public/characters_random/${index + 1}.png`);
+// Helper function to build image array from folder with all files
+// Since we can't list files client-side, we try common patterns and known files
+function buildImageArrayFromFolder(folderPath, knownFiles = [], numberedRange = null) {
+	const images = [];
+	// Add known files
+	knownFiles.forEach(file => {
+		images.push(`${folderPath}/${file}`);
+	});
+	// Add numbered files if range specified
+	if (numberedRange) {
+		for (let i = numberedRange.start; i <= numberedRange.end; i++) {
+			images.push(`${folderPath}/${i}.png`);
+		}
+	}
+	return images;
+}
 
-// Crime character images - add new images here as they're added to the folder
-const CRIME_CHARACTER_IMAGES = [
-	'public/characters_crime/11.png',
-	'public/characters_crime/12.png',
-	'public/characters_crime/13.png',
-	'public/characters_crime/14.png',
-	'public/characters_crime/15.png',
-	'public/characters_crime/16.png',
-	'public/characters_crime/17.png',
-	'public/characters_crime/20.png',
-	'public/characters_crime/21.png',
-	'public/characters_crime/23.png',
-	'public/characters_crime/24.png',
-	'public/characters_crime/25.png',
-	'public/characters_crime/29.png',
-	'public/characters_crime/30.png',
-	'public/characters_crime/35.png',
-	'public/characters_crime/36.png',
-	'public/characters_crime/37.png',
-	'public/characters_crime/38.png',
-	'public/characters_crime/40.png',
-	'public/characters_crime/84.png',
-	'public/characters_crime/84awd.png',
-	'public/characters_crime/91.png',
-	'public/characters_crime/92.png'
+// All images from random_characters folder (for polaroids)
+const RANDOM_CHARACTER_IMAGES = (() => {
+	const knownFiles = [
+		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
+		'csacas.png', 'daw.png', 'dwa.png', 'fva.png', 'ges.png', 'gse.png',
+		'hed.png', 'jyd.png', 'kitt.png', 'qeeweq.png', 'qeweqw.png', 'qewqe.png',
+		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png'
+	];
+	return buildImageArrayFromFolder('public/random_characters', knownFiles, { start: 1, end: 100 });
+})();
+
+// Company character images
+const COMPANY_CHARACTER_IMAGES = [
+	'public/company_characters/admin_character.png',
+	'public/company_characters/aldente_character.png',
+	'public/company_characters/ambulance_character.png',
+	'public/company_characters/aod_character.png',
+	'public/company_characters/bikes_character.png',
+	'public/company_characters/blockbudz_character.png',
+	'public/company_characters/burgershot_character.png',
+	'public/company_characters/caseys_character.png',
+	'public/company_characters/church_character.png',
+	'public/company_characters/doj_character.png',
+	'public/company_characters/larrys_character.png',
+	'public/company_characters/leapfrog_character.png',
+	'public/company_characters/news_character.png',
+	'public/company_characters/pearls_character.png',
+	'public/company_characters/pier76_character.png',
+	'public/company_characters/police_character.png',
+	'public/company_characters/reds_character.png',
+	'public/company_characters/sheriff_character.png',
+	'public/company_characters/smokeys_character.png',
+	'public/company_characters/taxi_character.png',
+	'public/company_characters/tuner_character.png',
+	'public/company_characters/yellowjack_character.png'
 ];
+
+// Crime character images
+const CRIME_CHARACTER_IMAGES_ARRAY = [
+	'public/crime_characters/aod_character.png',
+	'public/crime_characters/ballas_character.png',
+	'public/crime_characters/lost_character.png',
+	'public/crime_characters/madrazo_character.png',
+	'public/crime_characters/pit_character.png',
+	'public/crime_characters/rednecks_character.png'
+];
+
+// Crime shuffle images
+const CRIME_SHUFFLE_IMAGES = (() => {
+	const knownFiles = [
+		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
+		'csacas.png', 'daw.png', 'dwa.png', 'fva.png', 'ges.png', 'gse.png',
+		'hed.png', 'jyd.png', 'kitt.png', 'qeeweq.png', 'qeweqw.png', 'qewqe.png',
+		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png',
+		'crime_aod_character.png', 'crime_ballas_character.png', 'crime_fightclub_character.png',
+		'crime_lost_character.png', 'crime_madrazo_character.png', 'crime_pit_character.png',
+		'crime_rednecks_character.png'
+	];
+	return knownFiles.map(file => `public/crime_shuffle/${file}`);
+})();
 
 // Helper function to get unique random images from pool
 function getUniqueRandomImages(pool, count) {
@@ -210,13 +273,62 @@ async function init() {
 
 async function loadContent() {
 	try {
-		const [companies, crime] = await Promise.all([
+		const [companies, crime, nogos] = await Promise.all([
 			fetch('content/companies.json').then((r) => r.json()),
-			fetch('content/crime-factions.json').then((r) => r.json())
+			fetch('content/crime-factions.json').then((r) => r.json()),
+			fetch('content/nogos.json').then((r) => r.json())
 		]);
 
 		state.companies = (companies.companies || []).filter(Boolean);
 		state.crimeFactions = (crime.factions || []).filter(Boolean);
+		
+		// Transform nogos.json into card format
+		const nogosSteps = (nogos.steps || []).filter(Boolean);
+		
+		// Create first card with roots_nogo.png image only (no text)
+		const introImageCard = {
+			id: 'regelwerk-intro',
+			title: '',
+			content: '',
+			image: 'public/roots_nogo.png',
+			tagline: '',
+			showTextLabel: false,
+			isIntroImageCard: true // Mark as intro image card (image only, no content)
+		};
+		
+		// First step is the introduction (Einleitung)
+		const einleitungCard = nogosSteps.length > 0 ? {
+			id: 'regelwerk-einleitung',
+			title: nogosSteps[0].title || 'Einleitung',
+			content: nogosSteps[0].content || '',
+			tagline: '',
+			isEinleitung: true, // Mark as Einleitung card
+			showTextLabel: true
+		} : null;
+		
+		// Transform remaining steps (starting from index 1) into NoGo cards
+		const nogosCards = nogosSteps.slice(1).map((step, index) => ({
+			id: `nogo-${index}`,
+			title: step.title || '',
+			content: step.content || '',
+			tagline: '',
+			nogoNumber: index + 1, // NoGo 1, NoGo 2, etc.
+			showTextLabel: true
+		}));
+		
+		// Create guidelines card with all guideline images and Discord CTA
+		const guidelineImages = Array.from({ length: 10 }, (_, i) => `public/guidelines/${i + 4}.png`);
+		const guidelinesCard = {
+			id: 'guidelines',
+			title: 'Guidelines',
+			content: '',
+			tagline: '',
+			guidelineImages: guidelineImages,
+			showGuidelines: true
+		};
+		
+		// Combine: intro image card, einleitung card, then nogos, then guidelines card
+		state.nogos = [introImageCard, ...(einleitungCard ? [einleitungCard] : []), ...nogosCards, guidelinesCard];
 
 		// Inject a shuffling placeholder card at the front of the illegal rail
 		const illegalMysteryCard = {
@@ -375,6 +487,20 @@ function setCategory(category, options = {}) {
     resetHeroRailIdle();
     clearHeroRandomSpin();
     renderHeroCards(dataset, category);
+    
+    // Use polaroids for legal, illegal, and regelwerk categories
+    const container = document.getElementById('heroDynamicBg');
+    if (container) {
+        if (category === 'regelwerk' || category === 'legal' || category === 'illegal') {
+            spawnFloatingLogos(category);
+        } else {
+            container.innerHTML = '';
+            if (Array.isArray(spawnFloatingLogos._highlightTimers)) {
+                spawnFloatingLogos._highlightTimers.forEach((id) => clearTimeout(id));
+            }
+            spawnFloatingLogos._highlightTimers = [];
+        }
+    }
 
     if (dataset.length === 0) {
         closeDetail({ silent: true, force: true });
@@ -451,14 +577,16 @@ function createHeroCard(item, index, category) {
 	const card = document.createElement('button');
 	card.type = 'button';
 	const isPlaceholder = !!(item && item.placeholder === true);
-	card.className = 'hero-card' + (category === 'illegal' ? ' hero-card--illegal' : '') + (isPlaceholder ? ' hero-card--placeholder' : '');
+	card.className = 'hero-card' + (category === 'illegal' ? ' hero-card--illegal' : '') + (category === 'regelwerk' ? ' hero-card--regelwerk' : '') + (isPlaceholder ? ' hero-card--placeholder' : '');
 	card.dataset.index = String(index);
 	card.dataset.category = category;
 
 	const imageSrc = getHeroCardImage(item, category);
 	const logoSrc = getHeroCardLogo(item, category);
 	// For illegal, use the thumbnail image as backdrop; for legal, use the company logo
-	const logoValue = category === 'illegal' ? `url('${imageSrc}')` : (logoSrc ? `url('${logoSrc}')` : '');
+	// For regelwerk, only use image backdrop on intro image card
+	const isRegelwerkIntro = category === 'regelwerk' && item?.isIntroImageCard;
+	const logoValue = (category === 'illegal' || isRegelwerkIntro) ? `url('${imageSrc}')` : (logoSrc ? `url('${logoSrc}')` : '');
 	const title = CATEGORY_CONFIG[category].getTitle(item);
 
 	card.setAttribute('aria-label', isPlaceholder ? '' : `${title} öffnen`);
@@ -471,14 +599,21 @@ function createHeroCard(item, index, category) {
 		: '';
 
 	const buildIllegalPlaceholder = () => {
-		const faceCount = Math.min(12, CRIME_CHARACTER_IMAGES.length);
-		const faces = getUniqueRandomImages(CRIME_CHARACTER_IMAGES, faceCount);
+		// Illegal shuffle: use only crime_shuffle
+		const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+		// Ensure exactly 8 characters
+		const faceCount = 8;
+		// Get exactly 8 unique images (or as many as available if pool is smaller)
+		const requestedCount = Math.min(faceCount, illegalShufflePool.length);
+		const faces = getUniqueRandomImages(illegalShufflePool, requestedCount);
+		// Use all faces we got (should be exactly requestedCount)
 		const grid = faces
 			.map((src) => {
-				const alt = getCharacterAltFromSrc(src);
+				const normalizedSrc = normalizeAssetPath(src);
+				const alt = getCharacterAltFromSrc(normalizedSrc);
 				return `
 					<div class="illegal-placeholder__cell">
-						<img class="illegal-placeholder__image" src="${src}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true">
+						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true" onerror="this.parentElement.style.display='none'">
 					</div>
 				`;
 			})
@@ -509,20 +644,210 @@ function createHeroCard(item, index, category) {
 			`;
 		}
 	} else {
-		mainContentHtml = `
-			<span class="hero-card__backdrop" aria-hidden="true"></span>
-			<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="lazy">
-		`;
+		// For regelwerk cards, show content directly on card with image backdrop
+		if (category === 'regelwerk') {
+			if (item?.isIntroImageCard) {
+				// Intro image card - just image, no text
+				mainContentHtml = `
+					<span class="hero-card__backdrop" aria-hidden="true"></span>
+					<img class="hero-card__image" src="${imageSrc}" alt="Roots NoGo" loading="lazy">
+				`;
+			} else if (item?.showGuidelines) {
+				// Guidelines card - show all guideline images with Discord CTA in middle
+				const guidelineImages = item.guidelineImages || [];
+				// Create grid: 4 columns x 4 rows = 16 slots
+				// Layout: Discord (2x2) centered (cols 2-3, rows 2-3), guidelines around it filling all space
+				// Row 1: 4 guidelines (cells 1,2,3,4)
+				// Row 2: 1 guideline (cell 1), Discord 2x2 (cells 2-3), 1 guideline (cell 4)
+				// Row 3: 1 guideline (cell 1), Discord continues (cells 2-3), 1 guideline (cell 4)
+				// Row 4: 2 guidelines (cells 1,2), 2 guidelines (cells 3,4)
+				const topRow = guidelineImages.slice(0, 4);
+				const row2Left = guidelineImages.slice(4, 5);
+				const row2Right = guidelineImages.slice(5, 6);
+				const row3Left = guidelineImages.slice(6, 7);
+				const row3Right = guidelineImages.slice(7, 8);
+				const bottomRow = guidelineImages.slice(8, 10);
+				// We have 10 images total, using 8 so far (4 top + 1 row2 left + 1 row2 right + 1 row3 left + 1 row3 right)
+				// Bottom row needs 4 cells, but we only have 2 images left, so we'll use those 2
+				
+				const topRowHtml = topRow.map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item">
+						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('');
+				
+				const row2LeftHtml = row2Left.map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
+						<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('');
+				
+				const ctaHtml = `<div class="hero-card__guideline-item hero-card__guideline-item--cta" style="grid-column: 2 / 4; grid-row: 2 / 4;">
+					<a href="https://discord.gg/rootsroleplay" target="_blank" rel="noopener noreferrer" class="hero-card__guidelines-discord-cta">
+						<svg class="hero-card__discord-icon" width="32" height="32" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+							<path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+						</svg>
+						<span class="hero-card__discord-text">Lese die Guidelines auf Discord</span>
+					</a>
+				</div>`;
+				
+				const row2RightHtml = row2Right.map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
+						<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('');
+				
+				const row3LeftHtml = row3Left.map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
+						<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('');
+				
+				const row3RightHtml = row3Right.map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
+						<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('');
+				
+				// Bottom row: use remaining 2 images, fill remaining 2 cells with first 2 images again to fill the grid
+				const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
+						<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('') + 
+				// Fill remaining 2 bottom cells by reusing first 2 images
+				guidelineImages.slice(0, 2).map((imgSrc, idx) => 
+					`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
+						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+					</div>`
+				).join('');
+				
+				mainContentHtml = `
+					<span class="hero-card__backdrop" aria-hidden="true"></span>
+					<div class="hero-card__guidelines-content">
+						<div class="hero-card__guidelines-grid">
+							${topRowHtml}
+							${row2LeftHtml}
+							${ctaHtml}
+							${row2RightHtml}
+							${row3LeftHtml}
+							${row3RightHtml}
+							${bottomRowHtml}
+						</div>
+					</div>
+				`;
+			} else if (item?.showTextLabel) {
+				const content = CATEGORY_CONFIG[category].getContent(item) || '';
+				// Format content - replace double newlines with paragraph breaks, single newlines with spaces
+				const formattedContent = content
+					.split(/\n{2,}/)
+					.map(para => para.replace(/\n/g, ' ').trim())
+					.filter(para => para.length > 0)
+					.map(para => `<p>${escapeHtml(para)}</p>`)
+					.join('');
+				
+				if (item?.isEinleitung) {
+					// Einleitung card - no image, just content
+					mainContentHtml = `
+						<span class="hero-card__backdrop" aria-hidden="true"></span>
+						<div class="hero-card__nogo-content">
+							<div class="hero-card__nogo-header">
+								<span class="hero-card__text hero-card__text--nogo hero-card__text--einleitung">Einleitung</span>
+								<span class="hero-card__text-title">${escapeHtml(title)}</span>
+							</div>
+							<div class="hero-card__nogo-description">${formattedContent}</div>
+						</div>
+					`;
+			} else {
+				// NoGo cards with text labels - card flip design
+				const nogoNumber = item.nogoNumber || (index + 1);
+				
+				// Special handling for nogo 11 - add buttons for links
+				let descriptionHtml = formattedContent;
+				if (nogoNumber === 11) {
+					// Extract links from content and create buttons
+					const cfxLink = 'https://runtime.fivem.net/platform-license-agreement-12-sept-2023.pdf';
+					const rockstarLink = 'https://www.rockstargames.com/legal';
+					
+					// Remove everything from "Links:" onwards and replace with buttons
+					descriptionHtml = formattedContent.replace(
+						/<p>Links:.*$/m,
+						''
+					).replace(
+						/<p>.*CFX Platform License Agreement.*$/m,
+						''
+					).replace(
+						/<p>.*Rockstar Games Legal.*$/m,
+						''
+					).trim() + `<div class="hero-card__nogo-buttons">
+							<a href="${cfxLink}" target="_blank" rel="noopener noreferrer" class="hero-card__nogo-button">
+								<span class="hero-card__nogo-button-text">CFX Platform License Agreement</span>
+							</a>
+							<a href="${rockstarLink}" target="_blank" rel="noopener noreferrer" class="hero-card__nogo-button">
+								<span class="hero-card__nogo-button-text">Rockstar Games Legal</span>
+							</a>
+						</div>`;
+				}
+				
+				mainContentHtml = `
+					<div class="hero-card__flip-container">
+						<div class="hero-card__face hero-card__face--back">
+							<img src="public/roots_R.png" alt="Roots" loading="lazy">
+							<span class="hero-card__footer">Klicken zum Umdrehen</span>
+						</div>
+						<div class="hero-card__face hero-card__face--front">
+							<span class="hero-card__backdrop" aria-hidden="true"></span>
+							<div class="hero-card__nogo-content">
+								<div class="hero-card__nogo-header">
+									<span class="hero-card__text hero-card__text--nogo">NoGo ${nogoNumber}</span>
+									<span class="hero-card__text-title">${escapeHtml(title)}</span>
+								</div>
+								<div class="hero-card__nogo-description">${descriptionHtml}</div>
+							</div>
+							<span class="hero-card__footer">Klicken zum Umdrehen</span>
+						</div>
+					</div>
+				`;
+				// Start with back showing (flipped state)
+				card.classList.add('hero-card--flipped');
+			}
+			} else {
+				mainContentHtml = `
+					<span class="hero-card__backdrop" aria-hidden="true"></span>
+					<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="lazy">
+				`;
+			}
+		} else {
+			mainContentHtml = `
+				<span class="hero-card__backdrop" aria-hidden="true"></span>
+				<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="lazy">
+			`;
+		}
 	}
 
+	// Show footer for non-regelwerk cards or regelwerk cards that don't flip (but not intro image or guidelines)
+	const showFooter = category !== 'regelwerk' || (category === 'regelwerk' && !item?.showTextLabel && !item?.isIntroImageCard && !item?.showGuidelines);
+	const footerText = isPlaceholder ? '' : 'Zum Öffnen klicken';
+	
 	card.innerHTML = `
 		${mainContentHtml}
-		<span class="hero-card__footer">${isPlaceholder ? '' : 'Zum Öffnen klicken'}</span>
+		${showFooter ? `<span class="hero-card__footer">${footerText}</span>` : ''}
 	`;
 
 	// Add interactive grid splitting effect for placeholder card
 	if (isPlaceholder) {
 		card.style.setProperty('--card-logo', 'none');
+	}
+
+	// Auto-size text in nogo description cards to fit perfectly
+	if (category === 'regelwerk' && !isPlaceholder && item?.showTextLabel) {
+		const descriptionEl = card.querySelector('.hero-card__nogo-description');
+		if (descriptionEl) {
+			// Use requestAnimationFrame to ensure card is rendered first
+			requestAnimationFrame(() => {
+				autoSizeTextToFit(descriptionEl);
+			});
+		}
 	}
 
 	if (isPlaceholder && category === 'illegal') {
@@ -540,18 +865,24 @@ function createHeroCard(item, index, category) {
 			
 			// Track used images to prevent duplicates
 			let usedImages = new Set();
+			// Illegal shuffle: use only crime_shuffle
+			const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
 			const getAvailableImages = () => {
 				const currentImages = getImages().map(img => img.src);
 				usedImages = new Set(currentImages);
-				return CRIME_CHARACTER_IMAGES.filter(img => !usedImages.has(img));
+				return illegalShufflePool.filter(img => {
+					const normalized = normalizeAssetPath(img);
+					return !usedImages.has(normalized);
+				});
 			};
 			
 			const getRandomUniqueImage = (availablePool) => {
 				if (availablePool.length === 0) {
 					// If all images are used, reset and use all images
-					return CRIME_CHARACTER_IMAGES[Math.floor(Math.random() * CRIME_CHARACTER_IMAGES.length)];
+					const randomImg = illegalShufflePool[Math.floor(Math.random() * illegalShufflePool.length)];
+					return normalizeAssetPath(randomImg);
 				}
-				return availablePool[Math.floor(Math.random() * availablePool.length)];
+				return normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
 			};
 
 			const clearSelection = () => {
@@ -569,29 +900,115 @@ function createHeroCard(item, index, category) {
 				
 				// Get unique images for final result
 				const imageCount = getImages().length;
-				const finalImages = getUniqueRandomImages(CRIME_CHARACTER_IMAGES, imageCount);
+				// Illegal shuffle: use only crime_shuffle
+				const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+				const finalImages = getUniqueRandomImages(illegalShufflePool, imageCount);
 				let finalImageIndex = 0;
 				
+				// Track images used during animation to prevent duplicates
+				const usedDuringAnimation = new Set();
 				let step = 0;
 				const spin = () => {
-					const availablePool = getAvailableImages();
 					getImages().forEach((img, index) => {
-						// During animation, use random images
+						// During animation, use random images (ensuring no duplicates)
 						// On final step, use the pre-selected unique images
 						if (step < cadence.length - 1) {
-							const src = getRandomUniqueImage(availablePool);
-							const alt = getCharacterAltFromSrc(src);
-							img.src = src;
-							img.alt = alt;
+							// Get available images excluding those already used in this animation cycle
+							const availablePool = illegalShufflePool.filter(imgPath => {
+								const normalized = normalizeAssetPath(imgPath);
+								return !usedDuringAnimation.has(normalized);
+							});
+							// If we've used all images, reset the set
+							if (availablePool.length === 0) {
+								usedDuringAnimation.clear();
+								// Re-filter with empty set
+								const allAvailable = illegalShufflePool.map(img => normalizeAssetPath(img));
+								const src = allAvailable[Math.floor(Math.random() * allAvailable.length)];
+								usedDuringAnimation.add(src);
+								img.src = src;
+								img.alt = getCharacterAltFromSrc(src);
+							} else {
+								const src = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
+								usedDuringAnimation.add(src);
+								img.src = src;
+								img.alt = getCharacterAltFromSrc(src);
+							}
+							// Retry with different image if current one fails
+							img.onerror = () => {
+								const retryPool = illegalShufflePool.filter(imgPath => {
+									const normalized = normalizeAssetPath(imgPath);
+									return !usedDuringAnimation.has(normalized);
+								});
+								if (retryPool.length > 0) {
+									const retrySrc = normalizeAssetPath(retryPool[Math.floor(Math.random() * retryPool.length)]);
+									usedDuringAnimation.add(retrySrc);
+									img.src = retrySrc;
+								}
+							};
 						} else {
-							// Final step: use unique images
-							const src = finalImages[finalImageIndex % finalImages.length];
-							const alt = getCharacterAltFromSrc(src);
-							img.src = src;
-							img.alt = alt;
-							finalImageIndex++;
+							// Final step: use unique images from pre-selected set (one per image, no duplicates)
+							// Track which images we've already assigned in this final step
+							if (!spin._usedFinalImages) {
+								spin._usedFinalImages = new Set();
+							}
+							// Find next unused image from final set
+							let src = null;
+							let attempts = 0;
+							while (!src && attempts < finalImages.length * 2) {
+								if (finalImageIndex < finalImages.length) {
+									const candidate = normalizeAssetPath(finalImages[finalImageIndex]);
+									if (!spin._usedFinalImages.has(candidate)) {
+										src = candidate;
+										spin._usedFinalImages.add(src);
+										finalImageIndex++;
+									} else {
+										finalImageIndex++;
+									}
+								} else {
+									// If we've exhausted finalImages, find any unused from pool
+									const remainingPool = illegalShufflePool.filter(imgPath => {
+										const normalized = normalizeAssetPath(imgPath);
+										return !spin._usedFinalImages.has(normalized);
+									});
+									if (remainingPool.length > 0) {
+										src = normalizeAssetPath(remainingPool[Math.floor(Math.random() * remainingPool.length)]);
+										spin._usedFinalImages.add(src);
+									} else {
+										break; // No more unique images available
+									}
+								}
+								attempts++;
+							}
+							if (src) {
+								const alt = getCharacterAltFromSrc(src);
+								img.src = src;
+								img.alt = alt;
+								// Retry with different image if current one fails
+								img.onerror = () => {
+									spin._usedFinalImages.delete(src);
+									// Find an unused image from final set
+									const remainingFinalImages = finalImages.filter(finalImg => {
+										const normalized = normalizeAssetPath(finalImg);
+										return !spin._usedFinalImages.has(normalized);
+									});
+									if (remainingFinalImages.length > 0) {
+										const retrySrc = normalizeAssetPath(remainingFinalImages[0]);
+										spin._usedFinalImages.add(retrySrc);
+										img.src = retrySrc;
+									}
+								};
+							}
 						}
 					});
+					// Clear used images after each animation step (except final)
+					if (step < cadence.length - 1) {
+						usedDuringAnimation.clear();
+					} else if (step === cadence.length - 1) {
+						// Clear final images tracking after final step completes
+						if (spin._usedFinalImages) {
+							spin._usedFinalImages.clear();
+						}
+					}
 					step++;
 					if (step < cadence.length) {
 						setTimeout(spin, cadence[step]);
@@ -611,11 +1028,16 @@ function createHeroCard(item, index, category) {
 	} else if (isPlaceholder && category === 'legal' && !item?.isHint) {
 		const maxLevels = 3; // initial grid + two deeper splits (64 max panels)
 		// Combine both crime and random character images for legal section
-		const legalCharacterPool = [...CRIME_CHARACTER_IMAGES, ...RANDOM_CHARACTER_IMAGES];
+		// Legal shuffle: use random_characters + company_characters + crime_characters + crime_shuffle
+		const legalCharacterPool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...CRIME_SHUFFLE_IMAGES];
 		const getRandomCharacterImage = () => {
-			return legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)];
+			const img = legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)];
+			return normalizeAssetPath(img);
 		};
 		const getRandomCharacterAlt = (src) => getCharacterAltFromSrc(src);
+
+		// Track used images across all panels in this card to prevent duplicates
+		const usedPanelImages = new Set();
 
 		const wireGridHover = () => {};
 		const wireCardPointerHiding = () => {};
@@ -640,14 +1062,96 @@ function createHeroCard(item, index, category) {
 				btn.disabled = true;
 				btn.classList.add('is-rolling');
 				const cadence = [60, 80, 100, 120, 140, 160, 200, 240, 280, 340, 420, 520];
+				// Get unique images for final result
+				const allImgs = Array.from(card.querySelectorAll('.split-panel__image'));
+				const finalImages = getUniqueRandomImages(legalCharacterPool, allImgs.length);
+				let finalImageIndex = 0;
+				// Track images used during animation to prevent duplicates
+				const usedDuringAnimation = new Set();
 				let step = 0;
 				const spin = () => {
-					const allImgs = Array.from(card.querySelectorAll('.split-panel__image'));
-					allImgs.forEach((img) => {
-						const src = getRandomCharacterImage();
-						img.src = src;
-						img.alt = getRandomCharacterAlt(src);
-					});
+					const currentImgs = Array.from(card.querySelectorAll('.split-panel__image'));
+					if (step < cadence.length - 1) {
+						// During animation: ensure no duplicates within this step
+						currentImgs.forEach((img) => {
+							const availablePool = legalCharacterPool.filter(imgPath => {
+								const normalized = normalizeAssetPath(imgPath);
+								return !usedDuringAnimation.has(normalized);
+							});
+							// If we've used all images, reset the set
+							if (availablePool.length === 0) {
+								usedDuringAnimation.clear();
+								const allAvailable = legalCharacterPool.map(img => normalizeAssetPath(img));
+								const src = allAvailable[Math.floor(Math.random() * allAvailable.length)];
+								usedDuringAnimation.add(src);
+								img.src = src;
+								img.alt = getRandomCharacterAlt(src);
+							} else {
+								const src = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
+								usedDuringAnimation.add(src);
+								img.src = src;
+								img.alt = getRandomCharacterAlt(src);
+							}
+						});
+						// Clear used images after each animation step
+						usedDuringAnimation.clear();
+					} else {
+						// Final step: use unique images from pre-selected set (already unique via getUniqueRandomImages)
+						// Track used images to ensure no duplicates even in final step
+						const usedFinalImages = new Set();
+						currentImgs.forEach((img, index) => {
+							// Use one image per panel, ensuring no duplicates
+							let src;
+							if (index < finalImages.length) {
+								src = normalizeAssetPath(finalImages[index]);
+								// Double-check it's not already used (shouldn't happen, but safety check)
+								if (usedFinalImages.has(src)) {
+									// Find an unused image from the pool
+									const remainingPool = legalCharacterPool.filter(imgPath => {
+										const normalized = normalizeAssetPath(imgPath);
+										return !usedFinalImages.has(normalized);
+									});
+									if (remainingPool.length > 0) {
+										src = normalizeAssetPath(remainingPool[Math.floor(Math.random() * remainingPool.length)]);
+									} else {
+										// Last resort: use any image
+										src = normalizeAssetPath(legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)]);
+									}
+								}
+								usedFinalImages.add(src);
+							} else {
+								// If we have more panels than finalImages, get from remaining pool
+								const remainingPool = legalCharacterPool.filter(imgPath => {
+									const normalized = normalizeAssetPath(imgPath);
+									return !usedFinalImages.has(normalized);
+								});
+								if (remainingPool.length > 0) {
+									src = normalizeAssetPath(remainingPool[Math.floor(Math.random() * remainingPool.length)]);
+									usedFinalImages.add(src);
+								} else {
+									// Last resort: use any image
+									src = normalizeAssetPath(legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)]);
+									usedFinalImages.add(src);
+								}
+							}
+							if (src) {
+								img.src = src;
+								img.alt = getRandomCharacterAlt(src);
+								// Retry with different image if current one fails to load
+								img.onerror = () => {
+									const retryPool = legalCharacterPool.filter(imgPath => {
+										const normalized = normalizeAssetPath(imgPath);
+										return !usedFinalImages.has(normalized);
+									});
+									if (retryPool.length > 0) {
+										const retrySrc = normalizeAssetPath(retryPool[Math.floor(Math.random() * retryPool.length)]);
+										usedFinalImages.add(retrySrc);
+										img.src = retrySrc;
+									}
+								};
+							}
+						});
+					}
 					step++;
 					if (step < cadence.length) {
 						setTimeout(spin, cadence[step]);
@@ -672,12 +1176,44 @@ function createHeroCard(item, index, category) {
 			for (let i = 0; i < 4; i++) {
 				const panel = document.createElement('div');
 				panel.className = `split-panel split-panel--${i}`;
-				const characterSrc = getRandomCharacterImage();
+				// Get unique image that hasn't been used yet in this card
+				const availablePool = legalCharacterPool.filter(imgPath => {
+					const normalized = normalizeAssetPath(imgPath);
+					return !usedPanelImages.has(normalized);
+				});
+				// If all images are used, reset and start over (shouldn't happen with large pool)
+				let characterSrc;
+				if (availablePool.length === 0) {
+					usedPanelImages.clear();
+					const allAvailable = legalCharacterPool.map(img => normalizeAssetPath(img));
+					characterSrc = allAvailable[Math.floor(Math.random() * allAvailable.length)];
+					usedPanelImages.add(characterSrc);
+				} else {
+					characterSrc = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
+					usedPanelImages.add(characterSrc);
+				}
 				const characterAlt = getRandomCharacterAlt(characterSrc);
 				panel.innerHTML = `
 					<span class="split-panel__backdrop"></span>
 					<img class="split-panel__image" src="${characterSrc}" alt="${characterAlt}" loading="lazy">
 				`;
+				// Add error handler to retry with different image if load fails
+				const imgEl = panel.querySelector('.split-panel__image');
+				if (imgEl) {
+					imgEl.onerror = () => {
+						// Find an unused image from the pool
+						const retryPool = legalCharacterPool.filter(imgPath => {
+							const normalized = normalizeAssetPath(imgPath);
+							return !usedPanelImages.has(normalized);
+						});
+						if (retryPool.length > 0) {
+							const retrySrc = normalizeAssetPath(retryPool[Math.floor(Math.random() * retryPool.length)]);
+							usedPanelImages.add(retrySrc);
+							imgEl.src = retrySrc;
+							imgEl.alt = getRandomCharacterAlt(retrySrc);
+						}
+					};
+				}
 				panel.addEventListener('click', (event) => {
 					event.stopPropagation();
 					if (level < maxLevels) {
@@ -720,17 +1256,32 @@ function createHeroCard(item, index, category) {
 
 		card.addEventListener('click', splitCard);
 	} else if (!isPlaceholder) {
-		const activate = () => {
-			if (Date.now() < (state.heroRailDragging.blockClickUntil || 0)) return;
-			openDetail(category, index);
-		};
-		card.addEventListener('click', activate);
-		card.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' || event.key === ' ') {
-				event.preventDefault();
-				activate();
+		// Handle regelwerk card flips
+		if (category === 'regelwerk') {
+			if (item?.showTextLabel && !item?.isEinleitung) {
+				// NoGo cards - flip on click
+				card.style.cursor = 'pointer';
+				card.addEventListener('click', (e) => {
+					if (Date.now() < (state.heroRailDragging.blockClickUntil || 0)) return;
+					card.classList.toggle('hero-card--flipped');
+				});
+			} else {
+				// Other regelwerk cards are non-interactive
+				card.style.cursor = 'default';
 			}
-		});
+		} else {
+			const activate = () => {
+				if (Date.now() < (state.heroRailDragging.blockClickUntil || 0)) return;
+				openDetail(category, index);
+			};
+			card.addEventListener('click', activate);
+			card.addEventListener('keydown', (event) => {
+				if (event.key === 'Enter' || event.key === ' ') {
+					event.preventDefault();
+					activate();
+				}
+			});
+		}
 	}
 
 	return card;
@@ -1064,7 +1615,7 @@ function initHeroRailRandom() {
 	const randomBtn = document.getElementById('heroRailRandom');
 	if (!randomBtn) return;
 
-	const activateRandom = () => {
+		const activateRandom = () => {
 		if (state.heroRandomCooldown) return;
 		const dataset = getDataset(state.currentCategory);
 		if (!dataset || dataset.length === 0) return;
@@ -1075,6 +1626,78 @@ function initHeroRailRandom() {
 		document.body.classList.add('is-random-rolling');
 		resetHeroRailIdle();
 
+		// Special handling for regelwerk - flip through nogo cards 1-12
+		if (state.currentCategory === 'regelwerk') {
+			// Find nogo cards (items with showTextLabel and nogoNumber)
+			const nogoCards = dataset
+				.map((item, idx) => ({ item, index: idx }))
+				.filter(({ item }) => item?.showTextLabel && !item?.isEinleitung && item?.nogoNumber)
+				.sort((a, b) => (a.item.nogoNumber || 0) - (b.item.nogoNumber || 0))
+				.slice(0, 12); // Only first 12 nogo cards
+			
+			if (nogoCards.length === 0) {
+				randomBtn.classList.remove('is-rolling');
+				state.heroRandomCooldown = false;
+				document.body.classList.remove('is-random-rolling');
+				return;
+			}
+
+			// Randomly select one of the nogo cards
+			const selected = nogoCards[Math.floor(Math.random() * nogoCards.length)];
+			const targetIndex = selected.index;
+			const currentIndex = clampHeroIndex(state.currentIndex);
+			
+			const sequence = buildHeroRandomSequence({
+				startIndex: currentIndex,
+				targetIndex,
+				total: dataset.length
+			});
+
+			const totalSteps = sequence.length;
+			let accumulated = 0;
+			sequence.forEach((index, step) => {
+				const isFinal = step === totalSteps - 1;
+				const delay = getHeroRandomDelay(step, totalSteps);
+				accumulated += delay;
+				const timeout = setTimeout(() => {
+					const pulse = isFinal || step > totalSteps - 3;
+					jumpHeroRailToIndex(index, { smooth: step !== 0, pulse, align: 'center' });
+					if (isFinal) {
+						tagHeroCard(targetIndex, 'hero-card--random-lock', 1120);
+						document.body.classList.add('is-random-lock');
+						const revealTimeout = setTimeout(() => {
+							document.body.classList.remove('is-random-rolling');
+							document.body.classList.add('is-random-reveal');
+							highlightHeroCard(targetIndex);
+							setTimeout(() => document.body.classList.remove('is-random-reveal'), 900);
+							
+							// Flip the card to show front (remove flipped class)
+							setTimeout(() => {
+								const card = getHeroCardByIndex(targetIndex);
+								if (card) {
+									card.classList.remove('hero-card--flipped');
+								}
+							}, 500);
+						}, Math.min(460, delay + 160));
+						state.heroRandomSpinTimeouts.push(revealTimeout);
+					} else {
+						tagHeroCard(index, 'hero-card--roulette', delay + 180);
+					}
+				}, accumulated);
+				state.heroRandomSpinTimeouts.push(timeout);
+			});
+
+			const cooldownTimeout = setTimeout(() => {
+				randomBtn.classList.remove('is-rolling');
+				state.heroRandomCooldown = false;
+				document.body.classList.remove('is-random-rolling', 'is-random-lock');
+				state.heroRandomSpinTimeouts = [];
+			}, accumulated + 900);
+			state.heroRandomSpinTimeouts.push(cooldownTimeout);
+			return;
+		}
+
+		// Original behavior for other categories
 		const currentIndex = clampHeroIndex(state.currentIndex);
 		let targetIndex = Math.floor(Math.random() * dataset.length);
 		if (dataset.length > 1 && targetIndex === currentIndex) {
@@ -1157,7 +1780,7 @@ function jumpHeroRailToIndex(index, options = {}) {
 	focusHeroRailIndex(index, { ...rest, smooth });
 }
 
-function spawnFloatingLogos() {
+function spawnFloatingLogos(category = state.currentCategory) {
 	const container = document.getElementById('heroDynamicBg');
 	if (!container) return;
 	container.innerHTML = '';
@@ -1209,16 +1832,16 @@ function spawnFloatingLogos() {
 		return array;
 	};
 
-	// Combine both crime and random character images for polaroids
-	const combinedPool = [...CRIME_CHARACTER_IMAGES, ...RANDOM_CHARACTER_IMAGES];
-	const pool = shuffleArray(combinedPool.slice());
+	// Polaroids: use ALL images from company_characters, crime_characters, crime_shuffle, and random_characters
+	const imagePool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...CRIME_SHUFFLE_IMAGES];
+	const pool = shuffleArray(imagePool.slice());
 	let cursor = 0;
 	const pullNextImage = () => {
 		if (cursor >= pool.length) {
 			shuffleArray(pool);
 			cursor = 0;
 		}
-		const src = pool[cursor++];
+		const src = normalizeAssetPath(pool[cursor++]);
 		return { src, alt: getCharacterAltFromSrc(src) };
 	};
 
@@ -1239,12 +1862,28 @@ function spawnFloatingLogos() {
 
 		const img = document.createElement('img');
 		img.className = 'bg-polaroid__image';
-		const { src } = pullNextImage();
-		img.src = src;
+		let { src } = pullNextImage();
 		img.alt = '';
 		img.loading = 'lazy';
 		img.decoding = 'async';
 		img.setAttribute('aria-hidden', 'true');
+		
+		// Retry with a different image if current one fails to load (404 or other error)
+		let retryCount = 0;
+		const maxRetries = 3;
+		img.onerror = () => {
+			if (retryCount < maxRetries) {
+				retryCount++;
+				// Try a different image from the pool
+				const nextImage = pullNextImage();
+				img.src = nextImage.src;
+			} else {
+				// After max retries, hide the figure
+				figure.style.display = 'none';
+			}
+		};
+		
+		img.src = src;
 
 		figure.appendChild(img);
 		return figure;
@@ -1302,7 +1941,12 @@ function spawnFloatingLogos() {
 	});
 
 	if (!spawnFloatingLogos._resizeBound) {
-		window.addEventListener('resize', debounce(() => spawnFloatingLogos(), 500));
+		window.addEventListener('resize', debounce(() => {
+			// Only respawn if we're in a category that uses polaroids
+			if (state.currentCategory === 'regelwerk' || state.currentCategory === 'legal' || state.currentCategory === 'illegal') {
+				spawnFloatingLogos(state.currentCategory);
+			}
+		}, 500));
 		spawnFloatingLogos._resizeBound = true;
 	}
 }
@@ -1345,16 +1989,22 @@ function attachHoldHandler() {}
 function openDetail(category, index) {
 	const detailBg = document.getElementById('detailDynamicBg');
 	if (detailBg) {
-		// Spawn flying logos for legal category, fog and damage for illegal
-		if (category !== 'illegal') {
-			// Clear any fog/damage effects first
-			detailBg.querySelectorAll('.fog-container, .crime-damage-container').forEach(el => el.remove());
-			spawnDetailFlyingLogos(detailBg);
-		} else {
+		// Spawn flying logos for legal category, fog and damage for illegal, polaroids for regelwerk
+		if (category === 'illegal') {
 			// Clear any flying logos first
 			detailBg.querySelectorAll('.detail-flying-logo').forEach(el => el.remove());
 			spawnFogEffect(detailBg);
 			spawnCrimeDamage(detailBg);
+		} else if (category === 'regelwerk') {
+			// Clear any fog/damage effects first
+			detailBg.querySelectorAll('.fog-container, .crime-damage-container, .detail-flying-logo').forEach(el => el.remove());
+			// Use the same polaroid effect as legal
+			spawnDetailPolaroids(detailBg);
+		} else {
+			// Legal category - flying logos
+			// Clear any fog/damage effects first
+			detailBg.querySelectorAll('.fog-container, .crime-damage-container').forEach(el => el.remove());
+			spawnDetailFlyingLogos(detailBg);
 		}
 	}
 	const config = CATEGORY_CONFIG[category];
@@ -1373,9 +2023,10 @@ function openDetail(category, index) {
 	state.currentCategory = category;
 	state.currentIndex = safeIndex;
 	
-	// Add class to crime-detail for illegal category
+	// Add class to crime-detail for illegal category and set data-category
 	const detailEl = document.getElementById('detailOverlay') || document.querySelector('.crime-detail');
 	if (detailEl) {
+		detailEl.setAttribute('data-category', category);
 		if (category === 'illegal') {
 			detailEl.classList.add('is-illegal');
 		} else {
@@ -1430,20 +2081,25 @@ function renderDetail(item, category) {
 		}
 	}
 	
-	// Set company character (hide for illegal category)
+	// Set company/crime character image
 	const characterEl = document.getElementById('detailCharacter');
 	if (characterEl) {
-		if (category === 'illegal') {
-			characterEl.style.display = 'none';
+		let characterSrc;
+		if (category === 'legal') {
+			// Legal detail: use company_characters
+			characterSrc = normalizeAssetPath(`public/company_characters/${item.id}_character.png`);
+		} else if (category === 'illegal') {
+			// Illegal detail: use crime_characters
+			characterSrc = normalizeAssetPath(`public/crime_characters/${item.id}_character.png`);
 		} else {
-			const characterSrc = getHeroCardImage(item, category);
-			if (characterSrc) {
-				characterEl.src = characterSrc;
-				characterEl.alt = config.getTitle(item) + ' Character';
-				characterEl.style.display = 'block';
-			} else {
-				characterEl.style.display = 'none';
-			}
+			characterSrc = getHeroCardImage(item, category);
+		}
+		if (characterSrc) {
+			characterEl.src = characterSrc;
+			characterEl.alt = config.getTitle(item) + ' Character';
+			characterEl.style.display = 'block';
+		} else {
+			characterEl.style.display = 'none';
 		}
 	}
 
@@ -1503,7 +2159,12 @@ function renderDetailMedia(item, category) {
 		img.src = media.src;
 		img.alt = media.alt || config.getTitle(item);
 		img.loading = 'lazy';
-		img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+		// Use contain for regelwerk to show complete image, cover for others
+		const objectFit = category === 'regelwerk' ? 'contain' : 'cover';
+		img.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${objectFit};object-position:center;`;
+		if (category === 'regelwerk') {
+			img.classList.add('detail-media-image--regelwerk');
+		}
 		container.appendChild(img);
 	}
 }
@@ -1802,8 +2463,6 @@ function buildDetailVideoControls(buyUrl = null, allVideos = null, videoIndex = 
 	// Always add video counter and navigation (show 1/1 for single videos)
 	const videoCount = (allVideos && Array.isArray(allVideos) && allVideos.length > 0) ? allVideos.length : 1;
 	const currentIndex = Math.max(0, Math.min(videoIndex, videoCount - 1));
-	const videoNav = document.createElement('div');
-	videoNav.className = 'video-nav';
 	
 	// Previous video button
 	const prevBtn = document.createElement('button');
@@ -1833,10 +2492,6 @@ function buildDetailVideoControls(buyUrl = null, allVideos = null, videoIndex = 
 	nextBtn.setAttribute('aria-label', 'Nächstes Video');
 	nextBtn.innerHTML = '<span aria-hidden="true">›</span>';
 	nextBtn.disabled = videoCount <= 1 || currentIndex === videoCount - 1;
-	
-	videoNav.appendChild(prevBtn);
-	videoNav.appendChild(videoCounter);
-	videoNav.appendChild(nextBtn);
 	
 	// Store references for later updates
 	element._videoNav = {
@@ -1868,10 +2523,10 @@ function buildDetailVideoControls(buyUrl = null, allVideos = null, videoIndex = 
 		buyLinkWrapper.appendChild(buyBtn);
 	}
 	
-	// Append all elements in order: mute, volume, buy link (if exists), video nav (always)
+	// Append all elements in order: mute, volume, buy link (if exists), prev button, counter, next button
 	const elementsToAppend = [muteBtn, volumeWrapper];
 	if (buyLinkWrapper) elementsToAppend.push(buyLinkWrapper);
-	elementsToAppend.push(videoNav);
+	elementsToAppend.push(prevBtn, videoCounter, nextBtn);
 	element.append(...elementsToAppend);
 
 	return {
@@ -2515,12 +3170,12 @@ function spawnDetailFlyingLogos(container) {
 	if (!container) return;
 	container.innerHTML = '';
 	
-	// Get all service-app logos from companies
+	// Get all company logos from companies folder
 	const serviceAppLogos = state.companies
 		.filter(company => company && company.id && !company.placeholder)
 		.map(company => ({
 			id: company.id,
-			src: normalizeAssetPath(`public/service-app/${company.id}.png`),
+			src: normalizeAssetPath(`public/company/${company.id}.png`),
 			alt: (company.displayName || company.title || company.id) + ' Logo'
 		}));
 	
@@ -3264,7 +3919,19 @@ function getHeroCardImage(item, category) {
 		return normalizeAssetPath(item.image || 'public/character_2.png');
 	}
 	if (category === 'legal') {
-		return normalizeAssetPath(`public/characters/${item.id}_character.png`);
+		// Legal cards: use company_characters folder
+		return normalizeAssetPath(`public/company_characters/${item.id}_character.png`);
+	}
+	if (category === 'illegal') {
+		// Illegal cards: use crime folder images (crime_ballas.png, etc.)
+		// The image path is already set in the JSON, but we ensure it uses the crime folder
+		if (item.image) {
+			return normalizeAssetPath(item.image);
+		}
+		return normalizeAssetPath(`public/crime/crime_${item.id}.png`);
+	}
+	if (category === 'regelwerk') {
+		return normalizeAssetPath(item.image || 'public/roots_nogo.png');
 	}
 	const fallback = `public/crime/${item.id}.png`;
 	return normalizeAssetPath(item.image || fallback);
@@ -3273,7 +3940,8 @@ function getHeroCardImage(item, category) {
 function getHeroCardLogo(item, category) {
 	if (item?.placeholder) return '';
 	if (category === 'legal') {
-		return normalizeAssetPath(`public/service-app/${item.id}.png`);
+		// Legal cards: use company folder for logos
+		return normalizeAssetPath(`public/company/${item.id}.png`);
 	}
 	return normalizeAssetPath(item.badge || item.image || '');
 }
@@ -3299,7 +3967,7 @@ function escapeHtml(str = '') {
 function formatParagraphs(text = '') {
 	const trimmed = text.trim();
 	if (!trimmed) return '';
-	// Combine all text into a single paragraph, replacing double newlines with single breaks
+	// Always combine all text into a single paragraph
 	const singleParagraph = trimmed
 		.replace(/\n{2,}/g, ' ')
 		.replace(/\n/g, ' ')
@@ -3351,6 +4019,21 @@ function buildCrimeCollage(faction) {
 	const others = buildSharedCollageItemsFromDataset({
 		dataset,
 		category: 'illegal',
+		excludeKey: featured?.key || null,
+		limit: remainingLimit
+	});
+	return others.slice(0, MAX_COLLAGE_ITEMS);
+}
+
+function buildRegelwerkCollage(item) {
+	const datasetRaw = getDataset('regelwerk');
+	const dataset = Array.isArray(datasetRaw) ? datasetRaw : [];
+	const index = dataset.findIndex((entry) => entry?.id === item?.id);
+	const featured = index >= 0 ? createCollageItem(dataset[index], 'regelwerk', index) : null;
+	const remainingLimit = MAX_COLLAGE_ITEMS;
+	const others = buildSharedCollageItemsFromDataset({
+		dataset,
+		category: 'regelwerk',
 		excludeKey: featured?.key || null,
 		limit: remainingLimit
 	});
@@ -3440,6 +4123,62 @@ function scaleTaglineToFit(element) {
 	element.style.fontSize = `${bestSize}px`;
 }
 
+// ==================== NOGO TEXT AUTO-SIZING ====================
+
+function autoSizeTextToFit(descriptionElement) {
+	if (!descriptionElement) return;
+	
+	const card = descriptionElement.closest('.hero-card');
+	const content = descriptionElement.closest('.hero-card__nogo-content');
+	if (!card || !content) return;
+	
+	// Get available height: card height minus header and padding
+	const header = descriptionElement.previousElementSibling;
+	const headerHeight = header ? header.offsetHeight : 0;
+	const cardHeight = card.offsetHeight;
+	const contentPadding = parseFloat(getComputedStyle(content).paddingTop) + parseFloat(getComputedStyle(content).paddingBottom);
+	const availableHeight = cardHeight - headerHeight - contentPadding - 20; // Extra margin for safety
+	
+	if (availableHeight <= 0) return;
+	
+	const maxFontSize = 32; // Max from clamp(18px, 2.8vw, 32px)
+	const minFontSize = 16;
+	
+	// Reset to max size first to measure
+	descriptionElement.style.fontSize = `${maxFontSize}px`;
+	descriptionElement.style.overflow = 'visible';
+	
+	// Check if it fits
+	if (descriptionElement.scrollHeight <= availableHeight) {
+		// It fits, use responsive sizing
+		descriptionElement.style.fontSize = '';
+		return;
+	}
+	
+	// Binary search for the right font size
+	let low = minFontSize;
+	let high = maxFontSize;
+	let bestSize = minFontSize;
+	
+	for (let i = 0; i < 25; i++) {
+		const mid = (low + high) / 2;
+		descriptionElement.style.fontSize = `${mid}px`;
+		
+		// Small delay to ensure layout recalculation
+		const currentHeight = descriptionElement.scrollHeight;
+		
+		if (currentHeight <= availableHeight) {
+			bestSize = mid;
+			low = mid + 0.3;
+		} else {
+			high = mid - 0.3;
+		}
+	}
+	
+	descriptionElement.style.fontSize = `${bestSize}px`;
+	descriptionElement.style.overflow = 'visible';
+}
+
 // ==================== RESIZE HANDLER ====================
 
 let resizeTimeout;
@@ -3449,6 +4188,12 @@ function handleResize() {
 		const taglineEl = document.getElementById('detailTagline');
 		if (taglineEl && taglineEl.style.display !== 'none') {
 			scaleTaglineToFit(taglineEl);
+		}
+		
+		// Re-auto-size nogo description cards
+		if (state.currentCategory === 'regelwerk') {
+			const nogoDescriptions = document.querySelectorAll('.hero-card--regelwerk .hero-card__nogo-description');
+			nogoDescriptions.forEach(desc => autoSizeTextToFit(desc));
 		}
 	}, 150);
 }
