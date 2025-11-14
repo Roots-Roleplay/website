@@ -982,7 +982,14 @@ function createHeroCard(item, index, category) {
 	// For regelwerk and whitelist, only use image backdrop on intro image card
 	const isRegelwerkIntro = category === 'regelwerk' && item?.isIntroImageCard;
 	const isWhitelistIntro = category === 'whitelist' && item?.isIntroImageCard;
-	const logoValue = (category === 'illegal' || isRegelwerkIntro || isWhitelistIntro) ? `url('${imageSrc}')` : (logoSrc ? `url('${logoSrc}')` : '');
+	
+	// Ensure paths are absolute for CSS variables (CSS resolves relative to CSS file location)
+	const imageSrcAbsolute = imageSrc ? ensureAbsolutePathForCSS(imageSrc) : '';
+	const logoSrcAbsolute = logoSrc ? ensureAbsolutePathForCSS(logoSrc) : '';
+	
+	const logoValue = (category === 'illegal' || isRegelwerkIntro || isWhitelistIntro) 
+		? (imageSrcAbsolute ? `url('${imageSrcAbsolute}')` : '')
+		: (logoSrcAbsolute ? `url('${logoSrcAbsolute}')` : '');
 	const title = CATEGORY_CONFIG[category].getTitle(item);
 
 	card.setAttribute('aria-label', isPlaceholder ? '' : `${title} öffnen`);
@@ -3970,37 +3977,35 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 	const logoCount = Math.min(logos.length * 2, 15);
 	const shuffledLogos = shuffleArray([...logos, ...logos]).slice(0, logoCount);
 	
-	// Stagger creation to avoid loading all at once
+	// Create all logos immediately (no stagger delay)
 	shuffledLogos.forEach((logo, index) => {
-		setTimeout(() => {
-			const logoEl = document.createElement('img');
-			logoEl.className = 'detail-flying-logo';
-			logoEl.alt = logo.alt;
-			logoEl.loading = 'lazy';
-			logoEl.decoding = 'async';
-			logoEl.setAttribute('aria-hidden', 'true');
-			
-			// Random position - keep logos more centered and avoid edges
-			const left = 15 + Math.random() * 70; // 15-85% (avoid edges)
-			const top = 15 + Math.random() * 70; // 15-85% (avoid edges)
-			const size = 45 + Math.random() * 55; // 45-100px
-			const duration = 100 + Math.random() * 100; // 100-200s (slower, smoother)
-			const delay = Math.random() * 8; // 0-8s delay for more variation
-			const direction = Math.random() > 0.5 ? 1 : -1;
-			
-			logoEl.style.left = `${left}%`;
-			logoEl.style.top = `${top}%`;
-			logoEl.style.width = `${size}px`;
-			logoEl.style.height = 'auto';
-			logoEl.style.opacity = '0.08';
-			logoEl.style.setProperty('--fly-duration', `${duration}s`);
-			logoEl.style.setProperty('--fly-delay', `${delay}s`);
-			logoEl.style.setProperty('--fly-direction', direction);
-			
-			// Set src after appending to reduce concurrent loads
-			container.appendChild(logoEl);
-			logoEl.src = logo.src;
-		}, index * 50); // Stagger by 50ms each
+		const logoEl = document.createElement('img');
+		logoEl.className = 'detail-flying-logo';
+		logoEl.alt = logo.alt;
+		logoEl.loading = 'eager'; // Load immediately, not lazy
+		logoEl.decoding = 'async';
+		logoEl.setAttribute('aria-hidden', 'true');
+		
+		// Random position - keep logos more centered and avoid edges
+		const left = 15 + Math.random() * 70; // 15-85% (avoid edges)
+		const top = 15 + Math.random() * 70; // 15-85% (avoid edges)
+		const size = 45 + Math.random() * 55; // 45-100px
+		const duration = 100 + Math.random() * 100; // 100-200s (slower, smoother)
+		const delay = 0; // No delay - start immediately
+		const direction = Math.random() > 0.5 ? 1 : -1;
+		
+		logoEl.style.left = `${left}%`;
+		logoEl.style.top = `${top}%`;
+		logoEl.style.width = `${size}px`;
+		logoEl.style.height = 'auto';
+		logoEl.style.opacity = '0.08';
+		logoEl.style.setProperty('--fly-duration', `${duration}s`);
+		logoEl.style.setProperty('--fly-delay', `${delay}s`);
+		logoEl.style.setProperty('--fly-direction', direction);
+		
+		// Append immediately and set src
+		container.appendChild(logoEl);
+		logoEl.src = logo.src;
 	});
 }
 
@@ -4753,13 +4758,39 @@ function getHeroCardImage(item, category) {
 	return normalizeAssetPath(item.image || fallback);
 }
 
+// Helper function to ensure paths are absolute for CSS variables
+// CSS resolves url() in CSS variables relative to the CSS file location, not document root
+function ensureAbsolutePathForCSS(path) {
+	if (!path) return '';
+	if (/^https?:\/\//i.test(path)) return path; // Already absolute URL
+	if (path.startsWith('/')) return path; // Already absolute path
+	
+	const basePath = getBasePath();
+	const normalized = normalizeAssetPath(path);
+	
+	// If normalized path doesn't start with /, make it absolute
+	if (!normalized.startsWith('/')) {
+		// If we have a base path, prepend it; otherwise use root
+		return basePath ? `${basePath}/${normalized}` : `/${normalized}`;
+	}
+	
+	return normalized;
+}
+
 function getHeroCardLogo(item, category) {
 	if (item?.placeholder) return '';
+	let path = '';
 	if (category === 'legal') {
 		// Legal cards: use company folder for logos
-		return normalizeAssetPath(`public/company/${item.id}.png`);
+		path = `public/company/${item.id}.png`;
+	} else {
+		path = item.badge || item.image || '';
 	}
-	return normalizeAssetPath(item.badge || item.image || '');
+	
+	if (!path) return '';
+	
+	// Return absolute path for CSS variables
+	return ensureAbsolutePathForCSS(path);
 }
 
 function getLayoutIndex(seed = '') {
