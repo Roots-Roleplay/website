@@ -97,7 +97,7 @@ function setupViewportScaling() {
 			
 			if (heroRailControls) {
 				// Position at viewport coordinates - use larger bottom offset to prevent cutoff
-				const controlsBottom = Math.max(48, Math.min(64, viewportHeight * 0.05)); // 5% of viewport height, clamped to 48-64px
+				const controlsBottom = Math.max(120, Math.min(160, viewportHeight * 0.08)); // 8% of viewport height, clamped to 120-160px
 				
 				heroRailControls.style.position = 'fixed';
 				heroRailControls.style.left = '50%';
@@ -331,7 +331,28 @@ function buildImageArrayFromFolder(folderPath, knownFiles = [], numberedRange = 
 	return images;
 }
 
-// All images from random_characters folder (for polaroids)
+// All images from random_characters folder (for polaroids) - function to ensure paths work with base tag
+function getRandomCharacterImages() {
+	const knownFiles = [
+		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
+		'csacas.png', 'daw.png', 'dwa.png', 'fva.png', 'ges.png', 'gse.png',
+		'hed.png', 'jyd.png', 'kitt.png', 'qeeweq.png', 'qeweqw.png', 'qewqe.png',
+		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png'
+	];
+	const images = buildImageArrayFromFolder('public/random_characters', knownFiles, { start: 1, end: 100 });
+	
+	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
+	const baseTag = document.querySelector('base[href]');
+	if (baseTag) {
+		// Base tag exists, return relative paths - browser will resolve them correctly
+		return images;
+	}
+	
+	// No base tag, normalize paths normally
+	return images.map(img => normalizeAssetPath(img));
+}
+
+// Keep a constant version for backward compatibility (computed once at load for performance)
 const RANDOM_CHARACTER_IMAGES = (() => {
 	const knownFiles = [
 		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
@@ -342,7 +363,45 @@ const RANDOM_CHARACTER_IMAGES = (() => {
 	return buildImageArrayFromFolder('public/random_characters', knownFiles, { start: 1, end: 100 });
 })();
 
-// Company character images
+// Company character images - function to ensure paths work with base tag
+function getCompanyCharacterImages() {
+	const images = [
+		'public/company_characters/admin_character.png',
+		'public/company_characters/aldente_character.png',
+		'public/company_characters/ambulance_character.png',
+		'public/company_characters/aod_character.png',
+		'public/company_characters/bikes_character.png',
+		'public/company_characters/blockbudz_character.png',
+		'public/company_characters/burgershot_character.png',
+		'public/company_characters/caseys_character.png',
+		'public/company_characters/church_character.png',
+		'public/company_characters/doj_character.png',
+		'public/company_characters/larrys_character.png',
+		'public/company_characters/leapfrog_character.png',
+		'public/company_characters/news_character.png',
+		'public/company_characters/pearls_character.png',
+		'public/company_characters/pier76_character.png',
+		'public/company_characters/police_character.png',
+		'public/company_characters/reds_character.png',
+		'public/company_characters/sheriff_character.png',
+		'public/company_characters/smokeys_character.png',
+		'public/company_characters/taxi_character.png',
+		'public/company_characters/tuner_character.png',
+		'public/company_characters/yellowjack_character.png'
+	];
+	
+	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
+	const baseTag = document.querySelector('base[href]');
+	if (baseTag) {
+		// Base tag exists, return relative paths - browser will resolve them correctly
+		return images;
+	}
+	
+	// No base tag, normalize paths normally
+	return images.map(img => normalizeAssetPath(img));
+}
+
+// Keep a constant version for backward compatibility
 const COMPANY_CHARACTER_IMAGES = [
 	'public/company_characters/admin_character.png',
 	'public/company_characters/aldente_character.png',
@@ -368,7 +427,29 @@ const COMPANY_CHARACTER_IMAGES = [
 	'public/company_characters/yellowjack_character.png'
 ];
 
-// Crime character images
+// Crime character images - function to ensure paths work with base tag
+function getCrimeCharacterImages() {
+	const images = [
+		'public/crime_characters/aod_character.png',
+		'public/crime_characters/ballas_character.png',
+		'public/crime_characters/lost_character.png',
+		'public/crime_characters/madrazo_character.png',
+		'public/crime_characters/pit_character.png',
+		'public/crime_characters/rednecks_character.png'
+	];
+	
+	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
+	const baseTag = document.querySelector('base[href]');
+	if (baseTag) {
+		// Base tag exists, return relative paths - browser will resolve them correctly
+		return images;
+	}
+	
+	// No base tag, normalize paths normally
+	return images.map(img => normalizeAssetPath(img));
+}
+
+// Keep a constant version for backward compatibility
 const CRIME_CHARACTER_IMAGES_ARRAY = [
 	'public/crime_characters/aod_character.png',
 	'public/crime_characters/ballas_character.png',
@@ -408,7 +489,15 @@ function getCrimeShuffleImages() {
 		'wda.png',
 		'yk.png'
 	];
-	// Normalize all paths to ensure consistency - compute dynamically to use current base path
+	
+	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
+	const baseTag = document.querySelector('base[href]');
+	if (baseTag) {
+		// Base tag exists, return relative paths - browser will resolve them correctly
+		return knownFiles.map(file => `public/crime_shuffle/${file}`);
+	}
+	
+	// No base tag, normalize paths normally
 	return knownFiles.map(file => normalizeAssetPath(`public/crime_shuffle/${file}`));
 }
 
@@ -425,7 +514,8 @@ function getUniqueRandomImages(pool, count) {
 }
 
 function pickRandomCharacterImage() {
-	return RANDOM_CHARACTER_IMAGES[Math.floor(Math.random() * RANDOM_CHARACTER_IMAGES.length)];
+	const images = getRandomCharacterImages();
+	return images[Math.floor(Math.random() * images.length)];
 }
 
 function getCharacterAltFromSrc(src) {
@@ -1684,7 +1774,7 @@ function createHeroCard(item, index, category) {
 		const maxLevels = 3; // initial grid + two deeper splits (64 max panels)
 		// Combine both crime and random character images for legal section
 		// Legal shuffle: use random_characters + company_characters + crime_characters + crime_shuffle
-		const legalCharacterPool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...getCrimeShuffleImages()];
+		const legalCharacterPool = [...getRandomCharacterImages(), ...getCompanyCharacterImages(), ...getCrimeCharacterImages(), ...getCrimeShuffleImages()];
 		const getRandomCharacterImage = () => {
 			const img = legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)];
 			return normalizeAssetPath(img);
@@ -1848,8 +1938,9 @@ function createHeroCard(item, index, category) {
 					usedPanelImages.add(characterSrc);
 				}
 				const characterAlt = getRandomCharacterAlt(characterSrc);
+				const backdropSrc = normalizeAssetPath('public/roots_R.png');
 				panel.innerHTML = `
-					<span class="split-panel__backdrop"></span>
+					<span class="split-panel__backdrop" style="background-image: url('${backdropSrc}');"></span>
 					<img class="split-panel__image" src="${characterSrc}" alt="${characterAlt}" loading="lazy">
 				`;
 				// Add error handler to retry with different image if load fails
@@ -2491,7 +2582,7 @@ function spawnFloatingLogos(category = state.currentCategory) {
 	};
 
 	// Polaroids: use ALL images from company_characters, crime_characters, crime_shuffle, and random_characters
-	const imagePool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...getCrimeShuffleImages()];
+	const imagePool = [...getRandomCharacterImages(), ...getCompanyCharacterImages(), ...getCrimeCharacterImages(), ...getCrimeShuffleImages()];
 	const pool = shuffleArray(imagePool.slice());
 	let cursor = 0;
 	const pullNextImage = () => {
@@ -2649,11 +2740,11 @@ function openDetail(category, index) {
 	if (detailBg) {
 		// Spawn flying logos for legal and illegal categories, polaroids for regelwerk
 		if (category === 'illegal') {
-			// Clear any fog/damage effects first
-			detailBg.querySelectorAll('.fog-container, .crime-damage-container').forEach(el => el.remove());
+			// Clear any fog/damage effects and police lights first
+			detailBg.querySelectorAll('.fog-container, .crime-damage-container, .police-light').forEach(el => el.remove());
 			spawnFogEffect(detailBg);
 			spawnCrimeDamage(detailBg);
-			// Also spawn crime logos
+			// Spawn crime logos (no police lights)
 			spawnDetailFlyingLogos(detailBg, 'illegal');
 		} else if (category === 'regelwerk' || category === 'whitelist') {
 			// Clear any fog/damage effects first
@@ -3870,19 +3961,19 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 			logoEl.decoding = 'async';
 			logoEl.setAttribute('aria-hidden', 'true');
 			
-			// Random position
-			const left = Math.random() * 100;
-			const top = Math.random() * 100;
-			const size = 40 + Math.random() * 60; // 40-100px
-			const duration = 20 + Math.random() * 30; // 20-50s
-			const delay = Math.random() * 5; // 0-5s delay
+			// Random position - keep logos more centered and avoid edges
+			const left = 15 + Math.random() * 70; // 15-85% (avoid edges)
+			const top = 15 + Math.random() * 70; // 15-85% (avoid edges)
+			const size = 45 + Math.random() * 55; // 45-100px
+			const duration = 100 + Math.random() * 100; // 100-200s (slower, smoother)
+			const delay = Math.random() * 8; // 0-8s delay for more variation
 			const direction = Math.random() > 0.5 ? 1 : -1;
 			
 			logoEl.style.left = `${left}%`;
 			logoEl.style.top = `${top}%`;
 			logoEl.style.width = `${size}px`;
 			logoEl.style.height = 'auto';
-			logoEl.style.opacity = '0.45';
+			logoEl.style.opacity = '0.08';
 			logoEl.style.setProperty('--fly-duration', `${duration}s`);
 			logoEl.style.setProperty('--fly-delay', `${delay}s`);
 			logoEl.style.setProperty('--fly-direction', direction);
@@ -3913,14 +4004,12 @@ function spawnPoliceLights(container) {
 		const left = Math.random() * 100;
 		const top = Math.random() * 100;
 		const size = 200 + Math.random() * 300; // 200-500px
-		const delay = Math.random() * 2; // 0-2s delay
 		const isRed = i % 2 === 0; // Alternate between red and blue
 		
 		lightEl.style.left = `${left}%`;
 		lightEl.style.top = `${top}%`;
 		lightEl.style.width = `${size}px`;
 		lightEl.style.height = `${size}px`;
-		lightEl.style.setProperty('--light-delay', `${delay}s`);
 		lightEl.classList.add(isRed ? 'police-light--red' : 'police-light--blue');
 		
 		container.appendChild(lightEl);
@@ -4094,7 +4183,7 @@ function spawnDetailPolaroids(container) {
     ];
 
     // Combine both crime and random character images for polaroids
-    const combinedPool = [...CRIME_CHARACTER_IMAGES, ...RANDOM_CHARACTER_IMAGES];
+    const combinedPool = [...getCrimeCharacterImages(), ...getRandomCharacterImages()];
     const pool = shuffleArray(combinedPool.slice());
     let cursor = 0;
     const pullNextImage = () => {
@@ -4574,12 +4663,20 @@ function getBasePath() {
 function normalizeAssetPath(path = '') {
 	if (!path) return '';
 	if (/^https?:\/\//i.test(path)) return path;
+	
 	const basePath = getBasePath();
+	const baseTag = document.querySelector('base[href]');
 	
 	// Check if path already starts with base path - avoid double normalization
 	if (basePath && path.startsWith(basePath + '/')) {
 		// Path already has base path prefix, just clean up any double slashes
 		return path.replace(/\/+/g, '/');
+	}
+	
+	// If base tag exists and path is relative (doesn't start with /), return as-is
+	// Browser will resolve it relative to the base tag
+	if (baseTag && !path.startsWith('/') && !path.startsWith('./') && !path.startsWith('../')) {
+		return path;
 	}
 	
 	const trimmed = String(path).replace(/^\/+/, '');
