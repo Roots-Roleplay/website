@@ -687,12 +687,12 @@ body.desktop-scaled {
 	display: grid;
 	grid-template-columns: minmax(320px, 640px) 1fr;
 	align-items: center;
-	gap: clamp(32px, 6vw, 120px);
+	gap: clamp(20px, 4vw, 80px);
 	width: 100%;
 	margin-left: 0;
 	margin-right: 0;
 	padding: clamp(24px, 5vh, 64px) clamp(24px, 5vw, 72px) clamp(24px, 5vh, 64px) 0;
-	padding-left: clamp(24px, 5vw, 72px);
+	padding-left: clamp(20px, 4vw, 56px);
 	position: relative;
 	z-index: 2;
 	overflow: visible;
@@ -704,6 +704,8 @@ body.desktop-scaled {
 	gap: clamp(20px, 3vh, 32px);
 	max-width: min(540px, 44vw);
 	align-items: flex-start;
+	position: relative;
+	z-index: 11;
 }
 
 .hero-logo {
@@ -721,41 +723,20 @@ body.desktop-scaled {
 	padding: clamp(32px, 4vh, 40px) clamp(24px, 3vw, 36px);
 	border-radius: 36px;
 	border: 1px solid rgba(134, 166, 139, 0.3);
-	background:
-		linear-gradient(155deg, rgba(16, 22, 24, 0.92) 0%, rgba(12, 18, 20, 0.88) 52%, rgba(8, 14, 16, 0.82) 100%),
-		radial-gradient(120% 120% at 0% 0%, rgba(134, 166, 139, 0.16) 0%, rgba(12, 18, 16, 0) 52%);
-	box-shadow:
-		0 32px 64px rgba(4, 10, 12, 0.54),
-		inset 0 0 0 1px rgba(134, 166, 139, 0.12);
-	backdrop-filter: blur(24px);
+	background: transparent;
+	z-index: 11;
+	box-shadow: none;
+	backdrop-filter: none;
 	overflow: hidden;
 	position: relative;
 }
 
 .hero-left__content::before {
-	content: '';
-	position: absolute;
-	top: -22%;
-	right: -26%;
-	width: clamp(240px, 32vw, 360px);
-	height: clamp(240px, 32vw, 360px);
-	background: radial-gradient(circle at 50% 50%, rgba(155, 192, 164, 0.22), rgba(155, 192, 164, 0));
-	opacity: 0.3;
-	filter: blur(16px);
-	pointer-events: none;
+	display: none;
 }
 
 .hero-left__content::after {
-	content: '';
-	position: absolute;
-	bottom: -30%;
-	left: -24%;
-	width: clamp(300px, 38vw, 440px);
-	height: clamp(200px, 30vw, 340px);
-	background: radial-gradient(circle at 30% 70%, rgba(68, 122, 118, 0.28), rgba(10, 18, 16, 0));
-	opacity: 0.26;
-	filter: blur(24px);
-	pointer-events: none;
+	display: none;
 }
 
 .hero-tagline-group {
@@ -977,11 +958,13 @@ body.desktop-scaled {
 	align-items: center;
 	justify-content: flex-start;
 	padding-bottom: clamp(56px, 9vh, 120px);
+	padding-left: clamp(40px, 5vw, 80px);
 	min-width: 0;
 	max-width: none;
-	overflow: visible;
+	overflow: hidden;
 	margin-right: 0;
 	padding-right: 0;
+	border-radius: 10px;
 }
 
 .hero-rail-controls {
@@ -1226,20 +1209,21 @@ body.is-random-reveal .crime-detail.active .crime-detail-content {
 	align-items: center;
 	justify-content: flex-start;
 	gap: clamp(20px, 2.5vw, 36px);
-	padding: 16px 0 24px clamp(32px, 10vw, 160px);
-	padding-right: 0;
-	width: calc(100% + clamp(32px, 10vw, 160px) + 300px);
+	padding: 16px 0 24px clamp(60px, 12vw, 180px);
+	padding-right: clamp(32px, 10vw, 160px);
+	width: calc(100% + clamp(60px, 12vw, 180px) + 300px);
 	max-width: none;
 	height: 100%;
 	overflow-x: auto;
 	overflow-y: hidden;
-	margin-left: calc(-1 * clamp(32px, 10vw, 160px));
+	margin-left: calc(-1 * clamp(60px, 12vw, 180px));
 	margin-right: -300px;
 	scroll-behavior: smooth;
 	cursor: default;
 	flex: 1 1 auto;
 	min-width: 0;
 	scrollbar-width: none;
+	border-radius: 40px;
 	-ms-overflow-style: none;
 }
 
@@ -1253,6 +1237,7 @@ body.is-random-reveal .crime-detail.active .crime-detail-content {
 	will-change: transform;
 	width: max-content;
 	flex: 0 0 auto;
+	margin-left: clamp(20px, 3vw, 40px);
 }
 
 /* Add a trailing spacer so the end of the rail disappears beyond the right edge */
@@ -4546,14 +4531,7 @@ body.is-split-open .hero-rail-hint { display: none; }
 }
 
 .detail-dynamic-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.22;
+  display: none;
 }
 
 .detail-flying-logo {
@@ -4911,8 +4889,10 @@ body.is-split-open .hero-rail-hint { display: none; }
   flex: 1;
   min-height: 0;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   max-height: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 @media (min-width: 1024px) {
@@ -4957,8 +4937,8 @@ body.is-split-open .hero-rail-hint { display: none; }
   padding: 0;
   border-radius: 24px;
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.48);
+  background: transparent;
+  box-shadow: none;
   animation: detailMediaFadeIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
   border: 1px solid rgba(134, 166, 139, 0.3);
   isolation: isolate;
@@ -5009,16 +4989,14 @@ body.is-split-open .hero-rail-hint { display: none; }
 /* Regelwerk and Whitelist detail view styling */
 .crime-detail[data-category="regelwerk"] .detail-media-row,
 .crime-detail[data-category="whitelist"] .detail-media-row {
-  background: linear-gradient(155deg, rgba(8, 10, 12, 0.98) 0%, rgba(6, 8, 10, 0.96) 52%, rgba(4, 6, 8, 0.94) 100%);
+  background: transparent;
   border: 1px solid rgba(134, 166, 139, 0.3);
-  box-shadow: 
-    0 18px 40px rgba(0, 0, 0, 0.48),
-    inset 0 0 0 1px rgba(134, 166, 139, 0.12);
+  box-shadow: none;
 }
 
 .crime-detail[data-category="regelwerk"] .detail-media-row::after,
 .crime-detail[data-category="whitelist"] .detail-media-row::after {
-  background: radial-gradient(ellipse at 50% 110%, rgba(134, 166, 139, 0.20), rgba(134, 166, 139, 0.08) 38%, rgba(0, 0, 0, 0) 62%);
+  display: none;
 }
 
 .detail-media-image--regelwerk,
@@ -5049,14 +5027,11 @@ body.is-split-open .hero-rail-hint { display: none; }
   padding: clamp(48px, 5.5vh, 64px) clamp(40px, 5vw, 56px);
   border-radius: 24px;
   border: 1px solid rgba(134, 166, 139, 0.3);
-  background:
-    linear-gradient(155deg, rgba(8, 10, 12, 0.98) 0%, rgba(6, 8, 10, 0.96) 52%, rgba(4, 6, 8, 0.94) 100%),
-    radial-gradient(120% 120% at 0% 0%, rgba(134, 166, 139, 0.12) 0%, rgba(8, 10, 8, 0) 52%);
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.48),
-    inset 0 0 0 1px rgba(134, 166, 139, 0.12);
-  backdrop-filter: blur(24px);
-  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: none;
   min-height: 400px;
   height: auto;
@@ -5065,9 +5040,10 @@ body.is-split-open .hero-rail-hint { display: none; }
   overflow-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
-  z-index: 1;
+  z-index: 3;
   scrollbar-width: thin;
   scrollbar-color: rgba(134, 166, 139, 0.6) rgba(8, 10, 12, 0.4);
+  isolation: isolate;
 }
 
 @media (min-width: 1024px) {
@@ -5416,33 +5392,11 @@ body.is-split-open .hero-rail-hint { display: none; }
 /* Remove duplicate - using styles defined above */
 
 .content-text::before {
-  content: '';
-  position: absolute;
-  top: -22%;
-  right: -26%;
-  width: clamp(240px, 32vw, 360px);
-  height: clamp(240px, 32vw, 360px);
-  background: radial-gradient(circle at 50% 50%, rgba(155, 192, 164, 0.22), rgba(155, 192, 164, 0));
-  opacity: 0.3;
-  filter: blur(16px);
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 50%;
+  display: none;
 }
 
 .content-text::after {
-  content: '';
-  position: absolute;
-  bottom: -30%;
-  left: -24%;
-  width: clamp(300px, 38vw, 440px);
-  height: clamp(200px, 30vw, 340px);
-  background: radial-gradient(circle at 30% 70%, rgba(68, 122, 118, 0.28), rgba(10, 18, 16, 0));
-  opacity: 0.26;
-  filter: blur(24px);
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 50%;
+  display: none;
 }
 
 .content-text > * {

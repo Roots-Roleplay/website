@@ -408,7 +408,8 @@ const CRIME_SHUFFLE_IMAGES = (() => {
 		'wda.png',
 		'yk.png'
 	];
-	return knownFiles.map(file => `public/crime_shuffle/${file}`);
+	// Normalize all paths to ensure consistency
+	return knownFiles.map(file => normalizeAssetPath(`public/crime_shuffle/${file}`));
 })();
 
 // Helper function to get unique random images from pool
@@ -937,20 +938,35 @@ function createHeroCard(item, index, category) {
 		const gridCells = [];
 		for (let index = 0; index < faceCount; index++) {
 			if (index < finalFaces.length) {
-				const normalizedSrc = finalFaces[index];
+				const normalizedSrc = normalizeAssetPath(finalFaces[index]);
 				const alt = getCharacterAltFromSrc(normalizedSrc);
 				gridCells.push(`
 					<div class="illegal-placeholder__cell">
-						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true">
+						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true" onerror="this.style.display='none'; const cell=this.closest('.illegal-placeholder__cell'); if(cell) cell.style.display='none';">
 					</div>
 				`);
 			} else {
-				// This shouldn't happen if we have enough images, but create empty cell as fallback
-				gridCells.push(`
-					<div class="illegal-placeholder__cell">
-						<img class="illegal-placeholder__image" src="" alt="" loading="lazy" aria-hidden="true" style="display: none;">
-					</div>
-				`);
+				// Fallback: try to get a random image from the pool
+				const fallbackPool = illegalShufflePool
+					.map(normalizeAssetPath)
+					.filter(src => !usedSrcs.has(src));
+				if (fallbackPool.length > 0) {
+					const fallbackSrc = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+					usedSrcs.add(fallbackSrc);
+					const alt = getCharacterAltFromSrc(fallbackSrc);
+					gridCells.push(`
+						<div class="illegal-placeholder__cell">
+							<img class="illegal-placeholder__image" src="${fallbackSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true" onerror="this.style.display='none'; const cell=this.closest('.illegal-placeholder__cell'); if(cell) cell.style.display='none';">
+						</div>
+					`);
+				} else {
+					// Last resort: create empty cell
+					gridCells.push(`
+						<div class="illegal-placeholder__cell">
+							<img class="illegal-placeholder__image" src="" alt="" loading="lazy" aria-hidden="true" style="display: none;">
+						</div>
+					`);
+				}
 			}
 		}
 		
