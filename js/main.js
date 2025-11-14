@@ -464,12 +464,14 @@ async function init() {
 async function loadContent() {
 	try {
 		const basePath = getBasePath();
+		// Ensure base path has leading slash for fetch, or empty for root
+		const basePathPrefix = basePath ? `${basePath}/` : '/';
 		
 		const [companies, crime, nogos, whitelist] = await Promise.all([
-			fetch(`${basePath}/content/companies.json`).then((r) => r.json()),
-			fetch(`${basePath}/content/crime-factions.json`).then((r) => r.json()),
-			fetch(`${basePath}/content/nogos.json`).then((r) => r.json()),
-			fetch(`${basePath}/content/whitelist.json`).then((r) => r.json())
+			fetch(`${basePathPrefix}content/companies.json`).then((r) => r.json()),
+			fetch(`${basePathPrefix}content/crime-factions.json`).then((r) => r.json()),
+			fetch(`${basePathPrefix}content/nogos.json`).then((r) => r.json()),
+			fetch(`${basePathPrefix}content/whitelist.json`).then((r) => r.json())
 		]);
 
 		state.companies = (companies.companies || []).filter(Boolean);
@@ -4559,6 +4561,11 @@ function normalizeAssetPath(path = '') {
 	const basePath = getBasePath();
 	const trimmed = String(path).replace(/^\/+/, '');
 	// Ensure path starts with base path
+	if (!basePath) {
+		// Root site: return absolute path
+		return `/${trimmed}`.replace(/\/+/g, '/');
+	}
+	// Subdirectory site: prepend base path
 	return `${basePath}/${trimmed}`.replace(/\/+/g, '/');
 }
 
