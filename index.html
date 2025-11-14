@@ -4,6 +4,20 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<title>Roots Roleplay</title>
+	<script>
+		// Set base path for GitHub Pages compatibility
+		(function() {
+			const path = window.location.pathname;
+			const basePath = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
+			window.__BASE_PATH__ = basePath;
+			// Set base href for relative paths (only if not at root)
+			if (basePath) {
+				const base = document.createElement('base');
+				base.href = basePath + '/';
+				document.head.insertBefore(base, document.head.firstChild);
+			}
+		})();
+	</script>
 	<meta name="description" content="Rooted in play">
 	<meta name="theme-color" content="#1f2127">
 	<link rel="icon" type="image/png" href="public/roots_R.png">

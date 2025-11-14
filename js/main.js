@@ -463,11 +463,13 @@ async function init() {
 
 async function loadContent() {
 	try {
+		const basePath = getBasePath();
+		
 		const [companies, crime, nogos, whitelist] = await Promise.all([
-			fetch('content/companies.json').then((r) => r.json()),
-			fetch('content/crime-factions.json').then((r) => r.json()),
-			fetch('content/nogos.json').then((r) => r.json()),
-			fetch('content/whitelist.json').then((r) => r.json())
+			fetch(`${basePath}/content/companies.json`).then((r) => r.json()),
+			fetch(`${basePath}/content/crime-factions.json`).then((r) => r.json()),
+			fetch(`${basePath}/content/nogos.json`).then((r) => r.json()),
+			fetch(`${basePath}/content/whitelist.json`).then((r) => r.json())
 		]);
 
 		state.companies = (companies.companies || []).filter(Boolean);
@@ -4540,11 +4542,24 @@ function maybeRestartThumbnailHighlights(container) {
 
 // ==================== UTILITIES ====================
 
+// Get base path for GitHub Pages compatibility
+function getBasePath() {
+	if (typeof window.__BASE_PATH__ !== 'undefined') {
+		return window.__BASE_PATH__;
+	}
+	const path = window.location.pathname;
+	// Remove the filename if present
+	const cleaned = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '');
+	return cleaned || '';
+}
+
 function normalizeAssetPath(path = '') {
 	if (!path) return '';
 	if (/^https?:\/\//i.test(path)) return path;
+	const basePath = getBasePath();
 	const trimmed = String(path).replace(/^\/+/, '');
-	return `/${trimmed}`;
+	// Ensure path starts with base path
+	return `${basePath}/${trimmed}`.replace(/\/+/g, '/');
 }
 
 function debounce(fn, wait = 300) {
