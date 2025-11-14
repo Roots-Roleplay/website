@@ -2,6 +2,8 @@ const HERO_RANDOM_MAX_STEPS = 12;
 
 // ==================== VIEWPORT SCALING & MOBILE DETECTION ====================
 
+const DESIGN_WIDTH = 2560;
+const DESIGN_HEIGHT = 1440;
 const MOBILE_BREAKPOINT = 1024; // Consider anything under 1024px width as mobile
 
 function isMobileDevice() {
@@ -16,83 +18,135 @@ function isMobileDevice() {
 }
 
 function setupViewportScaling() {
-        const mobileOverlay = document.getElementById('mobileOverlay');
-        const body = document.body;
-        const html = document.documentElement;
-
-        const resetDesktopStyles = () => {
-                if (!body) return;
-                body.classList.remove('desktop-scaled');
-                body.style.removeProperty('transform');
-                body.style.removeProperty('transform-origin');
-                body.style.removeProperty('width');
-                body.style.removeProperty('height');
-
-                const fixedElements = [
-                        document.querySelector('.top-cta'),
-                        document.querySelector('.hero-rail-controls'),
-                        document.querySelector('.crime-back')
-                ];
-
-                fixedElements.forEach((el) => {
-                        if (!el) return;
-                        el.style.removeProperty('transform');
-                        el.style.removeProperty('transform-origin');
-                        el.style.removeProperty('margin');
-                        el.style.removeProperty('right');
-                        el.style.removeProperty('left');
-                        el.style.removeProperty('top');
-                        el.style.removeProperty('bottom');
-                });
-        };
-
-        const applyLayout = () => {
-                const mobile = isMobileDevice();
-
-                if (mobile) {
-                        if (mobileOverlay) {
-                                mobileOverlay.style.display = 'flex';
-                        }
-
-                        if (body) {
-                                body.classList.add('is-mobile-blocked');
-                                if (!body.classList.contains('is-detail-open')) {
-                                        body.style.overflow = 'hidden';
-                                }
-                        }
-
-                        if (html) {
-                                html.style.overflow = 'hidden';
-                        }
-
-                        return;
-                }
-
-                if (mobileOverlay) {
-                        mobileOverlay.style.display = 'none';
-                }
-
-                resetDesktopStyles();
-
-                if (body) {
-                        body.classList.remove('is-mobile-blocked');
-                        if (!body.classList.contains('is-detail-open')) {
-                                body.style.overflow = '';
-                        }
-                }
-
-                if (html) {
-                        html.style.overflow = '';
-                }
-        };
-
-        applyLayout();
-
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(applyLayout, 120);
-        });
+	const mobileOverlay = document.getElementById('mobileOverlay');
+	const body = document.body;
+	const html = document.documentElement;
+	
+	if (isMobileDevice()) {
+		// Show mobile overlay
+		if (mobileOverlay) {
+			mobileOverlay.style.display = 'flex';
+		}
+		// Hide main content
+		if (body) {
+			body.classList.remove('desktop-scaled');
+			body.style.transform = 'none';
+			body.style.width = 'auto';
+			body.style.height = 'auto';
+			body.style.overflow = 'hidden';
+		}
+		return;
+	}
+	
+	// Hide mobile overlay on desktop
+	if (mobileOverlay) {
+		mobileOverlay.style.display = 'none';
+	}
+	
+	// Scale body to fill viewport while maintaining 2K proportions
+	function applyScaling() {
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+		
+		// Use Math.max to fill entire viewport (might crop slightly on one axis)
+		const scaleX = viewportWidth / DESIGN_WIDTH;
+		const scaleY = viewportHeight / DESIGN_HEIGHT;
+		const scale = Math.max(scaleX, scaleY);
+		
+		// Apply transform to body
+		if (body) {
+			body.classList.add('desktop-scaled');
+			body.style.width = `${DESIGN_WIDTH}px`;
+			body.style.height = `${DESIGN_HEIGHT}px`;
+			
+			// Calculate scaled dimensions
+			const scaledWidth = DESIGN_WIDTH * scale;
+			const scaledHeight = DESIGN_HEIGHT * scale;
+			
+			// Center the scaled content
+			const offsetX = (viewportWidth - scaledWidth) / 2;
+			const offsetY = (viewportHeight - scaledHeight) / 2;
+			
+			body.style.transformOrigin = 'top left';
+			body.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+			
+			// Fix fixed position elements - position them relative to viewport, not scaled body
+			const topCta = document.querySelector('.top-cta');
+			const heroRailControls = document.querySelector('.hero-rail-controls');
+			const crimeBack = document.querySelector('.crime-back');
+			
+			// Calculate inverse scale and offset to compensate for body transform
+			const inverseScale = 1 / scale;
+			const inverseOffsetX = -offsetX * inverseScale;
+			const inverseOffsetY = -offsetY * inverseScale;
+			
+			if (topCta) {
+				// Position at viewport coordinates - ensure it's always in viewport
+				const safeTop = 16;
+				const safeRight = 16;
+				
+				topCta.style.position = 'fixed';
+				topCta.style.top = `${safeTop}px`;
+				topCta.style.right = `${safeRight}px`;
+				topCta.style.transform = `translate(${inverseOffsetX}px, ${inverseOffsetY}px) scale(${inverseScale})`;
+				topCta.style.transformOrigin = 'top right';
+				topCta.style.zIndex = '100000';
+				topCta.style.pointerEvents = 'auto';
+				topCta.style.margin = '0';
+			}
+			
+			if (heroRailControls) {
+				// Position at viewport coordinates - use larger bottom offset to prevent cutoff
+				const controlsBottom = Math.max(48, Math.min(64, viewportHeight * 0.05)); // 5% of viewport height, clamped to 48-64px
+				
+				heroRailControls.style.position = 'fixed';
+				heroRailControls.style.left = '50%';
+				heroRailControls.style.bottom = `${controlsBottom}px`;
+				heroRailControls.style.transform = 'translateX(-50%)';
+				heroRailControls.style.transformOrigin = 'center bottom';
+				heroRailControls.style.zIndex = '100000';
+				heroRailControls.style.pointerEvents = 'auto';
+				heroRailControls.style.margin = '0';
+			}
+			
+			if (crimeBack) {
+				// Position back button at viewport coordinates with inverse scaling
+				const safeTop = 24;
+				const safeLeft = 24;
+				
+				crimeBack.style.position = 'fixed';
+				crimeBack.style.top = `${safeTop}px`;
+				crimeBack.style.left = `${safeLeft}px`;
+				crimeBack.style.transform = `translate(${inverseOffsetX}px, ${inverseOffsetY}px) scale(${inverseScale})`;
+				crimeBack.style.transformOrigin = 'top left';
+				crimeBack.style.zIndex = '100000';
+				crimeBack.style.pointerEvents = 'auto';
+				crimeBack.style.margin = '0';
+			}
+		}
+		
+		// Ensure html and body fill viewport and don't scroll
+		if (html) {
+			html.style.width = '100%';
+			html.style.height = '100%';
+			html.style.overflow = 'hidden';
+			html.style.background = 'var(--bg)';
+		}
+	}
+	
+	// Apply scaling on load and resize
+	applyScaling();
+	
+	// Debounce resize handler
+	let resizeTimeout;
+	window.addEventListener('resize', () => {
+		clearTimeout(resizeTimeout);
+		resizeTimeout = setTimeout(applyScaling, 100);
+	});
+	
+	// Also apply scaling after a short delay to handle any layout shifts
+	setTimeout(applyScaling, 100);
+	setTimeout(applyScaling, 500);
 }
 
 // Initialize viewport scaling and mobile detection immediately
@@ -4845,4 +4899,3 @@ if (document.readyState === 'loading') {
 } else {
 	init();
 }
-
