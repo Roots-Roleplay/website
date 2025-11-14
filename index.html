@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<title>Roots Roleplay</title>
 	<meta name="description" content="Rooted in play">
 	<meta name="theme-color" content="#1f2127">
@@ -58,7 +58,7 @@
 						<button class="hero-choice__btn" data-choice="legal" type="button">Legal</button>
 						<button class="hero-choice__btn hero-choice__btn--illegal" data-choice="illegal" type="button">Illegal</button>
 						<button class="hero-choice__btn hero-choice__btn--rules" type="button" data-choice="regelwerk"><span class="strikethrough">Regelwerk</span></button>
-						<button class="hero-choice__btn hero-choice__btn--whitelist" type="button" data-link="https://rootsroleplay.de/whitelist">Whitelist</button>
+						<button class="hero-choice__btn hero-choice__btn--whitelist" type="button" data-choice="whitelist">Whitelist</button>
 					</div>
 				</div>
 			</div>
@@ -140,6 +140,15 @@
 				</button>
 				</nav>
 			</div>
+		</div>
+	</div>
+
+	<!-- Mobile Detection Overlay -->
+	<div id="mobileOverlay" class="mobile-overlay" style="display: none;">
+		<div class="mobile-overlay__content">
+			<img src="public/roots-roleplay.svg" alt="Roots Roleplay" class="mobile-overlay__logo">
+			<h2 class="mobile-overlay__title">Please visit on a desktop device</h2>
+			<p class="mobile-overlay__message">For the best experience, please enjoy Roots Roleplay on a desktop or laptop computer.</p>
 		</div>
 	</div>
 

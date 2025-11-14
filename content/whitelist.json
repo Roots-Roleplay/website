@@ -1,0 +1,71 @@
+{
+  "steps": [
+    {
+      "title": "Unsere Plattform",
+      "content": "ROOTS läuft auf FiveM – bitte stelle sicher, dass du es installiert hast.",
+      "links": [
+        {
+          "text": "FiveM herunterladen",
+          "url": "https://fivem.net/"
+        }
+      ]
+    },
+    {
+      "title": "Technik-Check",
+      "content": "Für das beste RP-Erlebnis brauchst du:",
+      "links": [
+        {
+          "text": "TeamSpeak 3 (aktuellste Version)",
+          "url": "https://teamspeak.com/en/downloads/#ts3client"
+        },
+        {
+          "text": "SaltyChat (Version 4.0.1)",
+          "url": "https://saltyhub.net/saltychat"
+        }
+      ],
+      "footer": "Bitte installiere beides und halte es aktuell!"
+    },
+    {
+      "title": "Discord & Guidelines",
+      "content": "Komm auf unseren Discord und lies die Guidelines, um das beste RP-Erlebnis zu haben.",
+      "showGuidelines": true
+    },
+    {
+      "title": "Clips & Doku",
+      "content": "Wir empfehlen dir, Spielszenen mit Medal oder einem ähnlichen Tool aufzunehmen. Clips helfen bei Supportfällen – oder einfach, um epische Momente festzuhalten.",
+      "links": [
+        {
+          "text": "Medal herunterladen",
+          "url": "https://medal.tv/de"
+        }
+      ]
+    },
+    {
+      "title": "TeamSpeak 3 Server",
+      "content": "Verbinde dich mit unserem TeamSpeak Server:",
+      "serverInfo": [
+        "ts.roots-rp.de",
+        "ts09.avoro.eu:9007"
+      ]
+    },
+    {
+      "title": "Sicheres RP",
+      "content": "Wir arbeiten mit Analystic Network zusammen, um unsere Community vor Ch3atern zu schützen. Analystic Network stellt uns Echtzeit-Checks, eine umfangreiche Datenbank mit über 100.000 bestätigten Ch3atern und über 1.200 blacklisted Discords zur Verfügung. Dank dieser Partnerschaft können wir Ch3ater erkennen, bevor sie Schaden anrichten, und sorgen gemeinsam mit anderen Servern für ein faires und sicheres RP-Erlebnis für alle.",
+      "links": [
+        {
+          "text": "Analystic Network Discord",
+          "url": "https://discord.gg/analystic"
+        }
+      ],
+      "footer": "🛡️ Gemeinsam gegen Ch3ater in FiveM!"
+    },
+    {
+      "title": "FiveM Server",
+      "content": "Suche ingame nach Roots Open Beta\n\noder öffne F8 und gib ein:",
+      "serverInfo": [
+        "connect fivem.roots-rp.de",
+        "connect 45.157.235.21:30120"
+      ]
+    }
+  ]
+}

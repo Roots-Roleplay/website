@@ -1,4 +1,161 @@
 const HERO_RANDOM_MAX_STEPS = 12;
+
+// ==================== VIEWPORT SCALING & MOBILE DETECTION ====================
+
+const DESIGN_WIDTH = 2560;
+const DESIGN_HEIGHT = 1440;
+const MOBILE_BREAKPOINT = 1024; // Consider anything under 1024px width as mobile
+
+function isMobileDevice() {
+	// Check for mobile/tablet devices
+	const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+	const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+	const isMobileWidth = window.innerWidth < MOBILE_BREAKPOINT;
+	const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+	
+	// Consider it mobile if it's mobile UA or has mobile width with touch
+	return isMobileUA || (isMobileWidth && isTouchDevice);
+}
+
+function setupViewportScaling() {
+	const mobileOverlay = document.getElementById('mobileOverlay');
+	const body = document.body;
+	const html = document.documentElement;
+	
+	if (isMobileDevice()) {
+		// Show mobile overlay
+		if (mobileOverlay) {
+			mobileOverlay.style.display = 'flex';
+		}
+		// Hide main content
+		if (body) {
+			body.classList.remove('desktop-scaled');
+			body.style.transform = 'none';
+			body.style.width = 'auto';
+			body.style.height = 'auto';
+			body.style.overflow = 'hidden';
+		}
+		return;
+	}
+	
+	// Hide mobile overlay on desktop
+	if (mobileOverlay) {
+		mobileOverlay.style.display = 'none';
+	}
+	
+	// Scale body to fill viewport while maintaining 2K proportions
+	function applyScaling() {
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+		
+		// Use Math.max to fill entire viewport (might crop slightly on one axis)
+		const scaleX = viewportWidth / DESIGN_WIDTH;
+		const scaleY = viewportHeight / DESIGN_HEIGHT;
+		const scale = Math.max(scaleX, scaleY);
+		
+		// Apply transform to body
+		if (body) {
+			body.classList.add('desktop-scaled');
+			body.style.width = `${DESIGN_WIDTH}px`;
+			body.style.height = `${DESIGN_HEIGHT}px`;
+			
+			// Calculate scaled dimensions
+			const scaledWidth = DESIGN_WIDTH * scale;
+			const scaledHeight = DESIGN_HEIGHT * scale;
+			
+			// Center the scaled content
+			const offsetX = (viewportWidth - scaledWidth) / 2;
+			const offsetY = (viewportHeight - scaledHeight) / 2;
+			
+			body.style.transformOrigin = 'top left';
+			body.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+			
+			// Fix fixed position elements - position them relative to viewport, not scaled body
+			const topCta = document.querySelector('.top-cta');
+			const heroRailControls = document.querySelector('.hero-rail-controls');
+			const crimeBack = document.querySelector('.crime-back');
+			
+			// Calculate inverse scale and offset to compensate for body transform
+			const inverseScale = 1 / scale;
+			const inverseOffsetX = -offsetX * inverseScale;
+			const inverseOffsetY = -offsetY * inverseScale;
+			
+			if (topCta) {
+				// Position at viewport coordinates - ensure it's always in viewport
+				const safeTop = 16;
+				const safeRight = 16;
+				
+				topCta.style.position = 'fixed';
+				topCta.style.top = `${safeTop}px`;
+				topCta.style.right = `${safeRight}px`;
+				topCta.style.transform = `translate(${inverseOffsetX}px, ${inverseOffsetY}px) scale(${inverseScale})`;
+				topCta.style.transformOrigin = 'top right';
+				topCta.style.zIndex = '100000';
+				topCta.style.pointerEvents = 'auto';
+				topCta.style.margin = '0';
+			}
+			
+			if (heroRailControls) {
+				// Position at viewport coordinates - use larger bottom offset to prevent cutoff
+				const controlsBottom = Math.max(48, Math.min(64, viewportHeight * 0.05)); // 5% of viewport height, clamped to 48-64px
+				
+				heroRailControls.style.position = 'fixed';
+				heroRailControls.style.left = '50%';
+				heroRailControls.style.bottom = `${controlsBottom}px`;
+				heroRailControls.style.transform = 'translateX(-50%)';
+				heroRailControls.style.transformOrigin = 'center bottom';
+				heroRailControls.style.zIndex = '100000';
+				heroRailControls.style.pointerEvents = 'auto';
+				heroRailControls.style.margin = '0';
+			}
+			
+			if (crimeBack) {
+				// Position back button at viewport coordinates with inverse scaling
+				const safeTop = 24;
+				const safeLeft = 24;
+				
+				crimeBack.style.position = 'fixed';
+				crimeBack.style.top = `${safeTop}px`;
+				crimeBack.style.left = `${safeLeft}px`;
+				crimeBack.style.transform = `translate(${inverseOffsetX}px, ${inverseOffsetY}px) scale(${inverseScale})`;
+				crimeBack.style.transformOrigin = 'top left';
+				crimeBack.style.zIndex = '100000';
+				crimeBack.style.pointerEvents = 'auto';
+				crimeBack.style.margin = '0';
+			}
+		}
+		
+		// Ensure html and body fill viewport and don't scroll
+		if (html) {
+			html.style.width = '100%';
+			html.style.height = '100%';
+			html.style.overflow = 'hidden';
+			html.style.background = 'var(--bg)';
+		}
+	}
+	
+	// Apply scaling on load and resize
+	applyScaling();
+	
+	// Debounce resize handler
+	let resizeTimeout;
+	window.addEventListener('resize', () => {
+		clearTimeout(resizeTimeout);
+		resizeTimeout = setTimeout(applyScaling, 100);
+	});
+	
+	// Also apply scaling after a short delay to handle any layout shifts
+	setTimeout(applyScaling, 100);
+	setTimeout(applyScaling, 500);
+}
+
+// Initialize viewport scaling and mobile detection immediately
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', setupViewportScaling);
+} else {
+	setupViewportScaling();
+}
+
 function exitSplitMode() {
 	// Restore the hero rail for current category
 	const category = state.currentCategory;
@@ -15,6 +172,7 @@ const state = {
 	companies: [],
 	crimeFactions: [],
 	nogos: [],
+	whitelist: [],
 	currentCategory: 'legal',
 	currentIndex: 0,
 	heroCardsMounted: false,
@@ -110,6 +268,19 @@ const CATEGORY_CONFIG = {
 			return null;
 		},
 		buildCollage: buildRegelwerkCollage
+	},
+	whitelist: {
+		getDataset: () => state.whitelist,
+		getTitle: (item) => item.title || item.id,
+		getTagline: (item) => item.tagline || '',
+		getContent: (item) => item.content || '',
+		getMedia: (item) => {
+			if (item.image) {
+				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.title || 'Whitelist' };
+			}
+			return null;
+		},
+		buildCollage: buildWhitelistCollage
 	}
 };
 
@@ -292,10 +463,11 @@ async function init() {
 
 async function loadContent() {
 	try {
-		const [companies, crime, nogos] = await Promise.all([
+		const [companies, crime, nogos, whitelist] = await Promise.all([
 			fetch('content/companies.json').then((r) => r.json()),
 			fetch('content/crime-factions.json').then((r) => r.json()),
-			fetch('content/nogos.json').then((r) => r.json())
+			fetch('content/nogos.json').then((r) => r.json()),
+			fetch('content/whitelist.json').then((r) => r.json())
 		]);
 
 		state.companies = (companies.companies || []).filter(Boolean);
@@ -346,8 +518,87 @@ async function loadContent() {
 			showGuidelines: true
 		};
 		
-		// Combine: einleitung card, intro image card, then nogos, then guidelines card
-		state.nogos = [...(einleitungCard ? [einleitungCard] : []), introImageCard, ...nogosCards, guidelinesCard];
+		// Create final card with roots_choice.png image only (no text)
+		const choiceImageCard = {
+			id: 'regelwerk-choice',
+			title: '',
+			content: '',
+			image: 'public/whitelist/roots_choice.png',
+			tagline: '',
+			showTextLabel: false,
+			isIntroImageCard: true // Mark as intro image card (image only, no content)
+		};
+		
+		// Combine: einleitung card, intro image card, then nogos, then choice image, then guidelines card
+		state.nogos = [...(einleitungCard ? [einleitungCard] : []), introImageCard, ...nogosCards, choiceImageCard, guidelinesCard];
+
+		// Transform whitelist.json into card format
+		const whitelistSteps = (whitelist.steps || []).filter(Boolean);
+		
+		// Create first intro card with roots_welcome.png image only (no text)
+		const whitelistWelcomeCard = {
+			id: 'whitelist-welcome',
+			title: '',
+			content: '',
+			image: 'public/whitelist/roots_welcome.png',
+			tagline: '',
+			showTextLabel: false,
+			isIntroImageCard: true // Mark as intro image card (image only, no content)
+		};
+		
+		// Create second intro card with roots_serverzeiten.png image only (no text)
+		const whitelistServerzeitenCard = {
+			id: 'whitelist-serverzeiten',
+			title: '',
+			content: '',
+			image: 'public/whitelist/roots_serverzeiten.png',
+			tagline: '',
+			showTextLabel: false,
+			isIntroImageCard: true // Mark as intro image card (image only, no content)
+		};
+		
+		// Transform all steps into whitelist cards
+		const whitelistCards = whitelistSteps.map((step, index) => {
+			const card = {
+				id: `whitelist-step-${index}`,
+				title: step.title || '',
+				content: step.content || '',
+				tagline: '',
+				stepNumber: index + 1,
+				showTextLabel: true,
+				links: step.links || [],
+				serverInfo: step.serverInfo || [],
+				footer: step.footer || ''
+			};
+			
+			// Add guidelines support if present
+			if (step.showGuidelines) {
+				const guidelineImages = Array.from({ length: 10 }, (_, i) => `public/guidelines/${i + 4}.png`);
+				card.showGuidelines = true;
+				card.guidelineImages = guidelineImages;
+				card.showTextLabel = false; // Guidelines card doesn't show text label
+			}
+			
+			return card;
+		});
+		
+		// Create final card with roots_beginyourstory.png image only (no text)
+		// This will be inserted between step 6 and step 7 (after Sicheres RP, before FiveM Server)
+		const whitelistFinalCard = {
+			id: 'whitelist-final',
+			title: '',
+			content: '',
+			image: 'public/whitelist/roots_beginyourstory.png',
+			tagline: '',
+			showTextLabel: false,
+			isIntroImageCard: true // Mark as intro image card (image only, no content)
+		};
+		
+		// Combine: welcome image, serverzeiten image, steps 1-6, final image, then step 7
+		// Step 6 is at index 5 (0-based), so we insert the final image after index 5
+		const firstSixSteps = whitelistCards.slice(0, 6);
+		const lastStep = whitelistCards.slice(6);
+		state.whitelist = [whitelistWelcomeCard, whitelistServerzeitenCard, ...firstSixSteps, whitelistFinalCard, ...lastStep];
 
 		// Inject a shuffling placeholder card at the front of the illegal rail
 		const illegalMysteryCard = {
@@ -507,10 +758,10 @@ function setCategory(category, options = {}) {
     clearHeroRandomSpin();
     renderHeroCards(dataset, category);
     
-    // Use polaroids for legal, illegal, and regelwerk categories
+    // Use polaroids for legal, illegal, regelwerk, and whitelist categories
     const container = document.getElementById('heroDynamicBg');
     if (container) {
-        if (category === 'regelwerk' || category === 'legal' || category === 'illegal') {
+        if (category === 'regelwerk' || category === 'whitelist' || category === 'legal' || category === 'illegal') {
             spawnFloatingLogos(category);
         } else {
             container.innerHTML = '';
@@ -560,7 +811,19 @@ function renderHeroCards(dataset, category = state.currentCategory) {
 	const track = document.createElement('div');
 	track.className = 'hero-card-track';
 	dataset.forEach((item, index) => {
-		track.appendChild(createHeroCard(item, index, category));
+		const card = createHeroCard(item, index, category);
+		track.appendChild(card);
+		
+		// Add arrow between all whitelist cards (including intro images and final image)
+		if (category === 'whitelist' && index < dataset.length - 1) {
+			const arrow = document.createElement('div');
+			arrow.className = 'hero-card-arrow';
+			arrow.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+			arrow.setAttribute('aria-hidden', 'true');
+			// Use the same animation delay as the card
+			arrow.style.setProperty('--animation-delay', `${index * 0.1}s`);
+			track.appendChild(arrow);
+		}
 	});
 
 	if (category === 'legal' || category === 'illegal') {
@@ -596,16 +859,17 @@ function createHeroCard(item, index, category) {
 	const card = document.createElement('button');
 	card.type = 'button';
 	const isPlaceholder = !!(item && item.placeholder === true);
-	card.className = 'hero-card' + (category === 'illegal' ? ' hero-card--illegal' : '') + (category === 'regelwerk' ? ' hero-card--regelwerk' : '') + (isPlaceholder ? ' hero-card--placeholder' : '');
+	card.className = 'hero-card' + (category === 'illegal' ? ' hero-card--illegal' : '') + (category === 'regelwerk' ? ' hero-card--regelwerk' : '') + (category === 'whitelist' ? ' hero-card--whitelist' : '') + (isPlaceholder ? ' hero-card--placeholder' : '');
 	card.dataset.index = String(index);
 	card.dataset.category = category;
 
 	const imageSrc = getHeroCardImage(item, category);
 	const logoSrc = getHeroCardLogo(item, category);
 	// For illegal, use the thumbnail image as backdrop; for legal, use the company logo
-	// For regelwerk, only use image backdrop on intro image card
+	// For regelwerk and whitelist, only use image backdrop on intro image card
 	const isRegelwerkIntro = category === 'regelwerk' && item?.isIntroImageCard;
-	const logoValue = (category === 'illegal' || isRegelwerkIntro) ? `url('${imageSrc}')` : (logoSrc ? `url('${logoSrc}')` : '');
+	const isWhitelistIntro = category === 'whitelist' && item?.isIntroImageCard;
+	const logoValue = (category === 'illegal' || isRegelwerkIntro || isWhitelistIntro) ? `url('${imageSrc}')` : (logoSrc ? `url('${logoSrc}')` : '');
 	const title = CATEGORY_CONFIG[category].getTitle(item);
 
 	card.setAttribute('aria-label', isPlaceholder ? '' : `${title} öffnen`);
@@ -713,13 +977,14 @@ function createHeroCard(item, index, category) {
 			`;
 		}
 	} else {
-		// For regelwerk cards, show content directly on card with image backdrop
-		if (category === 'regelwerk') {
+		// For regelwerk and whitelist cards, show content directly on card with image backdrop
+		if (category === 'regelwerk' || category === 'whitelist') {
 			if (item?.isIntroImageCard) {
 				// Intro image card - just image, no text
+				const altText = category === 'whitelist' ? 'Serverzeiten' : 'Roots NoGo';
 				mainContentHtml = `
 					<span class="hero-card__backdrop" aria-hidden="true"></span>
-					<img class="hero-card__image" src="${imageSrc}" alt="Roots NoGo" loading="lazy">
+					<img class="hero-card__image" src="${imageSrc}" alt="${altText}" loading="lazy">
 				`;
 			} else if (item?.showGuidelines) {
 				// Guidelines card - show all guideline images with Discord CTA in middle
@@ -827,7 +1092,201 @@ function createHeroCard(item, index, category) {
 							<div class="hero-card__nogo-description">${formattedContent}</div>
 						</div>
 					`;
-			} else {
+				} else if (category === 'whitelist') {
+					// Whitelist cards - simple design with no flip
+					const stepNumber = item.stepNumber || (index);
+					
+					// Handle guidelines card (similar to regelwerk)
+					if (item?.showGuidelines) {
+						const guidelineImages = item.guidelineImages || [];
+						// Create grid: 4 columns x 4 rows = 16 slots
+						const topRow = guidelineImages.slice(0, 4);
+						const row2Left = guidelineImages.slice(4, 5);
+						const row2Right = guidelineImages.slice(5, 6);
+						const row3Left = guidelineImages.slice(6, 7);
+						const row3Right = guidelineImages.slice(7, 8);
+						const bottomRow = guidelineImages.slice(8, 10);
+						
+						const topRowHtml = topRow.map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item">
+								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('');
+						
+						const row2LeftHtml = row2Left.map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
+								<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('');
+						
+						const ctaHtml = `<div class="hero-card__guideline-item hero-card__guideline-item--cta" style="grid-column: 2 / 4; grid-row: 2 / 4;">
+							<a href="https://discord.gg/rootsroleplay" target="_blank" rel="noopener noreferrer" class="hero-card__guidelines-discord-cta">
+								<svg class="hero-card__discord-icon" width="32" height="32" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+									<path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+								</svg>
+								<span class="hero-card__discord-text">Komm auf unseren Discord</span>
+							</a>
+						</div>`;
+						
+						const row2RightHtml = row2Right.map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
+								<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('');
+						
+						const row3LeftHtml = row3Left.map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
+								<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('');
+						
+						const row3RightHtml = row3Right.map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
+								<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('');
+						
+						const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
+								<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('') + 
+						guidelineImages.slice(0, 2).map((imgSrc, idx) => 
+							`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
+								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+							</div>`
+						).join('');
+						
+						mainContentHtml = `
+							<span class="hero-card__backdrop" aria-hidden="true"></span>
+							<div class="hero-card__guidelines-content">
+								<div class="hero-card__guidelines-grid">
+									${topRowHtml}
+									${row2LeftHtml}
+									${ctaHtml}
+									${row2RightHtml}
+									${row3LeftHtml}
+									${row3RightHtml}
+									${bottomRowHtml}
+								</div>
+							</div>
+						`;
+					} else {
+					
+					// Build buttons for links
+					let buttonsHtml = '';
+					if (item.links && item.links.length > 0) {
+						const buttons = item.links.map(link => 
+							`<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="hero-card__nogo-button">
+								<span class="hero-card__nogo-button-text">${escapeHtml(link.text)}</span>
+							</a>`
+						).join('');
+						buttonsHtml = `<div class="hero-card__nogo-buttons">${buttons}</div>`;
+					}
+					
+					// Build server info display with click-to-copy
+					let serverInfoHtml = '';
+					if (item.serverInfo && item.serverInfo.length > 0) {
+						const serverInfo = item.serverInfo.map((info, idx) => 
+							`<div class="hero-card__server-info" data-copy-text="${escapeHtml(info)}" data-copy-id="server-${stepNumber}-${idx}">
+								<span class="hero-card__server-info-text">${escapeHtml(info)}</span>
+								<span class="hero-card__server-info-hint">Klicken zum Kopieren</span>
+								<span class="hero-card__server-info-copied">✓ Kopiert!</span>
+							</div>`
+						).join('');
+						serverInfoHtml = `<div class="hero-card__server-info-container">${serverInfo}</div>`;
+					}
+					
+					// Add Quick Connect button for Schritt 5 (TeamSpeak) and Schritt 7 (FiveM)
+					let quickConnectHtml = '';
+					if (stepNumber === 5 && item.serverInfo && item.serverInfo.length > 0) {
+						// TeamSpeak Quick Connect - prefer entry with port, otherwise use first with default port
+						let serverAddress = item.serverInfo.find(info => info.includes(':')) || item.serverInfo[0];
+						// If no port specified, use default TeamSpeak port 9987
+						if (!serverAddress.includes(':')) {
+							serverAddress = `${serverAddress}:9987`;
+						}
+						quickConnectHtml = `<a href="ts3server://${serverAddress}" class="hero-card__quick-connect hero-card__quick-connect--teamspeak">
+							<svg class="hero-card__quick-connect-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+								<path d="M12 2a10 10 0 00-3.92 19.21c.62.11.85-.27.85-.6v-2.1c-3.46.75-4.18-1.67-4.18-1.67-.57-1.44-1.38-1.82-1.38-1.82-1.13-.78.09-.77.09-.77 1.26.09 1.92 1.3 1.92 1.3 1.11 1.92 2.9 1.36 3.61 1.04.11-.8.43-1.36.78-1.67-2.77-.32-5.69-1.38-5.69-6.15 0-1.36.51-2.47 1.3-3.34-.13-.33-.56-1.67.12-3.47 0 0 1.05-.33 3.45 1.29.99-.28 2.05-.42 3.11-.42s2.12.14 3.11.42c2.4-1.62 3.45-1.29 3.45-1.29.68 1.8.25 3.14.12 3.47.8.87 1.3 1.98 1.3 3.34 0 4.79-2.92 5.83-5.7 6.14.44.38.84 1.12.84 2.27v3.36c0 .33.22.71.86.59A10 10 0 0012 2z"/>
+							</svg>
+							<span>Quick Connect</span>
+						</a>`;
+					} else if (stepNumber === 7 && item.serverInfo && item.serverInfo.length > 0) {
+						// FiveM Quick Connect - use first server info, extract IP/domain
+						const firstServer = item.serverInfo[0];
+						// Remove "connect " prefix if present
+						const serverAddress = firstServer.replace(/^connect\s+/i, '').trim();
+						quickConnectHtml = `<a href="fivem://connect/${serverAddress}" class="hero-card__quick-connect hero-card__quick-connect--fivem">
+							<svg class="hero-card__quick-connect-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+								<path d="M12.46 2c.32 0 .6.18.75.46l8.24 16.27c.21.4.06.9-.34 1.11-.12.07-.26.1-.4.1h-4.5l-2.04-4.57a.9.9 0 00-1.64 0L9.5 19.94H4.75c-.46 0-.84-.38-.84-.84 0-.13.03-.27.1-.4l8.24-16.24A.85.85 0 0112.46 2zm.51 8.87l3.22 7.21h2.14l-5.36-10.7-1.77 3.49 1.77-.02zm-1.94 4.1l-1.2 3.1h2.45l-1.25-3.1z"/>
+							</svg>
+							<span>Quick Connect</span>
+						</a>`;
+					}
+					
+					// Add footer text if present
+					let footerTextHtml = '';
+					if (item.footer) {
+						footerTextHtml = `<div class="hero-card__whitelist-footer">${escapeHtml(item.footer)}</div>`;
+					}
+					
+					mainContentHtml = `
+						<span class="hero-card__backdrop" aria-hidden="true"></span>
+						<div class="hero-card__whitelist-content">
+							<div class="hero-card__whitelist-header">
+								<span class="hero-card__whitelist-step">Schritt ${stepNumber}</span>
+								<span class="hero-card__whitelist-title">${escapeHtml(title)}</span>
+							</div>
+							<div class="hero-card__whitelist-description">${formattedContent}</div>
+							${buttonsHtml}
+							${serverInfoHtml}
+							${footerTextHtml}
+							${quickConnectHtml}
+						</div>
+					`;
+					// Add animation delay based on index
+					card.style.setProperty('--animation-delay', `${index * 0.1}s`);
+					card.classList.add('hero-card--whitelist-step');
+					
+					// Add click-to-copy handlers for server info
+					if (item.serverInfo && item.serverInfo.length > 0) {
+						// Use setTimeout to ensure DOM is ready
+						setTimeout(() => {
+							const serverInfoElements = card.querySelectorAll('.hero-card__server-info');
+							serverInfoElements.forEach((el) => {
+								el.addEventListener('click', async (e) => {
+									e.preventDefault();
+									const textToCopy = el.dataset.copyText;
+									if (!textToCopy) return;
+									
+									// Immediately show "Kopiert!" and disable hover
+									el.classList.add('hero-card__server-info--copied');
+									el.classList.add('hero-card__server-info--no-hover');
+									
+									try {
+										await navigator.clipboard.writeText(textToCopy);
+										
+										// Remove the class after animation completes and re-enable hover
+										setTimeout(() => {
+											el.classList.remove('hero-card__server-info--copied');
+											// Re-enable hover after a short delay
+											setTimeout(() => {
+												el.classList.remove('hero-card__server-info--no-hover');
+											}, 300);
+										}, 2500);
+									} catch (err) {
+										console.error('Failed to copy:', err);
+										// Remove classes on error too
+										el.classList.remove('hero-card__server-info--copied');
+										el.classList.remove('hero-card__server-info--no-hover');
+									}
+								});
+							});
+						}, 100);
+					}
+					}
+				} else {
 				// NoGo cards with text labels - card flip design
 				const nogoNumber = item.nogoNumber || (index + 1);
 				
@@ -877,8 +1336,10 @@ function createHeroCard(item, index, category) {
 						</div>
 					</div>
 				`;
-				// Start with back showing (flipped state)
-				card.classList.add('hero-card--flipped');
+				// Start with back showing (flipped state) - except for the first nogo card (NoGo 1)
+				if (nogoNumber !== 1) {
+					card.classList.add('hero-card--flipped');
+				}
 			}
 			} else {
 				mainContentHtml = `
@@ -894,8 +1355,9 @@ function createHeroCard(item, index, category) {
 		}
 	}
 
-	// Show footer for non-regelwerk cards or regelwerk cards that don't flip (but not intro image or guidelines)
-	const showFooter = category !== 'regelwerk' || (category === 'regelwerk' && !item?.showTextLabel && !item?.isIntroImageCard && !item?.showGuidelines);
+	// Show footer for non-regelwerk/whitelist cards or regelwerk cards that don't flip (but not intro image or guidelines)
+	// Whitelist cards never show footer
+	const showFooter = (category !== 'regelwerk' && category !== 'whitelist') || (category === 'regelwerk' && !item?.showTextLabel && !item?.isIntroImageCard && !item?.showGuidelines);
 	const footerText = isPlaceholder ? '' : 'Zum Öffnen klicken';
 	
 	card.innerHTML = `
@@ -979,8 +1441,8 @@ function createHeroCard(item, index, category) {
 		}
 	}
 
-	// Auto-size text in nogo description cards to fit perfectly
-	if (category === 'regelwerk' && !isPlaceholder && item?.showTextLabel) {
+	// Auto-size text in nogo/whitelist description cards to fit perfectly
+	if ((category === 'regelwerk' || category === 'whitelist') && !isPlaceholder && item?.showTextLabel) {
 		const descriptionEl = card.querySelector('.hero-card__nogo-description');
 		if (descriptionEl) {
 			// Use requestAnimationFrame to ensure card is rendered first
@@ -1429,7 +1891,7 @@ function createHeroCard(item, index, category) {
 
 		card.addEventListener('click', splitCard);
 	} else if (!isPlaceholder) {
-		// Handle regelwerk card flips
+		// Handle regelwerk card flips (whitelist cards are non-interactive)
 		if (category === 'regelwerk') {
 			if (item?.showTextLabel && !item?.isEinleitung) {
 				// NoGo cards - flip on click
@@ -1442,6 +1904,9 @@ function createHeroCard(item, index, category) {
 				// Other regelwerk cards are non-interactive
 				card.style.cursor = 'default';
 			}
+		} else if (category === 'whitelist') {
+			// Whitelist cards are non-interactive (no flip, no detail)
+			card.style.cursor = 'default';
 		} else {
 			const activate = () => {
 				if (Date.now() < (state.heroRailDragging.blockClickUntil || 0)) return;
@@ -2116,7 +2581,7 @@ function spawnFloatingLogos(category = state.currentCategory) {
 	if (!spawnFloatingLogos._resizeBound) {
 		window.addEventListener('resize', debounce(() => {
 			// Only respawn if we're in a category that uses polaroids
-			if (state.currentCategory === 'regelwerk' || state.currentCategory === 'legal' || state.currentCategory === 'illegal') {
+			if (state.currentCategory === 'regelwerk' || state.currentCategory === 'whitelist' || state.currentCategory === 'legal' || state.currentCategory === 'illegal') {
 				spawnFloatingLogos(state.currentCategory);
 			}
 		}, 500));
@@ -2162,13 +2627,15 @@ function attachHoldHandler() {}
 function openDetail(category, index) {
 	const detailBg = document.getElementById('detailDynamicBg');
 	if (detailBg) {
-		// Spawn flying logos for legal category, fog and damage for illegal, polaroids for regelwerk
+		// Spawn flying logos for legal and illegal categories, polaroids for regelwerk
 		if (category === 'illegal') {
-			// Clear any flying logos first
-			detailBg.querySelectorAll('.detail-flying-logo').forEach(el => el.remove());
+			// Clear any fog/damage effects first
+			detailBg.querySelectorAll('.fog-container, .crime-damage-container').forEach(el => el.remove());
 			spawnFogEffect(detailBg);
 			spawnCrimeDamage(detailBg);
-		} else if (category === 'regelwerk') {
+			// Also spawn crime logos
+			spawnDetailFlyingLogos(detailBg, 'illegal');
+		} else if (category === 'regelwerk' || category === 'whitelist') {
 			// Clear any fog/damage effects first
 			detailBg.querySelectorAll('.fog-container, .crime-damage-container, .detail-flying-logo').forEach(el => el.remove());
 			// Use the same polaroid effect as legal
@@ -2332,11 +2799,13 @@ function renderDetailMedia(item, category) {
 		img.src = media.src;
 		img.alt = media.alt || config.getTitle(item);
 		img.loading = 'lazy';
-		// Use contain for regelwerk to show complete image, cover for others
-		const objectFit = category === 'regelwerk' ? 'contain' : 'cover';
+		// Use contain for regelwerk and whitelist to show complete image, cover for others
+		const objectFit = (category === 'regelwerk' || category === 'whitelist') ? 'contain' : 'cover';
 		img.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${objectFit};object-position:center;`;
 		if (category === 'regelwerk') {
 			img.classList.add('detail-media-image--regelwerk');
+		} else if (category === 'whitelist') {
+			img.classList.add('detail-media-image--whitelist');
 		}
 		container.appendChild(img);
 	}
@@ -3323,8 +3792,8 @@ function spawnDetailHeroMirror(container, context = {}) {
         buttonGroup.setAttribute('role', 'group');
         buttonGroup.setAttribute('aria-label', 'Aktionen');
         const buttons = [
-            { label: 'Regelwerk', className: 'hero-choice__btn--rules', dataset: { link: 'https://rootsroleplay.de/regelwerk' } },
-            { label: 'Whitelist', className: 'hero-choice__btn--whitelist', dataset: { link: 'https://rootsroleplay.de/whitelist' } }
+            { label: 'Regelwerk', className: 'hero-choice__btn--rules', dataset: { choice: 'regelwerk' } },
+            { label: 'Whitelist', className: 'hero-choice__btn--whitelist', dataset: { choice: 'whitelist' } }
         ];
         buttons.forEach((b) => {
             const btn = document.createElement('button');
@@ -3339,24 +3808,37 @@ function spawnDetailHeroMirror(container, context = {}) {
         foreground.appendChild(content);
 }
 
-function spawnDetailFlyingLogos(container) {
+function spawnDetailFlyingLogos(container, category = 'legal') {
 	if (!container) return;
-	container.innerHTML = '';
+	// Clear only existing flying logos, not fog/damage effects
+	container.querySelectorAll('.detail-flying-logo').forEach(el => el.remove());
 	
-	// Get all company logos from companies folder
-	const serviceAppLogos = state.companies
-		.filter(company => company && company.id && !company.placeholder)
-		.map(company => ({
-			id: company.id,
-			src: normalizeAssetPath(`public/company/${company.id}.png`),
-			alt: (company.displayName || company.title || company.id) + ' Logo'
+	let logos = [];
+	
+	if (category === 'illegal') {
+		// Get all crime logos from crime_logos folder (13.png through 23.png)
+		const crimeLogoNumbers = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+		logos = crimeLogoNumbers.map(num => ({
+			id: `crime-logo-${num}`,
+			src: normalizeAssetPath(`public/crime_logos/${num}.png`),
+			alt: `Crime Logo ${num}`
 		}));
+	} else {
+		// Get all company logos from companies folder
+		logos = state.companies
+			.filter(company => company && company.id && !company.placeholder)
+			.map(company => ({
+				id: company.id,
+				src: normalizeAssetPath(`public/company/${company.id}.png`),
+				alt: (company.displayName || company.title || company.id) + ' Logo'
+			}));
+	}
 	
-	if (serviceAppLogos.length === 0) return;
+	if (logos.length === 0) return;
 	
 	// Create floating logos with random positions and animations - limit to 15 for performance
-	const logoCount = Math.min(serviceAppLogos.length * 2, 15);
-	const shuffledLogos = shuffleArray([...serviceAppLogos, ...serviceAppLogos]).slice(0, logoCount);
+	const logoCount = Math.min(logos.length * 2, 15);
+	const shuffledLogos = shuffleArray([...logos, ...logos]).slice(0, logoCount);
 	
 	// Stagger creation to avoid loading all at once
 	shuffledLogos.forEach((logo, index) => {
@@ -3380,7 +3862,7 @@ function spawnDetailFlyingLogos(container) {
 			logoEl.style.top = `${top}%`;
 			logoEl.style.width = `${size}px`;
 			logoEl.style.height = 'auto';
-			logoEl.style.opacity = '0.28';
+			logoEl.style.opacity = '0.45';
 			logoEl.style.setProperty('--fly-duration', `${duration}s`);
 			logoEl.style.setProperty('--fly-delay', `${delay}s`);
 			logoEl.style.setProperty('--fly-direction', direction);
@@ -4213,6 +4695,21 @@ function buildRegelwerkCollage(item) {
 	return others.slice(0, MAX_COLLAGE_ITEMS);
 }
 
+function buildWhitelistCollage(item) {
+	const datasetRaw = getDataset('whitelist');
+	const dataset = Array.isArray(datasetRaw) ? datasetRaw : [];
+	const index = dataset.findIndex((entry) => entry?.id === item?.id);
+	const featured = index >= 0 ? createCollageItem(dataset[index], 'whitelist', index) : null;
+	const remainingLimit = MAX_COLLAGE_ITEMS;
+	const others = buildSharedCollageItemsFromDataset({
+		dataset,
+		category: 'whitelist',
+		excludeKey: featured?.key || null,
+		limit: remainingLimit
+	});
+	return others.slice(0, MAX_COLLAGE_ITEMS);
+}
+
 function buildSharedCollageItemsFromDataset({ dataset = [], category, excludeKey = null, limit = MAX_COLLAGE_ITEMS } = {}) {
 	const pool = [];
 	const seen = new Set();
@@ -4363,9 +4860,9 @@ function handleResize() {
 			scaleTaglineToFit(taglineEl);
 		}
 		
-		// Re-auto-size nogo description cards
-		if (state.currentCategory === 'regelwerk') {
-			const nogoDescriptions = document.querySelectorAll('.hero-card--regelwerk .hero-card__nogo-description');
+		// Re-auto-size nogo/whitelist description cards
+		if (state.currentCategory === 'regelwerk' || state.currentCategory === 'whitelist') {
+			const nogoDescriptions = document.querySelectorAll('.hero-card--regelwerk .hero-card__nogo-description, .hero-card--whitelist .hero-card__nogo-description');
 			nogoDescriptions.forEach(desc => autoSizeTextToFit(desc));
 		}
 	}, 150);
