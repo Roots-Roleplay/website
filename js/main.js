@@ -544,12 +544,30 @@ async function init() {
 	const loaded = await loadContent();
 	if (!loaded) return;
 
+	// Set CSS custom properties for roots_R.png paths (fixes GitHub Pages base path issue)
+	setRootsRImagePaths();
+
 	setupEventListeners();
 	setCategory('legal', { skipAutoOpen: true });
 	activateAppShell();
 	spawnFloatingLogos();
 
 	console.log('✅ Hero experience ready!');
+}
+
+function setRootsRImagePaths() {
+	// Normalize the roots_R.png path for GitHub Pages compatibility
+	// This must run early to set CSS custom properties before styles are applied
+	const rootsRPath = normalizeAssetPath('public/roots_R.png');
+	// Set CSS custom property for use in CSS background images
+	document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
+	
+	// Also set it immediately if document is already loaded
+	if (document.readyState !== 'loading') {
+		// Ensure it's applied to root element
+		const root = document.documentElement;
+		root.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
+	}
 }
 
 async function loadContent() {
@@ -1427,10 +1445,11 @@ function createHeroCard(item, index, category) {
 						</div>`;
 				}
 				
+				const rootsRImageSrc = normalizeAssetPath('public/roots_R.png');
 				mainContentHtml = `
 					<div class="hero-card__flip-container">
 						<div class="hero-card__face hero-card__face--back">
-							<img src="public/roots_R.png" alt="Roots" loading="lazy">
+							<img src="${rootsRImageSrc}" alt="Roots" loading="lazy">
 							<span class="hero-card__footer">Klicken zum Umdrehen</span>
 						</div>
 						<div class="hero-card__face hero-card__face--front">

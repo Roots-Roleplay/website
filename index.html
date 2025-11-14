@@ -16,6 +16,32 @@
 				base.href = basePath + '/';
 				document.head.insertBefore(base, document.head.firstChild);
 			}
+			
+			// Set CSS custom property for roots_R.png path early (fixes GitHub Pages 404)
+			// This runs before CSS loads so the CSS variables are available
+			function normalizeAssetPath(path) {
+				if (!path) return '';
+				if (/^https?:\/\//i.test(path)) return path;
+				const basePath = window.__BASE_PATH__ || '';
+				const baseTag = document.querySelector('base[href]');
+				
+				if (basePath && path.startsWith(basePath + '/')) {
+					return path.replace(/\/+/g, '/');
+				}
+				
+				if (baseTag && !path.startsWith('/') && !path.startsWith('./') && !path.startsWith('../')) {
+					return path;
+				}
+				
+				const trimmed = String(path).replace(/^\/+/, '');
+				if (!basePath) {
+					return `/${trimmed}`.replace(/\/+/g, '/');
+				}
+				return `${basePath}/${trimmed}`.replace(/\/+/g, '/');
+			}
+			
+			const rootsRPath = normalizeAssetPath('public/roots_R.png');
+			document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
 		})();
 	</script>
 	<meta name="description" content="Rooted in play">
