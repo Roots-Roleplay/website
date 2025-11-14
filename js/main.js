@@ -866,6 +866,9 @@ function setCategory(category, options = {}) {
     const dataset = getDataset(category);
     state.currentIndex = 0;
 
+    // Toggle body class for whitelist to hide rail controls
+    document.body.classList.toggle('is-whitelist', category === 'whitelist');
+
     updateChoiceButtons();
     resetHeroRailIdle();
     clearHeroRandomSpin();
@@ -910,6 +913,7 @@ function renderHeroCards(dataset, category = state.currentCategory) {
 
 	stack.innerHTML = '';
 	stack.classList.toggle('is-illegal', category === 'illegal');
+	stack.classList.toggle('is-whitelist', category === 'whitelist');
 	stack.classList.add('as-rail');
 
 	if (!Array.isArray(dataset) || dataset.length === 0) {
@@ -923,6 +927,21 @@ function renderHeroCards(dataset, category = state.currentCategory) {
 
 	const track = document.createElement('div');
 	track.className = 'hero-card-track';
+	
+	// Preload first card's image for faster initial load
+	if (dataset.length > 0) {
+		const firstItem = dataset[0];
+		const firstImageSrc = getHeroCardImage(firstItem, category);
+		if (firstImageSrc) {
+			const preloadLink = document.createElement('link');
+			preloadLink.rel = 'preload';
+			preloadLink.as = 'image';
+			preloadLink.href = normalizeAssetPath(firstImageSrc);
+			preloadLink.fetchPriority = 'high';
+			document.head.appendChild(preloadLink);
+		}
+	}
+	
 	dataset.forEach((item, index) => {
 		const card = createHeroCard(item, index, category);
 		track.appendChild(card);
@@ -975,6 +994,12 @@ function createHeroCard(item, index, category) {
 	card.className = 'hero-card' + (category === 'illegal' ? ' hero-card--illegal' : '') + (category === 'regelwerk' ? ' hero-card--regelwerk' : '') + (category === 'whitelist' ? ' hero-card--whitelist' : '') + (isPlaceholder ? ' hero-card--placeholder' : '');
 	card.dataset.index = String(index);
 	card.dataset.category = category;
+
+	// Determine loading strategy: first 3 cards load eagerly, rest lazy
+	const isVisibleCard = index < 3;
+	const loadingAttr = isVisibleCard ? 'eager' : 'lazy';
+	const fetchPriorityAttr = isVisibleCard ? 'fetchpriority="high"' : '';
+	const decodingAttr = 'decoding="async"';
 
 	const imageSrc = getHeroCardImage(item, category);
 	const logoSrc = getHeroCardLogo(item, category);
@@ -1057,7 +1082,7 @@ function createHeroCard(item, index, category) {
 				const alt = getCharacterAltFromSrc(normalizedSrc);
 				gridCells.push(`
 					<div class="illegal-placeholder__cell">
-						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true" onerror="this.style.display='none'; const cell=this.closest('.illegal-placeholder__cell'); if(cell) cell.style.display='none';">
+						<img class="illegal-placeholder__image" src="${normalizedSrc}" alt="${escapeHtml(alt)}" loading="lazy" ${decodingAttr} aria-hidden="true" onerror="this.style.display='none'; const cell=this.closest('.illegal-placeholder__cell'); if(cell) cell.style.display='none';">
 					</div>
 				`);
 			} else {
@@ -1071,14 +1096,14 @@ function createHeroCard(item, index, category) {
 					const alt = getCharacterAltFromSrc(fallbackSrc);
 					gridCells.push(`
 						<div class="illegal-placeholder__cell">
-							<img class="illegal-placeholder__image" src="${fallbackSrc}" alt="${escapeHtml(alt)}" loading="lazy" aria-hidden="true" onerror="this.style.display='none'; const cell=this.closest('.illegal-placeholder__cell'); if(cell) cell.style.display='none';">
+							<img class="illegal-placeholder__image" src="${fallbackSrc}" alt="${escapeHtml(alt)}" loading="lazy" ${decodingAttr} aria-hidden="true" onerror="this.style.display='none'; const cell=this.closest('.illegal-placeholder__cell'); if(cell) cell.style.display='none';">
 						</div>
 					`);
 				} else {
 					// Last resort: create empty cell
 					gridCells.push(`
 						<div class="illegal-placeholder__cell">
-							<img class="illegal-placeholder__image" src="" alt="" loading="lazy" aria-hidden="true" style="display: none;">
+							<img class="illegal-placeholder__image" src="" alt="" loading="lazy" ${decodingAttr} aria-hidden="true" style="display: none;">
 						</div>
 					`);
 				}
@@ -1119,7 +1144,7 @@ function createHeroCard(item, index, category) {
 				const altText = category === 'whitelist' ? 'Serverzeiten' : 'Roots NoGo';
 				mainContentHtml = `
 					<span class="hero-card__backdrop" aria-hidden="true"></span>
-					<img class="hero-card__image" src="${imageSrc}" alt="${altText}" loading="lazy">
+					<img class="hero-card__image" src="${imageSrc}" alt="${altText}" loading="${loadingAttr}" ${fetchPriorityAttr} ${decodingAttr}>
 				`;
 			} else if (item?.showGuidelines) {
 				// Guidelines card - show all guideline images with Discord CTA in middle
@@ -1141,13 +1166,13 @@ function createHeroCard(item, index, category) {
 				
 				const topRowHtml = topRow.map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item">
-						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('');
 				
 				const row2LeftHtml = row2Left.map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('');
 				
@@ -1162,32 +1187,32 @@ function createHeroCard(item, index, category) {
 				
 				const row2RightHtml = row2Right.map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('');
 				
 				const row3LeftHtml = row3Left.map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('');
 				
 				const row3RightHtml = row3Right.map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('');
 				
 				// Bottom row: use remaining 2 images, fill remaining 2 cells with first 2 images again to fill the grid
 				const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('') + 
 				// Fill remaining 2 bottom cells by reusing first 2 images
 				guidelineImages.slice(0, 2).map((imgSrc, idx) => 
 					`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 					</div>`
 				).join('');
 				
@@ -1244,13 +1269,13 @@ function createHeroCard(item, index, category) {
 						
 						const topRowHtml = topRow.map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item">
-								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('');
 						
 						const row2LeftHtml = row2Left.map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('');
 						
@@ -1265,30 +1290,30 @@ function createHeroCard(item, index, category) {
 						
 						const row2RightHtml = row2Right.map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('');
 						
 						const row3LeftHtml = row3Left.map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('');
 						
 						const row3RightHtml = row3Right.map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('');
 						
 						const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('') + 
 						guidelineImages.slice(0, 2).map((imgSrc, idx) => 
 							`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" class="hero-card__guideline-image">
+								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
 							</div>`
 						).join('');
 						
@@ -1456,7 +1481,7 @@ function createHeroCard(item, index, category) {
 				mainContentHtml = `
 					<div class="hero-card__flip-container">
 						<div class="hero-card__face hero-card__face--back">
-							<img src="${rootsRImageSrc}" alt="Roots" loading="lazy">
+							<img src="${rootsRImageSrc}" alt="Roots" loading="${loadingAttr}" ${fetchPriorityAttr} ${decodingAttr}>
 							<span class="hero-card__footer">Klicken zum Umdrehen</span>
 						</div>
 						<div class="hero-card__face hero-card__face--front">
@@ -1480,13 +1505,13 @@ function createHeroCard(item, index, category) {
 			} else {
 				mainContentHtml = `
 					<span class="hero-card__backdrop" aria-hidden="true"></span>
-					<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="lazy">
+					<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="${loadingAttr}" ${fetchPriorityAttr} ${decodingAttr}>
 				`;
 			}
 		} else {
 			mainContentHtml = `
 				<span class="hero-card__backdrop" aria-hidden="true"></span>
-				<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="lazy">
+				<img class="hero-card__image" src="${imageSrc}" alt="${escapeHtml(title)}" loading="${loadingAttr}" ${fetchPriorityAttr} ${decodingAttr}>
 			`;
 		}
 	}
@@ -1967,7 +1992,7 @@ function createHeroCard(item, index, category) {
 				const backdropSrc = normalizeAssetPath('public/roots_R.png');
 				panel.innerHTML = `
 					<span class="split-panel__backdrop" style="background-image: url('${backdropSrc}');"></span>
-					<img class="split-panel__image" src="${characterSrc}" alt="${characterAlt}" loading="lazy">
+					<img class="split-panel__image" src="${characterSrc}" alt="${characterAlt}" loading="lazy" decoding="async">
 				`;
 				// Add error handler to retry with different image if load fails
 				const imgEl = panel.querySelector('.split-panel__image');
@@ -2401,14 +2426,13 @@ function initHeroRailRandom() {
 		document.body.classList.add('is-random-rolling');
 		resetHeroRailIdle();
 
-		// Special handling for regelwerk - flip through nogo cards 1-12
+		// Special handling for regelwerk - flip through nogo cards 2-12 only
 		if (state.currentCategory === 'regelwerk') {
-			// Find nogo cards (items with showTextLabel and nogoNumber)
+			// Find nogo cards (items with showTextLabel and nogoNumber), exclude nogoNumber 1
 			const nogoCards = dataset
 				.map((item, idx) => ({ item, index: idx }))
-				.filter(({ item }) => item?.showTextLabel && !item?.isEinleitung && item?.nogoNumber)
-				.sort((a, b) => (a.item.nogoNumber || 0) - (b.item.nogoNumber || 0))
-				.slice(0, 12); // Only first 12 nogo cards
+				.filter(({ item }) => item?.showTextLabel && !item?.isEinleitung && item?.nogoNumber && item.nogoNumber >= 2 && item.nogoNumber <= 12)
+				.sort((a, b) => (a.item.nogoNumber || 0) - (b.item.nogoNumber || 0));
 			
 			if (nogoCards.length === 0) {
 				randomBtn.classList.remove('is-rolling');
@@ -2472,11 +2496,28 @@ function initHeroRailRandom() {
 			return;
 		}
 
-		// Original behavior for other categories
+		// Original behavior for other categories (legal and illegal)
+		// Filter out placeholder cards
+		const availableCards = dataset
+			.map((item, idx) => ({ item, index: idx }))
+			.filter(({ item }) => !item?.placeholder);
+		
+		if (availableCards.length === 0) {
+			randomBtn.classList.remove('is-rolling');
+			state.heroRandomCooldown = false;
+			document.body.classList.remove('is-random-rolling');
+			return;
+		}
+		
 		const currentIndex = clampHeroIndex(state.currentIndex);
-		let targetIndex = Math.floor(Math.random() * dataset.length);
-		if (dataset.length > 1 && targetIndex === currentIndex) {
-			targetIndex = (targetIndex + 1) % dataset.length;
+		let selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+		let targetIndex = selectedCard.index;
+		
+		// If selected card is the current one and there are other options, pick a different one
+		if (availableCards.length > 1 && targetIndex === currentIndex) {
+			const otherCards = availableCards.filter(({ index }) => index !== currentIndex);
+			selectedCard = otherCards[Math.floor(Math.random() * otherCards.length)];
+			targetIndex = selectedCard.index;
 		}
 		const sequence = buildHeroRandomSequence({
 			startIndex: currentIndex,
@@ -2851,6 +2892,9 @@ function renderDetail(item, category) {
 			if (logoSrc) {
 				logoEl.src = logoSrc;
 				logoEl.alt = config.getTitle(item) + ' Logo';
+				logoEl.decoding = 'async';
+				logoEl.loading = 'eager';
+				logoEl.fetchPriority = 'high';
 				logoEl.style.display = 'block';
 			} else {
 				logoEl.style.display = 'none';
@@ -2874,6 +2918,9 @@ function renderDetail(item, category) {
 		if (characterSrc) {
 			characterEl.src = characterSrc;
 			characterEl.alt = config.getTitle(item) + ' Character';
+			characterEl.decoding = 'async';
+			characterEl.loading = 'eager';
+			characterEl.fetchPriority = 'high';
 			characterEl.style.display = 'block';
 		} else {
 			characterEl.style.display = 'none';
@@ -2935,7 +2982,9 @@ function renderDetailMedia(item, category) {
 		const img = document.createElement('img');
 		img.src = media.src;
 		img.alt = media.alt || config.getTitle(item);
-		img.loading = 'lazy';
+		img.loading = 'eager';
+		img.decoding = 'async';
+		img.fetchPriority = 'high';
 		// Use contain for regelwerk and whitelist to show complete image, cover for others
 		const objectFit = (category === 'regelwerk' || category === 'whitelist') ? 'contain' : 'cover';
 		img.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${objectFit};object-position:center;`;
