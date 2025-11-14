@@ -4575,6 +4575,13 @@ function normalizeAssetPath(path = '') {
 	if (!path) return '';
 	if (/^https?:\/\//i.test(path)) return path;
 	const basePath = getBasePath();
+	
+	// Check if path already starts with base path - avoid double normalization
+	if (basePath && path.startsWith(basePath + '/')) {
+		// Path already has base path prefix, just clean up any double slashes
+		return path.replace(/\/+/g, '/');
+	}
+	
 	const trimmed = String(path).replace(/^\/+/, '');
 	// Ensure path starts with base path
 	if (!basePath) {
