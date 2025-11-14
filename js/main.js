@@ -378,8 +378,8 @@ const CRIME_CHARACTER_IMAGES_ARRAY = [
 	'public/crime_characters/rednecks_character.png'
 ];
 
-// Crime shuffle images
-const CRIME_SHUFFLE_IMAGES = (() => {
+// Crime shuffle images - function to ensure paths are normalized with current base path
+function getCrimeShuffleImages() {
 	// Only images from public/crime_shuffle folder (25 images total)
 	const knownFiles = [
 		'addad.png',
@@ -408,9 +408,9 @@ const CRIME_SHUFFLE_IMAGES = (() => {
 		'wda.png',
 		'yk.png'
 	];
-	// Normalize all paths to ensure consistency
+	// Normalize all paths to ensure consistency - compute dynamically to use current base path
 	return knownFiles.map(file => normalizeAssetPath(`public/crime_shuffle/${file}`));
-})();
+}
 
 // Helper function to get unique random images from pool
 function getUniqueRandomImages(pool, count) {
@@ -888,7 +888,7 @@ function createHeroCard(item, index, category) {
 
 	const buildIllegalPlaceholder = () => {
 		// Illegal shuffle: use only crime_shuffle
-		const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+		const illegalShufflePool = getCrimeShuffleImages();
 		// Ensure exactly 8 characters - always create 8 cells
 		const faceCount = 8;
 		// Get exactly 8 unique images (or as many as available if pool is smaller)
@@ -1395,7 +1395,7 @@ function createHeroCard(item, index, category) {
 				const grid = card.querySelector('.illegal-placeholder__grid');
 				if (grid) {
 					const images = Array.from(grid.querySelectorAll('.illegal-placeholder__image'));
-					const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+					const illegalShufflePool = getCrimeShuffleImages();
 					
 					images.forEach((img, index) => {
 						let retryCount = 0;
@@ -1488,7 +1488,7 @@ function createHeroCard(item, index, category) {
 			// Track used images to prevent duplicates
 			let usedImages = new Set();
 			// Illegal shuffle: use only crime_shuffle
-			const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+			const illegalShufflePool = getCrimeShuffleImages();
 			const getAvailableImages = () => {
 				const currentImages = getImages().map(img => img.src);
 				usedImages = new Set(currentImages);
@@ -1523,7 +1523,7 @@ function createHeroCard(item, index, category) {
 				// Get unique images for final result - always use 8, not current count
 				const imageCount = 8;
 				// Illegal shuffle: use only crime_shuffle
-				const illegalShufflePool = CRIME_SHUFFLE_IMAGES;
+				const illegalShufflePool = getCrimeShuffleImages();
 				// Ensure we get exactly 8 unique images
 				let finalImages = getUniqueRandomImages(illegalShufflePool, Math.min(imageCount, illegalShufflePool.length));
 				// If we got fewer than 8, try to get more unique ones
@@ -1684,7 +1684,7 @@ function createHeroCard(item, index, category) {
 		const maxLevels = 3; // initial grid + two deeper splits (64 max panels)
 		// Combine both crime and random character images for legal section
 		// Legal shuffle: use random_characters + company_characters + crime_characters + crime_shuffle
-		const legalCharacterPool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...CRIME_SHUFFLE_IMAGES];
+		const legalCharacterPool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...getCrimeShuffleImages()];
 		const getRandomCharacterImage = () => {
 			const img = legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)];
 			return normalizeAssetPath(img);
@@ -2491,7 +2491,7 @@ function spawnFloatingLogos(category = state.currentCategory) {
 	};
 
 	// Polaroids: use ALL images from company_characters, crime_characters, crime_shuffle, and random_characters
-	const imagePool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...CRIME_SHUFFLE_IMAGES];
+	const imagePool = [...RANDOM_CHARACTER_IMAGES, ...COMPANY_CHARACTER_IMAGES, ...CRIME_CHARACTER_IMAGES_ARRAY, ...getCrimeShuffleImages()];
 	const pool = shuffleArray(imagePool.slice());
 	let cursor = 0;
 	const pullNextImage = () => {
