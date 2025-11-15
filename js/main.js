@@ -3133,7 +3133,8 @@ function mountDetailVideoPlayer({ youtubeId, title, buyUrl, allVideos = null, vi
 				playsinline: 1,
 				loop: 1,
 				playlist: youtubeId,
-				origin: window.location.origin
+				origin: window.location.origin,
+				mute: 1
 			},
 			events: {
 				onReady: (event) => handleDetailVideoReady(detailVideoState, event?.target),
@@ -3512,9 +3513,18 @@ function handleDetailVideoReady(detailVideoState, player) {
 	if (!player) return;
 	try {
 		player.mute();
-		player.playVideo();
+		// Small delay to ensure player is fully ready before playing
+		setTimeout(() => {
+			try {
+				if (player && typeof player.playVideo === 'function') {
+					player.playVideo();
+				}
+			} catch (error) {
+				console.warn('⚠️ Unable to start detail video automatically:', error);
+			}
+		}, 100);
 	} catch (error) {
-		console.warn('⚠️ Unable to start detail video automatically:', error);
+		console.warn('⚠️ Unable to mute or prepare detail video:', error);
 	}
 	updateDetailVideoUi(detailVideoState, { muted: true, volume: 0 });
 	showDetailVideoControls(detailVideoState, { autoHide: true });
@@ -3523,6 +3533,19 @@ function handleDetailVideoReady(detailVideoState, player) {
 function handleDetailVideoStateChange(detailVideoState, event) {
 	if (!event || !detailVideoState?.player || typeof YT === 'undefined') return;
 	const stateValue = event.data;
+	
+	// If video is cued but not playing, start it
+	if (stateValue === YT.PlayerState.CUED) {
+		try {
+			if (detailVideoState.player && typeof detailVideoState.player.playVideo === 'function') {
+				detailVideoState.player.playVideo();
+			}
+		} catch (error) {
+			console.warn('⚠️ Failed to start cued video:', error);
+		}
+	}
+	
+	// Loop video when it ends
 	if (stateValue === YT.PlayerState.ENDED) {
 		try {
 			detailVideoState.player.seekTo(0, true);
