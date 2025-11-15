@@ -18,9 +18,8 @@ concurrency:
 
 jobs:
   deploy-main:
-    name: Deploy to VPS Server
+    name: 🚀 Deploy to VPS Server
     runs-on: [self-hosted, ROOT394]
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/MAIN_')
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
