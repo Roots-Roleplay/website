@@ -941,7 +941,7 @@ body.desktop-scaled {
 .hero-rail-controls {
 	position: fixed !important;
 	left: 50% !important;
-	top: calc(50vh + clamp(240px, 38vh, 430px) + clamp(20px, 3vh, 40px)) !important;
+	bottom: clamp(240px, 22vh, 320px) !important;
 	transform: translateX(-50%);
 	display: flex;
 	align-items: center;
