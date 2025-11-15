@@ -1,10 +1,7 @@
 name: Deploy to Roots
 
 on:
-  push:
-    branches:
-      - main
-      - 'MAIN_*'
+  push:  # Trigger on all branches
   workflow_dispatch:
 
 permissions:
@@ -29,49 +26,59 @@ jobs:
           fetch-depth: 0
           submodules: recursive  # Fetch submodules as well
 
-      - name: Ensure Clean Git State
+      - name: Build
         run: |
-          $target = 'C:\Roots\infrastructure\main\services\nginx\data\html\roots'
-          if (-not (Test-Path -Path $target)) {
-            New-Item -ItemType Directory -Path $target -Force
-          }
-          Set-Location -Path $target
-          # Initialize repo if missing
-          if (-not (Test-Path -Path ".git")) {
-            git init
-            git remote add origin https://github.com/${{ github.repository }}.git
+          Write-Output "Building project..."
+          if (Test-Path -Path "package.json") {
+            npm install
+            npm run build
+            Write-Output "Build completed successfully!"
           } else {
-            # Ensure remote is set correctly
-            $remoteExists = git remote | Select-String -Pattern "^origin$"
-            if (-not $remoteExists) {
-              git remote add origin https://github.com/${{ github.repository }}.git
-            } else {
-              git remote set-url origin https://github.com/${{ github.repository }}.git
-            }
+            Write-Output "No package.json found, skipping build step."
           }
-          # Fetch latest changes and submodules
-          git fetch origin
-          git checkout -f ${{ github.ref_name }}
-          git reset --hard origin/${{ github.ref_name }}
-          git pull origin ${{ github.ref_name }}
-          # Sync and update submodules
-          git submodule sync --recursive
-          git submodule update --init --recursive --force
-          Write-Output "Files deployed to: $target"
-          Write-Output "Current branch: ${{ github.ref_name }}"
         shell: powershell
 
-      - name: Deploy to Main Server
+      - name: Report build status
         run: |
+          Write-Output "Build status: SUCCESS"
+          Write-Output "Ready to deploy to server..."
+        shell: powershell
+
+      - name: Deploy files to server
+        run: |
+          $source = $env:GITHUB_WORKSPACE
           $target = 'C:\Roots\infrastructure\main\services\nginx\data\html\roots'
-          Write-Output "Verifying deployment..."
-          if (Test-Path -Path $target) {
-            $fileCount = (Get-ChildItem -Path $target -Recurse -File | Measure-Object).Count
-            Write-Output "Deployment successful! Found $fileCount files in $target"
-          } else {
-            Write-Error "Target directory does not exist: $target"
-            exit 1
+          
+          Write-Output "=== COPYING FILES TO SERVER ==="
+          Write-Output "Source: $source"
+          Write-Output "Target: $target"
+          
+          # Create target directory if it doesn't exist
+          if (-not (Test-Path -Path $target)) {
+            New-Item -ItemType Directory -Path $target -Force
+            Write-Output "Created target directory: $target"
           }
+          
+          # Copy all files except .git
+          Write-Output "Copying files..."
+          $exclude = @('.git', 'node_modules', '.github')
+          Get-ChildItem -Path $source -Exclude $exclude | ForEach-Object {
+            $destPath = Join-Path $target $_.Name
+            if ($_.PSIsContainer) {
+              Copy-Item -Path $_.FullName -Destination $destPath -Recurse -Force
+            } else {
+              Copy-Item -Path $_.FullName -Destination $destPath -Force
+            }
+          }
+          
+          Write-Output "Files copied successfully to: $target"
+          $fileCount = (Get-ChildItem -Path $target -Recurse -File | Measure-Object).Count
+          Write-Output "Total files in target: $fileCount"
+        shell: powershell
+
+      - name: Reload nginx
+        run: |
+          Write-Output "=== RELOADING NGINX ==="
           
           # Test nginx configuration before reloading
           Write-Output "Testing nginx configuration..."
@@ -81,7 +88,8 @@ jobs:
             Write-Output "Configuration test passed. Reloading nginx..."
             docker exec nginx_proxy_manager nginx -s reload
             if ($LASTEXITCODE -eq 0) {
-              Write-Output "Nginx reloaded successfully!"
+              Write-Output "✅ Nginx reloaded successfully!"
+              Write-Output "✅ Server deployment complete!"
             } else {
               Write-Warning "Nginx reload failed with exit code $LASTEXITCODE"
               exit 1
