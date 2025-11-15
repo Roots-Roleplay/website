@@ -1,7 +1,10 @@
 name: Deploy to Roots
 
 on:
-  push:  # Trigger on all branches
+  push:
+    branches:
+      - main
+      - 'MAIN_*'
   workflow_dispatch:
 
 permissions:
