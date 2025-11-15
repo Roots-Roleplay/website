@@ -25,6 +25,11 @@
 			var path = window.location.pathname;
 			var basePath = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
 			
+			// Normalize origin to always use www.roots-rp.de in production (fixes certificate errors)
+			if (origin.includes('roots-rp.de') && !origin.includes('www.roots-rp.de')) {
+				origin = origin.replace(/^https?:\/\/roots-rp\.de/i, 'https://www.roots-rp.de');
+			}
+			
 			// Image path - use roots_choice.png for embeds
 			var imagePath = 'public/whitelist/roots_choice.png';
 			
@@ -39,6 +44,10 @@
 				if (url.indexOf('http://') === 0 && !url.indexOf('localhost') > -1) {
 					url = url.replace('http://', 'https://');
 				}
+				// Ensure www subdomain for roots-rp.de
+				if (url.includes('roots-rp.de') && !url.includes('www.roots-rp.de')) {
+					url = url.replace(/^https?:\/\/roots-rp\.de/i, 'https://www.roots-rp.de');
+				}
 				return url;
 			}
 			
@@ -47,6 +56,10 @@
 			// Force HTTPS for current URL too (except localhost)
 			if (currentUrl.indexOf('http://') === 0 && currentUrl.indexOf('localhost') === -1) {
 				currentUrl = currentUrl.replace('http://', 'https://');
+			}
+			// Ensure www subdomain for roots-rp.de
+			if (currentUrl.includes('roots-rp.de') && !currentUrl.includes('www.roots-rp.de')) {
+				currentUrl = currentUrl.replace(/^https?:\/\/roots-rp\.de/i, 'https://www.roots-rp.de');
 			}
 			
 			// HTML escape function for attribute values
@@ -87,6 +100,17 @@
 			window.__ABSOLUTE_IMAGE_URL__ = absoluteImageUrl;
 			window.__CURRENT_URL__ = currentUrl;
 			
+			// Set CSS custom property for roots_R.png path VERY early (before CSS uses it)
+			// This ensures it works on both GitHub Pages (/website/) and nginx (/)
+			// Path should be relative to HTML location, not CSS location
+			const rootsRPath = basePath ? basePath + '/public/roots_R.png' : '/public/roots_R.png';
+			try {
+				document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
+				window.__ROOTS_R_IMAGE_PATH__ = rootsRPath;
+			} catch(e) {
+				console.warn('Could not set CSS custom property early:', e);
+			}
+			
 			// Debug: Log the generated URL
 			console.log('Discord Embed Image URL:', absoluteImageUrl);
 			console.log('Test this URL in your browser to verify the image is accessible');
@@ -124,6 +148,24 @@
 	<!-- Preload Critical Resources -->
 	<link rel="preload" href="css/main.css" as="style">
 	<link rel="preload" href="public/roots-roleplay.svg" as="image" type="image/svg+xml">
+	
+	<!-- Set CSS custom property early with base path detection -->
+	<script>
+		// Detect base path synchronously during HTML parsing (before CSS loads)
+		(function() {
+			const path = window.location.pathname;
+			const basePath = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
+			// Set CSS custom property immediately with correct path for GitHub Pages or nginx
+			const rootsRPath = basePath ? basePath + '/public/roots_R.png' : '/public/roots_R.png';
+			try {
+				document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
+				window.__BASE_PATH__ = basePath;
+				window.__ROOTS_R_IMAGE_PATH__ = rootsRPath;
+			} catch(e) {
+				console.warn('Could not set CSS custom property early:', e);
+			}
+		})();
+	</script>
 	
 	<script>
 		// Load SEO data from JSON and populate meta tags (enhancement after initial setup)
@@ -163,7 +205,17 @@
 				if (!relativePath) return '';
 				if (/^https?:\/\//i.test(relativePath)) return relativePath;
 				const normalizedPath = normalizeAssetPath(relativePath);
-				return window.location.origin + (normalizedPath.startsWith('/') ? normalizedPath : '/' + normalizedPath);
+				let origin = window.location.origin;
+				// Normalize origin to always use www.roots-rp.de in production (fixes certificate errors)
+				if (origin.includes('roots-rp.de') && !origin.includes('www.roots-rp.de')) {
+					origin = origin.replace(/^https?:\/\/roots-rp\.de/i, 'https://www.roots-rp.de');
+				}
+				let url = origin + (normalizedPath.startsWith('/') ? normalizedPath : '/' + normalizedPath);
+				// Ensure www subdomain for roots-rp.de
+				if (url.includes('roots-rp.de') && !url.includes('www.roots-rp.de')) {
+					url = url.replace(/^https?:\/\/roots-rp\.de/i, 'https://www.roots-rp.de');
+				}
+				return url;
 			}
 			
 			// Set base href for relative paths (only if not at root)
@@ -353,7 +405,11 @@
 			
 			// Set CSS custom property for roots_R.png path early (fixes GitHub Pages 404)
 			const rootsRPath = normalizeAssetPath('public/roots_R.png');
+			// Set it immediately so CSS can use it
 			document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
+			
+			// Also store for later use
+			window.__ROOTS_R_IMAGE_PATH__ = rootsRPath;
 		})();
 		
 	</script>

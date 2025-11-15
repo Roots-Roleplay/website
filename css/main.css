@@ -523,7 +523,7 @@ body.desktop-scaled {
 	inset: 8%;
 	background:
 		radial-gradient(circle at 50% 18%, rgba(124, 172, 152, 0.42), rgba(10, 16, 14, 0) 70%),
-		var(--roots-r-image, url('public/roots_R.png')) center/68% auto no-repeat;
+		var(--roots-r-image) center/68% auto no-repeat;
 	opacity: 0.38;
 	filter: blur(6px);
 	mix-blend-mode: screen;
@@ -1430,7 +1430,7 @@ body.is-random-rolling .hero-card-stack::before {
 .hero-card__backdrop {
 	position: absolute;
 	inset: 12% 10% 28%;
-	background: var(--card-logo, var(--roots-r-image, url('public/roots_R.png'))) center/contain no-repeat;
+	background: var(--card-logo, var(--roots-r-image)) center/contain no-repeat;
 	opacity: 0.35;
 	filter: blur(var(--logo-blur, 4px)) saturate(1.05);
 	transform: scale(1.06);
@@ -1442,7 +1442,7 @@ body.is-random-rolling .hero-card-stack::before {
 	content: '';
 	position: absolute;
 	inset: 0;
-	background: var(--card-logo, var(--roots-r-image, url('public/roots_R.png'))) center/contain no-repeat;
+	background: var(--card-logo, var(--roots-r-image)) center/contain no-repeat;
 	opacity: 0;
 	display: none;
 }
@@ -5881,7 +5881,7 @@ body.is-whitelist .hero-rail-controls {
         inset: 8%;
         background:
                 radial-gradient(circle at 50% 18%, rgba(124, 172, 152, 0.42), rgba(10, 16, 14, 0) 70%),
-                var(--roots-r-image, url('public/roots_R.png')) center/68% auto no-repeat;
+                var(--roots-r-image) center/68% auto no-repeat;
         opacity: 0.38;
         filter: blur(6px);
         mix-blend-mode: screen;
@@ -6151,7 +6151,7 @@ body.is-whitelist .hero-rail-controls {
 	inset: 9%;
 	background:
 		radial-gradient(circle at 50% 18%, rgba(124, 172, 152, 0.45), rgba(10, 16, 14, 0) 70%),
-		var(--roots-r-image, url('public/roots_R.png')) center/68% auto no-repeat;
+		var(--roots-r-image) center/68% auto no-repeat;
 	opacity: 0.38;
 	filter: blur(6px);
 	mix-blend-mode: screen;
@@ -6345,7 +6345,7 @@ body.is-whitelist .hero-rail-controls {
     content: '';
     position: absolute;
     inset: 4% 4% 12%;
-    background: var(--card-logo, var(--roots-r-image, url('public/roots_R.png'))) center/contain no-repeat;
+    background: var(--card-logo, var(--roots-r-image)) center/contain no-repeat;
     opacity: 0.58;
     filter: blur(var(--logo-blur, 6px)) saturate(1.12) drop-shadow(0 24px 40px rgba(0,0,0,0.5));
     transform: scale(1.28);

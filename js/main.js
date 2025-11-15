@@ -56,6 +56,13 @@ const checkMobile = () => {
 	if (!overlay) return;
 	const isMobile = window.innerWidth < 1024;
 	overlay.style.display = isMobile ? 'flex' : 'none';
+	
+	// Hide rail controls when mobile overlay is shown
+	const railControls = document.getElementById('heroRailControls');
+	if (railControls) {
+		railControls.style.display = isMobile ? 'none' : '';
+	}
+	
 	if (isMobile) document.body.style.overflow = 'hidden';
 };
 
@@ -494,7 +501,8 @@ async function init() {
 
 function setRootsRImagePaths() {
 	// Normalize the roots_R.png path for GitHub Pages compatibility
-	const rootsRPath = normalizeAssetPath('public/roots_R.png');
+	// Use cached path if available (set early in HTML), otherwise normalize
+	const rootsRPath = window.__ROOTS_R_IMAGE_PATH__ || normalizeAssetPath('public/roots_R.png');
 	document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
 }
 
@@ -792,16 +800,50 @@ function renderHeroCards(dataset, category = state.currentCategory) {
 	track.className = 'hero-card-track';
 	
 	// Preload first card's image for faster initial load
+	// Only preload if it's not a fallback/default image that might not be used immediately
 	if (dataset.length > 0) {
 		const firstItem = dataset[0];
-		const firstImageSrc = getHeroCardImage(firstItem, category);
-		if (firstImageSrc) {
-			const preloadLink = document.createElement('link');
-			preloadLink.rel = 'preload';
-			preloadLink.as = 'image';
-			preloadLink.href = normalizeAssetPath(firstImageSrc);
-			preloadLink.fetchPriority = 'high';
-			document.head.appendChild(preloadLink);
+		
+		// Check if this is a fallback/default image BEFORE getting the normalized path
+		// This prevents preloading default images like character_2.png that might not be used
+		const isPlaceholderWithoutImage = firstItem && firstItem.placeholder && !firstItem.image;
+		const itemImagePath = firstItem?.image || '';
+		const isFallbackImage = itemImagePath.includes('character_2.png') || 
+		                        itemImagePath.includes('character_1.png');
+		
+		// Only preload if it's NOT a fallback/default image
+		if (!isPlaceholderWithoutImage && !isFallbackImage) {
+			const firstImageSrc = getHeroCardImage(firstItem, category);
+			// Double-check after normalization (in case normalization changed something)
+			if (firstImageSrc) {
+				const normalizedPath = normalizeAssetPath(firstImageSrc);
+				// Final check on normalized path to ensure we're not preloading fallback images
+				const isNormalizedFallback = normalizedPath.includes('/character_2.png') || 
+				                            normalizedPath.includes('/character_1.png') ||
+				                            normalizedPath.endsWith('character_2.png') ||
+				                            normalizedPath.endsWith('character_1.png');
+				
+				if (normalizedPath && !isNormalizedFallback) {
+					const preloadLink = document.createElement('link');
+					preloadLink.rel = 'preload';
+					preloadLink.as = 'image';
+					preloadLink.href = normalizedPath;
+					preloadLink.fetchPriority = 'high';
+					document.head.appendChild(preloadLink);
+					
+					// Set a timeout to remove the preload link if image isn't used within 3 seconds
+					// This prevents the browser warning about unused preloads
+					setTimeout(() => {
+						if (preloadLink.parentNode) {
+							// Check if image was actually loaded by looking for it in the DOM
+							const imgElements = document.querySelectorAll(`img[src="${normalizedPath}"], img[src*="${normalizedPath.split('/').pop()}"]`);
+							if (imgElements.length === 0 || !Array.from(imgElements).some(img => img.complete && img.naturalWidth > 0)) {
+								preloadLink.remove();
+							}
+						}
+					}, 3000);
+				}
+			}
 		}
 	}
 	
@@ -2878,7 +2920,14 @@ function mountDetailVideoPlayer({ youtubeId, title, buyUrl, allVideos = null, vi
 				iv_load_policy: 3,
 				cc_load_policy: 0,
 				enablejsapi: 1,
-				origin: window.location.origin,
+				origin: (function() {
+					let origin = window.location.origin;
+					// Normalize origin to always use www.roots-rp.de in production (fixes certificate errors)
+					if (origin.includes('roots-rp.de') && !origin.includes('www.roots-rp.de')) {
+						origin = origin.replace(/^https?:\/\/roots-rp\.de/i, 'https://www.roots-rp.de');
+					}
+					return origin;
+				})(),
 				quality: 'highres'
 			}
 			// No events - just play the video
