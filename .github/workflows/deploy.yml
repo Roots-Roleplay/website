@@ -51,16 +51,27 @@ jobs:
           }
           # Fetch latest changes and submodules
           git fetch origin
-          git checkout ${{ github.ref_name }}
+          git checkout -f ${{ github.ref_name }}
+          git reset --hard origin/${{ github.ref_name }}
           git pull origin ${{ github.ref_name }}
           # Sync and update submodules
           git submodule sync --recursive
           git submodule update --init --recursive --force
+          Write-Output "Files deployed to: $target"
+          Write-Output "Current branch: ${{ github.ref_name }}"
         shell: powershell
 
       - name: Deploy to Main Server
         run: |
-          Write-Output "Deployment successful to Main Server!"
+          $target = 'C:\Roots\infrastructure\main\services\nginx\data\html\roots'
+          Write-Output "Verifying deployment..."
+          if (Test-Path -Path $target) {
+            $fileCount = (Get-ChildItem -Path $target -Recurse -File | Measure-Object).Count
+            Write-Output "Deployment successful! Found $fileCount files in $target"
+          } else {
+            Write-Error "Target directory does not exist: $target"
+            exit 1
+          }
           
           # Test nginx configuration before reloading
           Write-Output "Testing nginx configuration..."
