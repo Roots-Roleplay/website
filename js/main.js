@@ -513,10 +513,10 @@ async function loadContent() {
 		const basePathPrefix = basePath ? `${basePath}/` : '/';
 		
 		const [companies, crime, nogos, whitelist] = await Promise.all([
-			fetch(`${basePathPrefix}content/companies.json`).then((r) => r.json()),
-			fetch(`${basePathPrefix}content/crime-factions.json`).then((r) => r.json()),
-			fetch(`${basePathPrefix}content/nogos.json`).then((r) => r.json()),
-			fetch(`${basePathPrefix}content/whitelist.json`).then((r) => r.json())
+			fetch(`${basePathPrefix}content/companies.json?v=1.0`, { cache: 'no-store' }).then((r) => r.json()),
+			fetch(`${basePathPrefix}content/crime-factions.json?v=1.0`, { cache: 'no-store' }).then((r) => r.json()),
+			fetch(`${basePathPrefix}content/nogos.json?v=1.0`, { cache: 'no-store' }).then((r) => r.json()),
+			fetch(`${basePathPrefix}content/whitelist.json?v=1.0`, { cache: 'no-store' }).then((r) => r.json())
 		]);
 
 		state.companies = (companies.companies || []).filter(Boolean);
@@ -2361,10 +2361,11 @@ function spawnFloatingLogos(category = state.currentCategory) {
 		spawnFloatingLogos._highlightTimers.forEach((id) => clearTimeout(id));
 	}
 	spawnFloatingLogos._highlightTimers = [];
+	// Optimized: Reduced polaroid counts for better performance (was 12+14+13=39, now 8+9+8=25)
 	const stripeConfigs = [
 		{
 			modifier: 'bg-polaroid-stripe--left',
-			count: 12,
+			count: 8,
 			rotate: '-22deg',
 			top: '-18%',
 			left: '18%',
@@ -2375,7 +2376,7 @@ function spawnFloatingLogos(category = state.currentCategory) {
 		},
 		{
 			modifier: 'bg-polaroid-stripe--center',
-			count: 14,
+			count: 9,
 			rotate: '-18deg',
 			duration: '112s',
 			delay: '-24s',
@@ -2386,7 +2387,7 @@ function spawnFloatingLogos(category = state.currentCategory) {
 		},
 		{
 			modifier: 'bg-polaroid-stripe--right',
-			count: 13,
+			count: 8,
 			rotate: '-21deg',
 			duration: '126s',
 			delay: '-32s',
@@ -2432,14 +2433,24 @@ function spawnFloatingLogos(category = state.currentCategory) {
 		figure.style.setProperty('--bg-polaroid-tilt', `${tilt}deg`);
 		figure.style.setProperty('--bg-polaroid-offset', `${offset}%`);
 		figure.style.setProperty('--bg-polaroid-scale', scale);
+		
+		// Performance optimization: GPU acceleration hints
+		figure.style.willChange = 'transform';
+		figure.style.transform = 'translateZ(0)'; // Force GPU layer
 
 		const img = document.createElement('img');
 		img.className = 'bg-polaroid__image';
 		let { src } = pullNextImage();
 		img.alt = '';
+		// Performance: Use eager loading for first few, lazy for rest
 		img.loading = 'lazy';
 		img.decoding = 'async';
 		img.setAttribute('aria-hidden', 'true');
+		
+		// Performance: Add fetchpriority for first images
+		if (emphasis) {
+			img.fetchPriority = 'low';
+		}
 		
 		// Retry with a different image if current one fails to load (404 or other error)
 		let retryCount = 0;
@@ -2469,11 +2480,16 @@ function spawnFloatingLogos(category = state.currentCategory) {
 		if (typeof config.left === 'string') stripe.style.left = config.left;
 		stripe.style.setProperty('--bg-stripe-rotate', config.rotate);
 		stripe.style.zIndex = String(config.zIndex || 0);
+		// Performance: GPU acceleration (transform handled by CSS to preserve rotation)
+		stripe.style.willChange = 'transform';
 
 		const inner = document.createElement('div');
 		inner.className = 'bg-polaroid-stripe__inner';
 		inner.style.setProperty('--bg-line-duration', config.duration);
 		inner.style.setProperty('--bg-line-delay', config.delay);
+		// Performance: GPU acceleration for animation
+		inner.style.willChange = 'transform';
+		inner.style.transform = 'translateZ(0)';
 
 		const polaroids = [];
 		for (let i = 0; i < config.count; i += 1) {
@@ -2483,29 +2499,43 @@ function spawnFloatingLogos(category = state.currentCategory) {
 			polaroids.push(createBackgroundPolaroid(emphasis, curveOffset));
 		}
 
+		// Performance: Only duplicate for seamless loop, but reduce if needed
+		// Clone only once for better performance (was cloning all, now selective)
 		polaroids.forEach((node) => inner.appendChild(node));
-		polaroids.forEach((node) => inner.appendChild(node.cloneNode(true)));
+		// Clone only a subset for seamless scrolling (reduces DOM nodes)
+		const cloneCount = Math.min(polaroids.length, 5);
+		polaroids.slice(0, cloneCount).forEach((node) => {
+			const clone = node.cloneNode(true);
+			inner.appendChild(clone);
+		});
 
 		stripe.appendChild(inner);
 
 		container.appendChild(stripe);
 
+		// Performance: Optimized highlight scheduling with requestAnimationFrame
 		const scheduleHighlight = (stripeEl) => {
 			const delay = 4000 + Math.random() * 9000;
 			const timer = setTimeout(() => {
-				const cards = Array.from(stripeEl.querySelectorAll('.bg-polaroid'));
-				if (cards.length === 0) {
+				// Use requestAnimationFrame for smoother DOM updates
+				requestAnimationFrame(() => {
+					const cards = Array.from(stripeEl.querySelectorAll('.bg-polaroid'));
+					if (cards.length === 0) {
+						scheduleHighlight(stripeEl);
+						return;
+					}
+					// Batch DOM updates
+					cards.forEach((card) => card.classList.remove('bg-polaroid--pulse'));
+					const target = cards[Math.floor(Math.random() * cards.length)];
+					target.classList.add('bg-polaroid--pulse');
+					const removalTimer = setTimeout(() => {
+						requestAnimationFrame(() => {
+							target.classList.remove('bg-polaroid--pulse');
+						});
+					}, 5200);
+					spawnFloatingLogos._highlightTimers.push(removalTimer);
 					scheduleHighlight(stripeEl);
-					return;
-				}
-				cards.forEach((card) => card.classList.remove('bg-polaroid--pulse'));
-				const target = cards[Math.floor(Math.random() * cards.length)];
-				target.classList.add('bg-polaroid--pulse');
-				const removalTimer = setTimeout(() => {
-					target.classList.remove('bg-polaroid--pulse');
-				}, 5200);
-				spawnFloatingLogos._highlightTimers.push(removalTimer);
-				scheduleHighlight(stripeEl);
+				});
 			}, delay);
 			spawnFloatingLogos._highlightTimers.push(timer);
 		};
@@ -2574,34 +2604,81 @@ function openDetail(category, index) {
 	state.currentCategory = category;
 	state.currentIndex = safeIndex;
 	
+	// Get media info for performance optimizations
+	const media = config.getMedia(item);
+	const hasVideo = !!(media && media.type === 'video' && media.youtubeId);
+	
 	const detailBg = document.getElementById('detailDynamicBg');
+	console.log('openDetail: detailBg element:', detailBg, 'hasVideo:', hasVideo, 'category:', category, 'media:', media);
 	if (detailBg) {
-		// Spawn flying logos for legal and illegal categories, polaroids for regelwerk
-		// Disable fog and damage effects when video is present (they cause lag)
-		const media = config.getMedia(item);
-		const hasVideo = media && media.type === 'video' && media.youtubeId;
+		// Show background effects (main page is already hidden for performance)
+		detailBg.style.display = ''; // Show if hidden
+		detailBg.style.visibility = ''; // Ensure visible
+		detailBg.style.opacity = ''; // Reset opacity
 		
-		if (category === 'illegal') {
-			// Clear any fog/damage effects and police lights first
-			detailBg.querySelectorAll('.overlay-container, .police-light').forEach(el => el.remove());
-			// Only spawn fog/damage if no video (they cause lag with videos)
-			if (!hasVideo) {
+		if (hasVideo) {
+			// Video present - only show floating logos (no heavy effects like fog/damage)
+			detailBg.innerHTML = ''; // Clear everything first
+			if (category === 'illegal') {
+				// Spawn crime logos only (no fog/damage for performance)
+				console.log('About to call spawnDetailFlyingLogos for illegal category (with video), detailBg:', detailBg);
+				spawnDetailFlyingLogos(detailBg, 'illegal');
+			} else if (category === 'regelwerk' || category === 'whitelist') {
+				// Use polaroid effect
+				spawnDetailPolaroids(detailBg);
+			} else {
+				// Legal category - floating logos
+				console.log('About to call spawnDetailFlyingLogos for legal category (with video), detailBg:', detailBg);
+				spawnDetailFlyingLogos(detailBg);
+			}
+		} else {
+			// No video - spawn all effects normally
+			if (category === 'illegal') {
+				// Clear any fog/damage effects and police lights first
+				detailBg.querySelectorAll('.overlay-container, .police-light').forEach(el => el.remove());
 				spawnFogEffect(detailBg);
 				spawnCrimeDamage(detailBg);
+				// Spawn crime logos (floating logos)
+				console.log('About to call spawnDetailFlyingLogos for illegal category, detailBg:', detailBg);
+				spawnDetailFlyingLogos(detailBg, 'illegal');
+			} else if (category === 'regelwerk' || category === 'whitelist') {
+				// Clear any fog/damage effects first
+				detailBg.querySelectorAll('.overlay-container, .detail-flying-logo').forEach(el => el.remove());
+				// Use the same polaroid effect as legal
+				spawnDetailPolaroids(detailBg);
+			} else {
+				// Legal category - flying logos
+				// Clear any fog/damage effects first (but keep flying logos)
+				detailBg.querySelectorAll('.overlay-container').forEach(el => el.remove());
+				// Spawn floating logos
+				console.log('About to call spawnDetailFlyingLogos for legal category, detailBg:', detailBg);
+				spawnDetailFlyingLogos(detailBg);
 			}
-			// Spawn crime logos (no police lights) - keep logos, they're fine
-			spawnDetailFlyingLogos(detailBg, 'illegal');
-		} else if (category === 'regelwerk' || category === 'whitelist') {
-			// Clear any fog/damage effects first
-			detailBg.querySelectorAll('.overlay-container, .detail-flying-logo').forEach(el => el.remove());
-			// Use the same polaroid effect as legal
-			spawnDetailPolaroids(detailBg);
-		} else {
-			// Legal category - flying logos
-			// Clear any fog/damage effects first
-			detailBg.querySelectorAll('.overlay-container').forEach(el => el.remove());
-			spawnDetailFlyingLogos(detailBg);
 		}
+	}
+	
+	// Performance: Hide main page floating characters when ANY detail page is open (not just video)
+	// This prevents background rendering from competing with video/animations
+	const heroBg = document.getElementById('heroDynamicBg');
+	if (heroBg) {
+		// Clear highlight timers to prevent unnecessary work
+		if (Array.isArray(spawnFloatingLogos._highlightTimers)) {
+			spawnFloatingLogos._highlightTimers.forEach((id) => clearTimeout(id));
+			spawnFloatingLogos._highlightTimers = [];
+		}
+		// Hide completely to prevent any rendering/repaints
+		heroBg.style.display = 'none';
+		heroBg.style.visibility = 'hidden';
+		heroBg.style.pointerEvents = 'none';
+		// Also pause all animations
+		heroBg.style.animationPlayState = 'paused';
+		heroBg.querySelectorAll('.bg-polaroid-stripe').forEach(stripe => {
+			stripe.style.animationPlayState = 'paused';
+			stripe.style.display = 'none';
+			stripe.querySelectorAll('.bg-polaroid-stripe__inner').forEach(inner => {
+				inner.style.animationPlayState = 'paused';
+			});
+		});
 	}
 	
 	// Add class to crime-detail for illegal category and set data-category
@@ -3458,6 +3535,29 @@ function closeDetail(options = {}) {
     if (!overlay.classList.contains('active') && !options.force) return;
 
     destroyDetailVideoPlayer();
+    
+    // Performance: Resume main page floating characters when detail closes
+    const heroBg = document.getElementById('heroDynamicBg');
+    if (heroBg) {
+        // Show and resume animations
+        heroBg.style.display = '';
+        heroBg.style.visibility = '';
+        heroBg.style.pointerEvents = '';
+        heroBg.style.animationPlayState = 'running';
+        heroBg.querySelectorAll('.bg-polaroid-stripe').forEach(stripe => {
+            stripe.style.display = '';
+            stripe.style.animationPlayState = 'running';
+            stripe.querySelectorAll('.bg-polaroid-stripe__inner').forEach(inner => {
+                inner.style.animationPlayState = 'running';
+            });
+        });
+    }
+    
+    // Restore detail background if it was hidden
+    const detailBg = document.getElementById('detailDynamicBg');
+    if (detailBg) {
+        detailBg.style.display = '';
+    }
     clearHeroRandomSpin();
 
     overlay.classList.remove('active');
@@ -3724,7 +3824,17 @@ function spawnDetailHeroMirror(container, context = {}) {
 }
 
 function spawnDetailFlyingLogos(container, category = 'legal') {
-	if (!container) return;
+	console.log('🔵 spawnDetailFlyingLogos CALLED with category:', category, 'container:', container);
+	if (!container) {
+		console.error('❌ spawnDetailFlyingLogos: container is null');
+		return;
+	}
+	
+	// Ensure container is visible
+	container.style.display = '';
+	container.style.visibility = '';
+	container.style.opacity = '';
+	
 	// Clear only existing flying logos, not fog/damage effects
 	container.querySelectorAll('.detail-flying-logo').forEach(el => el.remove());
 	
@@ -3749,7 +3859,12 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 			}));
 	}
 	
-	if (logos.length === 0) return;
+	if (logos.length === 0) {
+		console.warn('spawnDetailFlyingLogos: No logos found for category', category);
+		return;
+	}
+	
+	console.log('spawnDetailFlyingLogos: Spawning', logos.length, 'logos for category', category);
 	
 	// Create floating logos - REDUCED COUNT for performance (was 15, now 8)
 	const logoCount = Math.min(logos.length, 8);
@@ -3776,7 +3891,8 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 		logoEl.style.top = `${top}%`;
 		logoEl.style.width = `${size}px`;
 		logoEl.style.height = 'auto';
-		logoEl.style.opacity = '0.12';
+		logoEl.style.opacity = '0.2';
+		logoEl.style.zIndex = '1';
 		logoEl.style.setProperty('--fly-duration', `${duration}s`);
 		logoEl.style.setProperty('--fly-delay', `${delay}s`);
 		logoEl.style.setProperty('--fly-direction', direction);
@@ -3789,7 +3905,17 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 		logoEl.src = logo.src;
 		logoEl.loading = 'lazy';
 		logoEl.decoding = 'async';
+		
+		// Debug: Log when image loads
+		logoEl.onload = () => {
+			console.log('Flying logo loaded:', logo.src);
+		};
+		logoEl.onerror = () => {
+			console.warn('Flying logo failed to load:', logo.src);
+		};
 	});
+	
+	console.log('spawnDetailFlyingLogos: Created', shuffledLogos.length, 'logo elements');
 }
 
 function spawnPoliceLights(container) {

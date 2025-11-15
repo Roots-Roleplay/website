@@ -478,10 +478,13 @@ body.desktop-scaled {
 	width: clamp(110px, 18vw, 160px);
 	overflow: hidden;
 	transform-origin: center;
-	transform: rotate(var(--bg-stripe-rotate, -22deg));
+	transform: rotate(var(--bg-stripe-rotate, -22deg)) translateZ(0);
 	filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
 	opacity: 0.22;
 	z-index: 1;
+	/* Performance: GPU acceleration and content visibility */
+	will-change: transform;
+	content-visibility: auto;
 }
 
 .hero-dynamic-bg .bg-polaroid-stripe__inner {
@@ -491,6 +494,9 @@ body.desktop-scaled {
 	gap: clamp(14px, 3vh, 20px);
 	animation: bgPolaroidLineScroll var(--bg-line-duration, 130s) linear infinite;
 	animation-delay: var(--bg-line-delay, 0s);
+	/* Performance: GPU acceleration */
+	will-change: transform;
+	transform: translateZ(0);
 }
 
 .hero-dynamic-bg .bg-polaroid {
@@ -509,12 +515,16 @@ body.desktop-scaled {
 	will-change: transform;
 	transform:
 		translateX(var(--bg-polaroid-offset, 0%))
+		translateZ(0)
 		rotate(var(--bg-polaroid-tilt, 0deg))
 		scale(var(--bg-polaroid-scale, 1));
 	border: 1px solid rgba(100, 140, 124, 0.22);
-	backdrop-filter: blur(10px);
+	/* Performance: Reduced backdrop-filter blur for better performance */
+	backdrop-filter: blur(8px);
 	background:
 		linear-gradient(160deg, rgba(10, 14, 16, 0.9) 0%, rgba(6, 10, 12, 0.82) 48%, rgba(2, 6, 8, 0.76) 100%);
+	/* Performance: CSS containment */
+	contain: layout style paint;
 }
 
 .hero-dynamic-bg .bg-polaroid::before {
@@ -566,6 +576,9 @@ body.desktop-scaled {
 	border-radius: 10px;
 	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 	z-index: 1;
+	/* Performance: GPU acceleration for images */
+	transform: translateZ(0);
+	will-change: transform;
 }
 
 .hero-dynamic-bg .bg-polaroid-stripe::before {
@@ -963,6 +976,18 @@ body.is-detail-open .hero-rail-controls {
     opacity: 0;
     pointer-events: none;
     transform: translateX(-50%) translateY(6px);
+}
+
+/* Performance: Hide main page background when detail is open to improve video performance */
+body.is-detail-open #heroDynamicBg {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    animation-play-state: paused !important;
+}
+
+body.is-detail-open #heroDynamicBg * {
+    animation-play-state: paused !important;
 }
 
 body.is-random-rolling .hero-rail-controls__btn--random {
@@ -4550,12 +4575,13 @@ body.is-whitelist .hero-rail-controls {
   animation: flyLogo var(--fly-duration, 30s) ease-in-out infinite;
   animation-delay: var(--fly-delay, 0s);
   will-change: transform;
-  opacity: 0.12;
-  z-index: 0;
+  opacity: 0.2;
+  z-index: 1;
   /* Removed mix-blend-mode and transitions for performance */
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  pointer-events: none;
 }
 
 .detail-flying-logo:hover {

@@ -3,6 +3,10 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<!-- Cache Control - Force fresh content -->
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Expires" content="0">
 	<title id="seo-title">Roots Roleplay | Alles beginnt mit einer Entscheidung</title>
 	
 	<!-- SEO Meta Tags - Will be populated from content/seo.json -->
@@ -162,7 +166,7 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	
 	<!-- Preload Critical Resources -->
-	<link rel="preload" href="css/main.css" as="style">
+	<link rel="preload" href="css/main.css?v=1.0" as="style">
 	<link rel="preload" href="public/roots-roleplay.svg" as="image" type="image/svg+xml">
 	
 	<!-- Set CSS custom property early with base path detection -->
@@ -242,7 +246,7 @@
 			}
 			
 			// Load SEO JSON and populate meta tags
-			fetch(`${basePathPrefix}content/seo.json`)
+			fetch(`${basePathPrefix}content/seo.json?v=1.0`, { cache: 'no-store' })
 				.then(response => response.json())
 				.then(seoData => {
 					if (!seoData) return;
@@ -479,7 +483,7 @@
 	<noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&family=Roboto+Slab:wght@300;400;700;800&display=swap" rel="stylesheet"></noscript>
 	
 	<!-- Styles -->
-	<link rel="stylesheet" href="css/main.css">
+	<link rel="stylesheet" href="css/main.css?v=1.0">
 </head>
 <body>
 	<!-- Primary CTAs -->
@@ -619,6 +623,6 @@
 
 	<!-- Scripts -->
 	<!-- YouTube API is now loaded dynamically by main.js when needed -->
-	<script src="js/main.js" defer></script>
+	<script src="js/main.js?v=1.0" defer></script>
 </body>
 </html>
