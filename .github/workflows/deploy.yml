@@ -1,7 +1,10 @@
 name: Deploy to Roots
 
 on:
-  push:  # Trigger on all branches
+  push:
+    branches:
+      - main
+      - 'MAIN_*'
   workflow_dispatch:
 
 permissions:
@@ -15,10 +18,9 @@ concurrency:
 
 jobs:
   deploy-main:
+    name: Deploy to VPS Server
     runs-on: [self-hosted, ROOT394]
-    if: >
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/MAIN_'))) ||
-      (github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/MAIN_')
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
