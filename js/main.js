@@ -1384,6 +1384,22 @@ function createHeroCard(item, index, category) {
 			let usedImages = new Set();
 			// Illegal shuffle: use only crime_shuffle
 			const illegalShufflePool = getCrimeShuffleImages();
+			
+			// Preload illegal shuffle images for faster animation
+			const preloadIllegalImages = () => {
+				// Preload a subset of images (first 20) to improve shuffle performance
+				const imagesToPreload = illegalShufflePool.slice(0, Math.min(20, illegalShufflePool.length));
+				imagesToPreload.forEach(imgPath => {
+					const link = document.createElement('link');
+					link.rel = 'preload';
+					link.as = 'image';
+					link.href = normalizeAssetPath(imgPath);
+					link.fetchPriority = 'low';
+					document.head.appendChild(link);
+				});
+			};
+			// Preload images after a short delay to not block initial render
+			setTimeout(preloadIllegalImages, 500);
 			const getAvailableImages = () => {
 				const currentImages = getImages().map(img => img.src);
 				usedImages = new Set(currentImages);
@@ -1410,6 +1426,9 @@ function createHeroCard(item, index, category) {
 				e.preventDefault();
 				e.stopPropagation();
 				if (shuffleActive) return;
+				// Check if a cell is already selected - if so, don't shuffle
+				const selectedCell = grid.querySelector(`.${highlightClass}`);
+				if (selectedCell) return;
 				shuffleActive = true;
 				clearSelection();
 				shuffleBtn.disabled = true;
@@ -1455,15 +1474,17 @@ function createHeroCard(item, index, category) {
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getCharacterAltFromSrc(src);
-								img.loading = 'lazy';
+								img.loading = 'eager';
 								img.decoding = 'async';
+								img.fetchPriority = 'high';
 							} else {
 								const src = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getCharacterAltFromSrc(src);
-								img.loading = 'lazy';
+								img.loading = 'eager';
 								img.decoding = 'async';
+								img.fetchPriority = 'high';
 							}
 							// Retry with different image if current one fails
 							img.onerror = () => {
@@ -1523,6 +1544,9 @@ function createHeroCard(item, index, category) {
 									img.src = src;
 									img.alt = alt;
 									img.style.display = '';
+									img.loading = 'eager';
+									img.decoding = 'async';
+									img.fetchPriority = 'high';
 									// Retry with different image if current one fails
 									img.onerror = () => {
 										spin._usedFinalImages.delete(src);
@@ -1536,6 +1560,8 @@ function createHeroCard(item, index, category) {
 											spin._usedFinalImages.add(retrySrc);
 											img.src = retrySrc;
 											img.alt = getCharacterAltFromSrc(retrySrc);
+											img.loading = 'eager';
+											img.fetchPriority = 'high';
 										} else {
 											// Last resort: find any unused from pool
 											const remainingPool = illegalShufflePool.filter(imgPath => {
@@ -1547,6 +1573,8 @@ function createHeroCard(item, index, category) {
 												spin._usedFinalImages.add(retrySrc);
 												img.src = retrySrc;
 												img.alt = getCharacterAltFromSrc(retrySrc);
+												img.loading = 'eager';
+												img.fetchPriority = 'high';
 											}
 										}
 									};
@@ -1584,6 +1612,23 @@ function createHeroCard(item, index, category) {
 		// Combine both crime and random character images for legal section
 		// Legal shuffle: use random_characters + company_characters + crime_characters + crime_shuffle
 		const legalCharacterPool = [...getRandomCharacterImages(), ...getCompanyCharacterImages(), ...getCrimeCharacterImages(), ...getCrimeShuffleImages()];
+		
+		// Preload character images for faster shuffle animation
+		const preloadCharacterImages = () => {
+			// Preload a subset of images (first 20) to improve shuffle performance
+			const imagesToPreload = legalCharacterPool.slice(0, Math.min(20, legalCharacterPool.length));
+			imagesToPreload.forEach(imgPath => {
+				const link = document.createElement('link');
+				link.rel = 'preload';
+				link.as = 'image';
+				link.href = normalizeAssetPath(imgPath);
+				link.fetchPriority = 'low';
+				document.head.appendChild(link);
+			});
+		};
+		// Preload images after a short delay to not block initial render
+		setTimeout(preloadCharacterImages, 500);
+		
 		const getRandomCharacterImage = () => {
 			const img = legalCharacterPool[Math.floor(Math.random() * legalCharacterPool.length)];
 			return normalizeAssetPath(img);
@@ -1610,6 +1655,9 @@ function createHeroCard(item, index, category) {
 			btn.innerHTML = '<span class="split-shuffle__icon">✦</span><span class="split-shuffle__text">Shuffle</span>';
 			btn.addEventListener('click', (e) => {
 				e.stopPropagation();
+				// Check if a panel is already selected - if so, don't shuffle
+				const selectedPanel = card.querySelector('.split-panel--selected');
+				if (selectedPanel) return;
 				clearSplitSelection();
 				const imgs = Array.from(card.querySelectorAll('.split-panel__image'));
 				if (imgs.length === 0) return;
@@ -1640,15 +1688,17 @@ function createHeroCard(item, index, category) {
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getRandomCharacterAlt(src);
-								img.loading = 'lazy';
+								img.loading = 'eager';
 								img.decoding = 'async';
+								img.fetchPriority = 'high';
 							} else {
 								const src = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getRandomCharacterAlt(src);
-								img.loading = 'lazy';
+								img.loading = 'eager';
 								img.decoding = 'async';
+								img.fetchPriority = 'high';
 							}
 						});
 						// Clear used images after each animation step
@@ -1695,6 +1745,9 @@ function createHeroCard(item, index, category) {
 							if (src) {
 								img.src = src;
 								img.alt = getRandomCharacterAlt(src);
+								img.loading = 'eager';
+								img.decoding = 'async';
+								img.fetchPriority = 'high';
 								// Retry with different image if current one fails to load
 								img.onerror = () => {
 									const retryPool = legalCharacterPool.filter(imgPath => {
@@ -1705,6 +1758,8 @@ function createHeroCard(item, index, category) {
 										const retrySrc = normalizeAssetPath(retryPool[Math.floor(Math.random() * retryPool.length)]);
 										usedFinalImages.add(retrySrc);
 										img.src = retrySrc;
+										img.loading = 'eager';
+										img.fetchPriority = 'high';
 									}
 								};
 							}
@@ -1754,7 +1809,7 @@ function createHeroCard(item, index, category) {
 				const backdropSrc = normalizeAssetPath('public/roots_R.png');
 				panel.innerHTML = `
 					<span class="split-panel__backdrop" style="background-image: url('${backdropSrc}');"></span>
-					<img class="split-panel__image" src="${characterSrc}" alt="${characterAlt}" loading="lazy" decoding="async">
+					<img class="split-panel__image" src="${characterSrc}" alt="${characterAlt}" loading="eager" decoding="async" fetchpriority="high">
 				`;
 				// Add error handler to retry with different image if load fails
 				const imgEl = panel.querySelector('.split-panel__image');
