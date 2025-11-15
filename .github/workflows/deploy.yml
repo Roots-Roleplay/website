@@ -1,10 +1,7 @@
-name: Deploy to GitHub Pages
+name: Deploy to Roots
 
 on:
-  push:
-    branches:
-      - main
-      - master
+  push:  # Trigger on all branches
   workflow_dispatch:
 
 permissions:
@@ -17,11 +14,77 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-main:
+    runs-on: [self-hosted, ROOT394]
+    if: >
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/MAIN_'))) ||
+      (github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive  # Fetch submodules as well
+
+      - name: Ensure Clean Git State
+        run: |
+          $target = 'C:\Roots\infrastructure\main\services\nginx\data\html\roots'
+          if (-not (Test-Path -Path $target)) {
+            New-Item -ItemType Directory -Path $target -Force
+          }
+          Set-Location -Path $target
+          # Initialize repo if missing
+          if (-not (Test-Path -Path ".git")) {
+            git init
+            git remote add origin https://github.com/${{ github.repository }}.git
+          } else {
+            # Ensure remote is set correctly
+            $remoteExists = git remote | Select-String -Pattern "^origin$"
+            if (-not $remoteExists) {
+              git remote add origin https://github.com/${{ github.repository }}.git
+            } else {
+              git remote set-url origin https://github.com/${{ github.repository }}.git
+            }
+          }
+          # Fetch latest changes and submodules
+          git fetch origin
+          git checkout ${{ github.ref_name }}
+          git pull origin ${{ github.ref_name }}
+          # Sync and update submodules
+          git submodule sync --recursive
+          git submodule update --init --recursive --force
+        shell: powershell
+
+      - name: Deploy to Main Server
+        run: |
+          Write-Output "Deployment successful to Main Server!"
+          
+          # Test nginx configuration before reloading
+          Write-Output "Testing nginx configuration..."
+          docker exec nginx_proxy_manager nginx -t
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output "Configuration test passed. Reloading nginx..."
+            docker exec nginx_proxy_manager nginx -s reload
+            if ($LASTEXITCODE -eq 0) {
+              Write-Output "Nginx reloaded successfully!"
+            } else {
+              Write-Warning "Nginx reload failed with exit code $LASTEXITCODE"
+              exit 1
+            }
+          } else {
+            Write-Error "Nginx configuration test failed! Not reloading."
+            exit 1
+          }
+        shell: powershell
+
+  deploy-pages:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
