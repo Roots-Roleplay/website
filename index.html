@@ -7,22 +7,73 @@
 	
 	<!-- SEO Meta Tags - Will be populated from content/seo.json -->
 	<meta id="seo-description" name="description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
-	<meta id="seo-keywords" name="keywords" content="Roots Roleplay, FiveM Roleplay, GTA V Roleplay, Roleplay Server, Teamspeak, Discord, Los Santos, Whitelist, Regelwerk">
+	<meta id="seo-keywords" name="keywords" content="Roots Roleplay, FiveM Server, GTA V Roleplay, FiveM Roleplay Deutschland, FiveM RP Server, Los Santos Roleplay, FiveM Whitelist, FiveM Community, Roleplay Server Deutschland, FiveM Gangs, FiveM Polizei, FiveM Rettungsdienst, FiveM Jobs, FiveM Unternehmen, FiveM Fraktionen, FiveM Regelwerk, FiveM Teamspeak, FiveM Discord, FiveM Community Server, Serious Roleplay, Realistic Roleplay, German Roleplay Server, FiveM DE Server, FiveM Los Santos RP">
 	<meta id="seo-author" name="author" content="Roots Roleplay">
 	<meta id="seo-robots" name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 	<meta id="seo-googlebot" name="googlebot" content="index, follow">
 	<meta id="seo-language" name="language" content="German">
 	<meta id="seo-revisit" name="revisit-after" content="7 days">
 	
+	<!-- CRITICAL: Generate absolute URLs synchronously using document.write for Discord/crawlers -->
+	<script>
+		(function() {
+			// Get URL info immediately (this runs synchronously during HTML parsing)
+			var origin = window.location.origin;
+			var path = window.location.pathname;
+			var basePath = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
+			
+			// Image path - use roots_choice.png for embeds
+			var imagePath = 'public/whitelist/roots_choice.png';
+			
+			// Build absolute URL
+			function getAbsoluteUrl(relativePath) {
+				if (!relativePath) return '';
+				if (/^https?:\/\//i.test(relativePath)) return relativePath;
+				var cleanPath = relativePath.replace(/^\/+/, '');
+				var fullPath = basePath ? basePath + '/' + cleanPath : '/' + cleanPath;
+				return origin + fullPath.replace(/\/+/g, '/');
+			}
+			
+			var absoluteImageUrl = getAbsoluteUrl(imagePath);
+			var currentUrl = origin + (basePath ? basePath : '') + '/';
+			
+			// HTML escape function for attribute values
+			function escapeHtmlAttr(str) {
+				return String(str)
+					.replace(/&/g, '&amp;')
+					.replace(/"/g, '&quot;')
+					.replace(/'/g, '&#39;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;');
+			}
+			
+			var escapedImageUrl = escapeHtmlAttr(absoluteImageUrl);
+			var escapedCurrentUrl = escapeHtmlAttr(currentUrl);
+			var escapedAlt = escapeHtmlAttr('Roots Roleplay - Alles beginnt mit einer Entscheidung');
+			
+			// Write meta tags directly to HTML using document.write (synchronous)
+			// This ensures they're in the HTML source when Discord/crawlers read it
+			document.write('<meta property="og:image" content="' + escapedImageUrl + '">');
+			document.write('<meta property="og:image:secure_url" content="' + escapedImageUrl + '">');
+			document.write('<meta property="og:image:width" content="1200">');
+			document.write('<meta property="og:image:height" content="630">');
+			document.write('<meta property="og:image:type" content="image/png">');
+			document.write('<meta property="og:image:alt" content="' + escapedAlt + '">');
+			document.write('<meta property="og:url" content="' + escapedCurrentUrl + '">');
+			document.write('<meta name="twitter:image" content="' + escapedImageUrl + '">');
+			document.write('<link rel="canonical" href="' + escapedCurrentUrl + '">');
+			
+			// Store for later use
+			window.__BASE_PATH__ = basePath;
+			window.__ABSOLUTE_IMAGE_URL__ = absoluteImageUrl;
+			window.__CURRENT_URL__ = currentUrl;
+		})();
+	</script>
+	
 	<!-- Open Graph / Facebook -->
 	<meta id="og-type" property="og:type" content="website">
 	<meta id="og-title" property="og:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
 	<meta id="og-description" property="og:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
-	<meta id="og-image" property="og:image" content="">
-	<meta id="og-image-width" property="og:image:width" content="1200">
-	<meta id="og-image-height" property="og:image:height" content="630">
-	<meta id="og-image-type" property="og:image:type" content="image/svg+xml">
-	<meta id="og-url" property="og:url" content="">
 	<meta id="og-site-name" property="og:site_name" content="Roots Roleplay">
 	<meta id="og-locale" property="og:locale" content="de_DE">
 	
@@ -30,11 +81,7 @@
 	<meta id="twitter-card" name="twitter:card" content="summary_large_image">
 	<meta id="twitter-title" name="twitter:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
 	<meta id="twitter-description" name="twitter:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
-	<meta id="twitter-image" name="twitter:image" content="">
-	<meta id="twitter-image-alt" name="twitter:image:alt" content="Roots Roleplay Logo">
-	
-	<!-- Canonical URL -->
-	<link id="seo-canonical" rel="canonical" href="">
+	<meta id="twitter-image-alt" name="twitter:image:alt" content="Roots Roleplay - Alles beginnt mit einer Entscheidung">
 	
 	<!-- Theme and Icons -->
 	<meta id="theme-color" name="theme-color" content="#1f2127">
@@ -55,11 +102,13 @@
 	<link rel="preload" href="public/roots-roleplay.svg" as="image" type="image/svg+xml">
 	
 	<script>
-		// Load SEO data from JSON and populate meta tags
+		// Load SEO data from JSON and populate meta tags (enhancement after initial setup)
 		(function() {
 			// Set base path for GitHub Pages compatibility
-			const path = window.location.pathname;
-			const basePath = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
+			const basePath = window.__BASE_PATH__ || (function() {
+				const path = window.location.pathname;
+				return path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
+			})();
 			window.__BASE_PATH__ = basePath;
 			const basePathPrefix = basePath ? `${basePath}/` : '/';
 			
@@ -144,16 +193,19 @@
 					if (openGraph.siteName) updateMeta('og:site_name', openGraph.siteName, true);
 					if (openGraph.locale) updateMeta('og:locale', openGraph.locale, true);
 					
-					// Set Open Graph URL
+					// Set Open Graph URL (updateMeta will find the document.write() tag)
 					updateMeta('og:url', currentUrl, true);
 					
-					// Set Open Graph image with absolute URL
+					// Set Open Graph image with absolute URL (update the document.write() tags if JSON has different image)
 					if (openGraph.image) {
 						const ogImageUrl = getAbsoluteUrl(openGraph.image);
+						// Update the tags created by document.write()
 						updateMeta('og:image', ogImageUrl, true);
+						updateMeta('og:image:secure_url', ogImageUrl, true);
 						if (openGraph.imageWidth) updateMeta('og:image:width', openGraph.imageWidth, true);
 						if (openGraph.imageHeight) updateMeta('og:image:height', openGraph.imageHeight, true);
 						if (openGraph.imageType) updateMeta('og:image:type', openGraph.imageType, true);
+						if (openGraph.imageAlt) updateMeta('og:image:alt', openGraph.imageAlt, true);
 					}
 					
 					// Twitter Card tags
@@ -162,13 +214,16 @@
 					if (twitter.description) updateMeta('twitter:description', twitter.description);
 					if (twitter.image) {
 						const twitterImageUrl = getAbsoluteUrl(twitter.image);
+						// Update the tag created by document.write()
 						updateMeta('twitter:image', twitterImageUrl);
 					}
 					if (twitter.imageAlt) updateMeta('twitter:image:alt', twitter.imageAlt);
 					
-					// Canonical URL
-					const canonical = document.getElementById('seo-canonical');
-					if (canonical) canonical.href = currentUrl;
+					// Canonical URL (updateMeta will find the document.write() link)
+					const canonicalLinks = document.querySelectorAll('link[rel="canonical"]');
+					if (canonicalLinks.length > 0) {
+						canonicalLinks[0].setAttribute('href', currentUrl);
+					}
 					
 					// Theme colors
 					if (meta.themeColor) {
