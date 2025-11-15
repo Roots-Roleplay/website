@@ -1140,17 +1140,21 @@ body.is-random-reveal .crime-detail.active .crime-detail-content {
 @media (max-width: 640px) {
     .hero-rail-nav { display: none; }
     .hero-rail-controls {
-        position: static;
-        transform: none;
-        margin: clamp(16px, 3vh, 28px) auto 0;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
     }
 
     .hero-right {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    /* Hide Teamspeak and FiveM buttons on mobile */
+    .top-cta .teamspeak-btn,
+    .top-cta .fivem-btn {
+        display: none !important;
     }
 }
 
@@ -2692,6 +2696,20 @@ body.is-whitelist .hero-rail-controls {
 @media (max-width: 1024px) {
 	.illegal-placeholder__grid {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	/* Hide rail controls on mobile/tablet */
+	.hero-rail-controls {
+		display: none !important;
+		opacity: 0 !important;
+		pointer-events: none !important;
+		visibility: hidden !important;
+	}
+
+	/* Hide Teamspeak and FiveM buttons on mobile/tablet */
+	.top-cta .teamspeak-btn,
+	.top-cta .fivem-btn {
+		display: none !important;
 	}
 }
 
