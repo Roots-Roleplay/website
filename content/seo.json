@@ -2,11 +2,12 @@
 	"site": {
 		"name": "Roots Roleplay",
 		"title": "Roots Roleplay | Alles beginnt mit einer Entscheidung",
-		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
-		"keywords": "Roots Roleplay, FiveM Server, GTA V Roleplay, FiveM Roleplay Deutschland, FiveM RP Server, Los Santos Roleplay, FiveM Whitelist, FiveM Community, Roleplay Server Deutschland, FiveM Gangs, FiveM Polizei, FiveM Rettungsdienst, FiveM Jobs, FiveM Unternehmen, FiveM Fraktionen, FiveM Regelwerk, FiveM Teamspeak, FiveM Discord, FiveM Community Server, Serious Roleplay, Realistic Roleplay, German Roleplay Server, FiveM DE Server, FiveM Los Santos RP",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"keywords": "Roots Roleplay, FiveM Server, GTA V Roleplay, FiveM Roleplay Deutschland, FiveM RP Server, Los Santos Roleplay, FiveM Whitelist, FiveM Community, Roleplay Server Deutschland, FiveM Gangs, FiveM Polizei, FiveM Rettungsdienst, FiveM Jobs, FiveM Unternehmen, FiveM Gruppierungen, FiveM Regelwerk, FiveM Teamspeak, FiveM Discord, FiveM Community Server, Serious Roleplay, Realistic Roleplay, German Roleplay Server, FiveM DE Server, FiveM Los Santos RP",
 		"author": "Roots Roleplay",
 		"language": "German",
-		"locale": "de_DE"
+		"locale": "de_DE",
+		"baseUrl": ""
 	},
 	"meta": {
 		"robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
@@ -18,7 +19,7 @@
 	"openGraph": {
 		"type": "website",
 		"title": "Roots Roleplay | Alles beginnt mit einer Entscheidung",
-		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.",
 		"image": "public/whitelist/roots_choice.png",
 		"imageWidth": "1200",
 		"imageHeight": "630",
@@ -29,7 +30,7 @@
 	"twitter": {
 		"card": "summary_large_image",
 		"title": "Roots Roleplay | Alles beginnt mit einer Entscheidung",
-		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.",
 		"image": "public/whitelist/roots_choice.png",
 		"imageAlt": "Roots Roleplay - Alles beginnt mit einer Entscheidung"
 	},
@@ -41,7 +42,7 @@
 	"structuredData": {
 		"website": {
 			"name": "Roots Roleplay",
-			"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+			"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.",
 			"inLanguage": "de-DE",
 			"publisher": {
 				"name": "Roots Roleplay",

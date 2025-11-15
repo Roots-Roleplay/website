@@ -6,15 +6,18 @@
 	<title id="seo-title">Roots Roleplay | Alles beginnt mit einer Entscheidung</title>
 	
 	<!-- SEO Meta Tags - Will be populated from content/seo.json -->
-	<meta id="seo-description" name="description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
-	<meta id="seo-keywords" name="keywords" content="Roots Roleplay, FiveM Server, GTA V Roleplay, FiveM Roleplay Deutschland, FiveM RP Server, Los Santos Roleplay, FiveM Whitelist, FiveM Community, Roleplay Server Deutschland, FiveM Gangs, FiveM Polizei, FiveM Rettungsdienst, FiveM Jobs, FiveM Unternehmen, FiveM Fraktionen, FiveM Regelwerk, FiveM Teamspeak, FiveM Discord, FiveM Community Server, Serious Roleplay, Realistic Roleplay, German Roleplay Server, FiveM DE Server, FiveM Los Santos RP">
+	<meta id="seo-description" name="description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta id="seo-keywords" name="keywords" content="Roots Roleplay, FiveM Server, GTA V Roleplay, FiveM Roleplay Deutschland, FiveM RP Server, Los Santos Roleplay, FiveM Whitelist, FiveM Community, Roleplay Server Deutschland, FiveM Gangs, FiveM Polizei, FiveM Rettungsdienst, FiveM Jobs, FiveM Unternehmen, FiveM Gruppierungen, FiveM Regelwerk, FiveM Teamspeak, FiveM Discord, FiveM Community Server, Serious Roleplay, Realistic Roleplay, German Roleplay Server, FiveM DE Server, FiveM Los Santos RP">
 	<meta id="seo-author" name="author" content="Roots Roleplay">
 	<meta id="seo-robots" name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 	<meta id="seo-googlebot" name="googlebot" content="index, follow">
 	<meta id="seo-language" name="language" content="German">
 	<meta id="seo-revisit" name="revisit-after" content="7 days">
 	
-	<!-- CRITICAL: Generate absolute URLs synchronously using document.write for Discord/crawlers -->
+	<!-- CRITICAL: Generate absolute URLs for Discord/crawlers -->
+	<!-- Discord requires absolute HTTPS URLs in static HTML -->
+	<!-- The script below writes meta tags during HTML parsing, but if Discord doesn't execute JS, -->
+	<!-- you may need to manually set the baseUrl in content/seo.json and rebuild -->
 	<script>
 		(function() {
 			// Get URL info immediately (this runs synchronously during HTML parsing)
@@ -25,17 +28,26 @@
 			// Image path - use roots_choice.png for embeds
 			var imagePath = 'public/whitelist/roots_choice.png';
 			
-			// Build absolute URL
+			// Build absolute URL - ensure HTTPS for Discord
 			function getAbsoluteUrl(relativePath) {
 				if (!relativePath) return '';
 				if (/^https?:\/\//i.test(relativePath)) return relativePath;
 				var cleanPath = relativePath.replace(/^\/+/, '');
 				var fullPath = basePath ? basePath + '/' + cleanPath : '/' + cleanPath;
-				return origin + fullPath.replace(/\/+/g, '/');
+				var url = origin + fullPath.replace(/\/+/g, '/');
+				// Force HTTPS for production (Discord requires HTTPS)
+				if (url.indexOf('http://') === 0 && !url.indexOf('localhost') > -1) {
+					url = url.replace('http://', 'https://');
+				}
+				return url;
 			}
 			
 			var absoluteImageUrl = getAbsoluteUrl(imagePath);
 			var currentUrl = origin + (basePath ? basePath : '') + '/';
+			// Force HTTPS for current URL too (except localhost)
+			if (currentUrl.indexOf('http://') === 0 && currentUrl.indexOf('localhost') === -1) {
+				currentUrl = currentUrl.replace('http://', 'https://');
+			}
 			
 			// HTML escape function for attribute values
 			function escapeHtmlAttr(str) {
@@ -51,36 +63,48 @@
 			var escapedCurrentUrl = escapeHtmlAttr(currentUrl);
 			var escapedAlt = escapeHtmlAttr('Roots Roleplay - Alles beginnt mit einer Entscheidung');
 			
-			// Write meta tags directly to HTML using document.write (synchronous)
+			// Write meta tags directly to HTML using document.write (synchronous during parsing)
 			// This ensures they're in the HTML source when Discord/crawlers read it
-			document.write('<meta property="og:image" content="' + escapedImageUrl + '">');
-			document.write('<meta property="og:image:secure_url" content="' + escapedImageUrl + '">');
-			document.write('<meta property="og:image:width" content="1200">');
-			document.write('<meta property="og:image:height" content="630">');
-			document.write('<meta property="og:image:type" content="image/png">');
-			document.write('<meta property="og:image:alt" content="' + escapedAlt + '">');
-			document.write('<meta property="og:url" content="' + escapedCurrentUrl + '">');
-			document.write('<meta name="twitter:image" content="' + escapedImageUrl + '">');
-			document.write('<link rel="canonical" href="' + escapedCurrentUrl + '">');
+			// IMPORTANT: These must appear BEFORE the closing </head> tag
+			// NOTE: If Discord still doesn't show the image, it might not execute JavaScript.
+			// In that case, you'll need to manually set absolute URLs in the HTML or use a build step.
+			try {
+				document.write('<meta property="og:image" content="' + escapedImageUrl + '">\n');
+				document.write('<meta property="og:image:secure_url" content="' + escapedImageUrl + '">\n');
+				document.write('<meta property="og:image:width" content="1200">\n');
+				document.write('<meta property="og:image:height" content="630">\n');
+				document.write('<meta property="og:image:type" content="image/png">\n');
+				document.write('<meta property="og:image:alt" content="' + escapedAlt + '">\n');
+				document.write('<meta property="og:url" content="' + escapedCurrentUrl + '">\n');
+				document.write('<meta name="twitter:image" content="' + escapedImageUrl + '">\n');
+				document.write('<link rel="canonical" href="' + escapedCurrentUrl + '">\n');
+			} catch(e) {
+				console.error('Failed to write meta tags:', e);
+			}
 			
 			// Store for later use
 			window.__BASE_PATH__ = basePath;
 			window.__ABSOLUTE_IMAGE_URL__ = absoluteImageUrl;
 			window.__CURRENT_URL__ = currentUrl;
+			
+			// Debug: Log the generated URL
+			console.log('Discord Embed Image URL:', absoluteImageUrl);
+			console.log('Test this URL in your browser to verify the image is accessible');
 		})();
 	</script>
 	
 	<!-- Open Graph / Facebook -->
+	<!-- Note: og:image, og:image:secure_url, og:url, twitter:image, and canonical are written by document.write() above -->
 	<meta id="og-type" property="og:type" content="website">
 	<meta id="og-title" property="og:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
-	<meta id="og-description" property="og:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta id="og-description" property="og:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
 	<meta id="og-site-name" property="og:site_name" content="Roots Roleplay">
 	<meta id="og-locale" property="og:locale" content="de_DE">
 	
 	<!-- Twitter Card -->
 	<meta id="twitter-card" name="twitter:card" content="summary_large_image">
 	<meta id="twitter-title" name="twitter:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
-	<meta id="twitter-description" name="twitter:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta id="twitter-description" name="twitter:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
 	<meta id="twitter-image-alt" name="twitter:image:alt" content="Roots Roleplay - Alles beginnt mit einer Entscheidung">
 	
 	<!-- Theme and Icons -->
