@@ -9,14 +9,19 @@
 }
 
 
-/* Fog effect for illegal detail pages */
-.fog-container {
+/* Base container for overlay effects */
+.overlay-container {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
 	pointer-events: none;
+	contain: layout style paint;
+}
+
+/* Fog effect for illegal detail pages */
+.fog-container {
 	overflow: hidden;
 	z-index: 2;
 }
@@ -29,7 +34,9 @@
 	animation: fogDrift linear infinite;
 	animation-delay: var(--fog-delay, 0s);
 	animation-duration: var(--fog-duration, 30s);
-	transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%) translateZ(0);
+	will-change: transform;
+	contain: layout style paint;
 }
 
 @keyframes fogDrift {
@@ -46,12 +53,6 @@
 
 /* Crime damage effects */
 .crime-damage-container {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	pointer-events: none;
 	overflow: visible;
 	z-index: 3;
 }
@@ -172,9 +173,8 @@ html {
 	width: 100vw;
 	height: 100vh;
 	overflow: hidden;
-	margin: 0;
-	padding: 0;
 	background: var(--bg);
+	position: relative;
 }
 
 body {
@@ -182,25 +182,34 @@ body {
 	background: var(--bg);
 	color: var(--text);
 	-webkit-font-smoothing: antialiased;
-	margin: 0;
-	padding: 0;
 	position: relative;
 	overflow: hidden;
+	margin: 0;
+	padding: 0;
 	/* Will be set by JS for desktop scaling */
 }
 
 body.desktop-scaled {
-	width: var(--design-width);
-	height: var(--design-height);
+	width: 2560px;
+	height: 1440px;
 	transform-origin: top left;
 	/* Ensure fixed children are not affected by transform */
 	transform-style: preserve-3d;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
-/* Fixed elements need to escape the transform context */
-.top-cta,
-.hero-rail-controls {
+/* Fixed elements - they will scale with the body transform */
+.top-cta {
+	/* This element is inside the scaled body, so it scales automatically */
 	transform: translateZ(0);
+	will-change: transform;
+}
+
+.hero-rail-controls {
+	/* This element is inside the scaled body, so it scales automatically */
+	/* Transform will be set in its own rule to avoid conflicts */
 	will-change: transform;
 }
 
@@ -215,17 +224,16 @@ body.desktop-scaled {
 
 /* Top CTAs */
 .top-cta {
-	position: fixed;
-	top: 32px;
-	right: 32px;
-	z-index: 100000;
+	position: fixed !important;
+	top: 32px !important;
+	right: 32px !important;
+	z-index: 100000 !important;
 	display: flex;
 	align-items: center;
 	gap: 12px;
 	flex-wrap: wrap;
 	transform-origin: top right;
 	pointer-events: auto;
-	margin: 0;
 }
 
 .top-cta__btn {
@@ -316,7 +324,7 @@ body.desktop-scaled {
 
 .discord-btn:hover::after,
 .discord-btn:focus-visible::after {
-	animation: discordShimmerHover 2s ease-in-out infinite;
+	animation: discordShimmer 2s ease-in-out infinite;
 }
 
 .discord-btn .top-cta__icon {
@@ -330,6 +338,7 @@ body.desktop-scaled {
 	filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
 }
 
+
 .fivem-btn {
 	background: linear-gradient(135deg, rgba(96, 30, 38, 0.95) 0%, rgba(62, 18, 24, 0.92) 100%);
 }
@@ -339,30 +348,7 @@ body.desktop-scaled {
 	background: linear-gradient(135deg, rgba(112, 38, 44, 0.98) 0%, rgba(70, 22, 28, 0.94) 100%);
 }
 
-.tebex-btn {
-	background: linear-gradient(135deg, rgba(134, 166, 139, 0.9) 0%, rgba(82, 116, 98, 0.9) 100%);
-	color: #0b1011;
-}
 
-.tebex-btn:hover,
-.tebex-btn:focus-visible {
-	background: linear-gradient(135deg, rgba(160, 196, 168, 0.96) 0%, rgba(96, 140, 116, 0.94) 100%);
-}
-
-@keyframes ctaPulse {
-	0%, 100% {
-		box-shadow:
-			0 12px 36px rgba(88, 101, 242, 0.32),
-			0 0 0 1px rgba(172, 180, 255, 0.28) inset;
-		transform: translateY(0);
-	}
-	50% {
-		box-shadow:
-			0 20px 46px rgba(88, 101, 242, 0.45),
-			0 0 0 1px rgba(190, 196, 255, 0.36) inset;
-		transform: translateY(-2px);
-	}
-}
 
 @keyframes discordPulse {
 	0%, 100% {
@@ -428,19 +414,7 @@ body.desktop-scaled {
 	}
 }
 
-@keyframes discordShimmerHover {
-	0% {
-		transform: translateX(-100%) skewX(-15deg);
-		opacity: 0;
-	}
-	50% {
-		opacity: 1;
-	}
-	100% {
-		transform: translateX(200%) skewX(-15deg);
-		opacity: 0;
-	}
-}
+/* discordShimmerHover uses same animation as discordShimmer */
 
 @keyframes discordIconPulse {
 	0%, 100% {
@@ -482,14 +456,6 @@ body.desktop-scaled {
 	background: linear-gradient(135deg, rgba(92, 136, 148, 0.98) 0%, rgba(44, 78, 84, 0.94) 100%);
 }
 
-.saltychat-btn {
-	background: linear-gradient(135deg, rgba(100, 140, 160, 0.95) 0%, rgba(50, 90, 110, 0.92) 100%);
-}
-
-.saltychat-btn:hover,
-.saltychat-btn:focus-visible {
-	background: linear-gradient(135deg, rgba(112, 156, 176, 0.98) 0%, rgba(60, 106, 128, 0.94) 100%);
-}
 
 /* Main App Layout */
 .app {
@@ -759,6 +725,9 @@ body.desktop-scaled {
 	text-transform: none;
 	letter-spacing: normal;
 	position: relative;
+	margin: 0;
+	padding: 0;
+	font-weight: inherit;
 }
 
 .hero-tagline__accent {
@@ -970,9 +939,9 @@ body.desktop-scaled {
 }
 
 .hero-rail-controls {
-	position: fixed;
-	left: 50%;
-	bottom: 120px;
+	position: fixed !important;
+	left: 50% !important;
+	bottom: clamp(160px, 12vh, 200px) !important;
 	transform: translateX(-50%);
 	display: flex;
 	align-items: center;
@@ -985,7 +954,7 @@ body.desktop-scaled {
 	backdrop-filter: blur(16px);
 	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
 	max-width: min(92vw, 520px);
-	z-index: 100000;
+	z-index: 100000 !important;
 	pointer-events: auto;
 	margin: 0;
 }
@@ -1382,10 +1351,6 @@ body.is-random-rolling .hero-card-stack::before {
 	aspect-ratio: 16 / 9;
 }
 
-.hero-card-stack.as-rail .hero-card:not(:focus-visible):hover {
-	transform: translateY(-3px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
-}
-
 .hero-card-stack.is-illegal {
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: clamp(14px, 2.4vw, 24px);
@@ -1446,10 +1411,6 @@ body.is-random-rolling .hero-card-stack::before {
 	--logo-blur: 0px;
 	opacity: 0.6;
 	transform: scale(1.02);
-}
-
-.hero-card.hero-card--active .hero-card__backdrop::before {
-	opacity: 1;
 }
 
 .hero-card.hero-card--active .hero-card__backdrop::before {
@@ -2308,8 +2269,7 @@ body.is-random-rolling .hero-card-stack::before {
 	text-transform: uppercase;
 }
 
-.hero-card:hover .hero-card__backdrop,
-.hero-card.hero-card--holding .hero-card__backdrop {
+.hero-card:hover .hero-card__backdrop {
     --logo-blur: 0px;
     opacity: 0.6;
 	transform: scale(1.02);
@@ -4562,147 +4522,47 @@ body.is-whitelist .hero-rail-controls {
   background: transparent;
 }
 
-.police-light {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(30px);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-  mix-blend-mode: screen;
-}
-
-.police-light--red {
-  background: radial-gradient(circle, rgba(255, 0, 0, 0.6) 0%, rgba(255, 50, 50, 0.4) 20%, rgba(255, 0, 0, 0.2) 40%, transparent 70%);
-  box-shadow: 0 0 50px rgba(255, 0, 0, 0.4), 0 0 100px rgba(255, 0, 0, 0.3), 0 0 150px rgba(255, 0, 0, 0.2);
-  animation: policeLightFlashRed 2s ease-in-out infinite;
-}
-
-.police-light--blue {
-  background: radial-gradient(circle, rgba(0, 100, 255, 0.6) 0%, rgba(50, 150, 255, 0.4) 20%, rgba(0, 100, 255, 0.2) 40%, transparent 70%);
-  box-shadow: 0 0 50px rgba(0, 100, 255, 0.4), 0 0 100px rgba(0, 100, 255, 0.3), 0 0 150px rgba(0, 100, 255, 0.2);
-  animation: policeLightFlashBlue 2s ease-in-out infinite;
-}
-
-/* Subtle police light effect - slower and less intense for website */
-@keyframes policeLightFlashRed {
-  0%, 20% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  21%, 30% {
-    opacity: 0.5;
-    transform: scale(1.1);
-  }
-  31%, 70% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  71%, 80% {
-    opacity: 0.5;
-    transform: scale(1.1);
-  }
-  81%, 100% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-}
-
-@keyframes policeLightFlashBlue {
-  0%, 45% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  46%, 55% {
-    opacity: 0.5;
-    transform: scale(1.1);
-  }
-  56%, 95% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  96%, 100% {
-    opacity: 0.5;
-    transform: scale(1.1);
-  }
-}
 
 .detail-flying-logo {
   position: absolute;
   object-fit: contain;
-  filter: 
-    drop-shadow(0 0 20px rgba(134, 166, 139, 0.3))
-    drop-shadow(0 0 40px rgba(134, 166, 139, 0.15))
-    drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
-  animation: flyLogo var(--fly-duration, 30s) ease-in-out infinite, logoGlow 4s ease-in-out infinite;
+  /* Simplified filter - single drop-shadow for performance */
+  filter: drop-shadow(0 2px 8px rgba(134, 166, 139, 0.2));
+  /* Single animation only - removed logoGlow for performance */
+  animation: flyLogo var(--fly-duration, 30s) ease-in-out infinite;
   animation-delay: var(--fly-delay, 0s);
-  will-change: transform, opacity, filter;
-  opacity: 0.15;
+  will-change: transform;
+  opacity: 0.12;
   z-index: 0;
-  transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
-  mix-blend-mode: screen;
+  /* Removed mix-blend-mode and transitions for performance */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .detail-flying-logo:hover {
-  opacity: 0.25;
-  filter: 
-    drop-shadow(0 0 30px rgba(134, 166, 139, 0.5))
-    drop-shadow(0 0 60px rgba(134, 166, 139, 0.25))
-    drop-shadow(0 6px 16px rgba(0, 0, 0, 0.3));
-  transform: scale(1.05);
+  opacity: 0.2;
+  filter: drop-shadow(0 2px 12px rgba(134, 166, 139, 0.3));
+  transform: translateZ(0) scale(1.02);
 }
 
-@keyframes logoGlow {
-  0%, 100% {
-    filter: 
-      drop-shadow(0 0 20px rgba(134, 166, 139, 0.3))
-      drop-shadow(0 0 40px rgba(134, 166, 139, 0.15))
-      drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
-  }
-  50% {
-    filter: 
-      drop-shadow(0 0 30px rgba(134, 166, 139, 0.4))
-      drop-shadow(0 0 50px rgba(134, 166, 139, 0.2))
-      drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
-  }
-}
+/* Removed logoGlow animation - was causing performance issues */
 
 @keyframes flyLogo {
   0% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-    opacity: 0.15;
-  }
-  12% {
-    transform: translate(calc(var(--fly-direction, 1) * 10vw), -8vh) rotate(45deg) scale(1.08);
-    opacity: 0.18;
+    transform: translate3d(0, 0, 0);
   }
   25% {
-    transform: translate(calc(var(--fly-direction, 1) * 18vw), 3vh) rotate(90deg) scale(0.95);
-    opacity: 0.16;
-  }
-  37% {
-    transform: translate(calc(var(--fly-direction, 1) * 22vw), 10vh) rotate(135deg) scale(1.1);
-    opacity: 0.19;
+    transform: translate3d(calc(var(--fly-direction, 1) * 15vw), -5vh, 0);
   }
   50% {
-    transform: translate(calc(var(--fly-direction, 1) * 20vw), 12vh) rotate(180deg) scale(0.98);
-    opacity: 0.17;
-  }
-  62% {
-    transform: translate(calc(var(--fly-direction, 1) * 14vw), 8vh) rotate(225deg) scale(1.05);
-    opacity: 0.18;
+    transform: translate3d(calc(var(--fly-direction, 1) * 20vw), 8vh, 0);
   }
   75% {
-    transform: translate(calc(var(--fly-direction, 1) * 8vw), 2vh) rotate(270deg) scale(0.97);
-    opacity: 0.16;
-  }
-  87% {
-    transform: translate(calc(var(--fly-direction, 1) * 4vw), -4vh) rotate(315deg) scale(1.03);
-    opacity: 0.17;
+    transform: translate3d(calc(var(--fly-direction, 1) * 10vw), 4vh, 0);
   }
   100% {
-    transform: translate(0, 0) rotate(360deg) scale(1);
-    opacity: 0.15;
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -4835,10 +4695,10 @@ body.is-whitelist .hero-rail-controls {
 }
 
 .crime-back {
-  position: fixed;
-  top: clamp(24px, 3vh, 32px);
-  left: clamp(24px, 4vw, 48px);
-  z-index: 1000;
+  position: fixed !important;
+  top: clamp(24px, 3vh, 32px) !important;
+  left: clamp(24px, 4vw, 48px) !important;
+  z-index: 100000 !important;
   width: 48px;
   height: 48px;
   display: flex;
@@ -4852,6 +4712,7 @@ body.is-whitelist .hero-rail-controls {
   transition: all 0.24s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.48);
   line-height: 1;
+  pointer-events: auto;
 }
 
 .crime-back:hover {
@@ -4898,7 +4759,7 @@ body.is-whitelist .hero-rail-controls {
   max-width: 1800px;
   width: 100%;
   margin: 0 auto;
-  padding: clamp(32px, 4vh, 48px) clamp(32px, 5vw, 64px) clamp(140px, 18vh, 180px);
+  padding: clamp(16px, 2vh, 24px) clamp(32px, 5vw, 64px) clamp(140px, 18vh, 180px);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -4923,7 +4784,7 @@ body.is-whitelist .hero-rail-controls {
 /* Hero Section with Media */
 .detail-header {
   text-align: left;
-  margin-top: clamp(100px, 14vh, 140px);
+  margin-top: clamp(40px, 6vh, 60px);
   margin-bottom: clamp(32px, 4.5vh, 48px);
   position: relative;
   z-index: 2;
@@ -5035,11 +4896,11 @@ body.is-whitelist .hero-rail-controls {
   gap: 0;
   align-items: stretch;
   margin-top: 0;
-  flex: 1;
+  flex: 0.85;
   min-height: 0;
   height: 100%;
   overflow: visible;
-  max-height: 100%;
+  max-height: 85%;
   position: relative;
   z-index: 2;
 }
@@ -5051,7 +4912,7 @@ body.is-whitelist .hero-rail-controls {
     gap: clamp(24px, 4vw, 40px);
     align-items: stretch;
     height: 100%;
-    max-height: 100%;
+    max-height: 85%;
   }
   
   
@@ -5088,9 +4949,8 @@ body.is-whitelist .hero-rail-controls {
   overflow: hidden;
   background: transparent;
   box-shadow: none;
-  animation: detailMediaFadeIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+  animation: none;
   border: 1px solid rgba(134, 166, 139, 0.3);
-  isolation: isolate;
   display: flex;
   align-items: stretch;
   box-sizing: border-box;
@@ -5104,34 +4964,17 @@ body.is-whitelist .hero-rail-controls {
 }
 
 .detail-media-row::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: calc(24px + 6px);
-  background: radial-gradient(ellipse at 50% 110%, rgba(134,166,139,0.20), rgba(134,166,139,0.08) 38%, rgba(0,0,0,0) 62%);
-  mix-blend-mode: screen;
-  opacity: 0;
-  transform: translateY(0) scale(1);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.detail-media-row:not(:focus-visible):hover::after {
-  opacity: 0.5;
-  transform: translateY(-2px) scale(1.01);
+  display: none;
 }
 
 @keyframes detailMediaFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(24px);
-    filter: blur(8px);
+    transform: scale(0.98) translateY(12px);
   }
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -7593,10 +7436,6 @@ body.is-whitelist .hero-rail-controls {
 	100% { transform: scale(1.03); filter: none; }
 }
 
-@keyframes textPulse {
-	0% { opacity: 0.8; transform: scale(1); }
-	100% { opacity: 1; transform: scale(1.02); }
-}
 
 /* Adjustments for deeper levels */
 .split-grid--level-2 .split-panel__logo {
@@ -7615,33 +7454,7 @@ body.is-whitelist .hero-rail-controls {
 }
 
 
-@keyframes singleLogoFloat {
-	0% { transform: translate(-50%, -50%) scale(1); }
-	100% { transform: translate(-50%, -50%) scale(1.05); }
-}
 
-.hero-card__overlay-logo {
-	position: absolute;
-	left: 50%;
-	top: 40%;
-	transform: translate(-50%, -50%);
-	width: 58%;
-	height: 58%;
-	background: var(--roots-r-image, url('public/roots_R.png')) center/contain no-repeat;
-	opacity: 0.88;
-	filter: drop-shadow(0 12px 28px rgba(0,0,0,0.6));
-	z-index: 1;
-	pointer-events: none;
-}
-
-.hero-card__overlay-logo--top { top: 32%; }
-.hero-card__overlay-logo--bottom {
-	top: auto;
-	bottom: 16%;
-	transform: translate(-50%, 0);
-	width: 42%;
-	height: 42%;
-}
 
 /* Remove duplicate - using styles defined earlier */
 .detail-inline-hero {

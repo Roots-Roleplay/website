@@ -3,22 +3,67 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<title>Roots Roleplay</title>
+	<title id="seo-title">Roots Roleplay | Alles beginnt mit einer Entscheidung</title>
+	
+	<!-- SEO Meta Tags - Will be populated from content/seo.json -->
+	<meta id="seo-description" name="description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta id="seo-keywords" name="keywords" content="Roots Roleplay, FiveM Roleplay, GTA V Roleplay, Roleplay Server, Teamspeak, Discord, Los Santos, Whitelist, Regelwerk">
+	<meta id="seo-author" name="author" content="Roots Roleplay">
+	<meta id="seo-robots" name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+	<meta id="seo-googlebot" name="googlebot" content="index, follow">
+	<meta id="seo-language" name="language" content="German">
+	<meta id="seo-revisit" name="revisit-after" content="7 days">
+	
+	<!-- Open Graph / Facebook -->
+	<meta id="og-type" property="og:type" content="website">
+	<meta id="og-title" property="og:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
+	<meta id="og-description" property="og:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta id="og-image" property="og:image" content="">
+	<meta id="og-image-width" property="og:image:width" content="1200">
+	<meta id="og-image-height" property="og:image:height" content="630">
+	<meta id="og-image-type" property="og:image:type" content="image/svg+xml">
+	<meta id="og-url" property="og:url" content="">
+	<meta id="og-site-name" property="og:site_name" content="Roots Roleplay">
+	<meta id="og-locale" property="og:locale" content="de_DE">
+	
+	<!-- Twitter Card -->
+	<meta id="twitter-card" name="twitter:card" content="summary_large_image">
+	<meta id="twitter-title" name="twitter:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
+	<meta id="twitter-description" name="twitter:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta id="twitter-image" name="twitter:image" content="">
+	<meta id="twitter-image-alt" name="twitter:image:alt" content="Roots Roleplay Logo">
+	
+	<!-- Canonical URL -->
+	<link id="seo-canonical" rel="canonical" href="">
+	
+	<!-- Theme and Icons -->
+	<meta id="theme-color" name="theme-color" content="#1f2127">
+	<meta id="msapplication-tile" name="msapplication-TileColor" content="#1f2127">
+	<link id="favicon" rel="icon" type="image/png" href="public/roots_R.png">
+	<link id="apple-touch-icon" rel="apple-touch-icon" href="public/roots_R.png">
+	<link id="shortcut-icon" rel="shortcut icon" href="public/roots_R.png">
+	
+	<!-- Resource Hints for Performance -->
+	<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+	<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+	<link rel="dns-prefetch" href="https://www.youtube.com">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	
+	<!-- Preload Critical Resources -->
+	<link rel="preload" href="css/main.css" as="style">
+	<link rel="preload" href="public/roots-roleplay.svg" as="image" type="image/svg+xml">
+	
 	<script>
-		// Set base path for GitHub Pages compatibility
+		// Load SEO data from JSON and populate meta tags
 		(function() {
+			// Set base path for GitHub Pages compatibility
 			const path = window.location.pathname;
 			const basePath = path.replace(/\/[^/]*\.html?$/, '').replace(/\/$/, '') || '';
 			window.__BASE_PATH__ = basePath;
-			// Set base href for relative paths (only if not at root)
-			if (basePath) {
-				const base = document.createElement('base');
-				base.href = basePath + '/';
-				document.head.insertBefore(base, document.head.firstChild);
-			}
+			const basePathPrefix = basePath ? `${basePath}/` : '/';
 			
-			// Set CSS custom property for roots_R.png path early (fixes GitHub Pages 404)
-			// This runs before CSS loads so the CSS variables are available
+			// Helper function to normalize asset paths
 			function normalizeAssetPath(path) {
 				if (!path) return '';
 				if (/^https?:\/\//i.test(path)) return path;
@@ -40,18 +85,249 @@
 				return `${basePath}/${trimmed}`.replace(/\/+/g, '/');
 			}
 			
+			// Helper function to get absolute URL
+			function getAbsoluteUrl(relativePath) {
+				if (!relativePath) return '';
+				if (/^https?:\/\//i.test(relativePath)) return relativePath;
+				const normalizedPath = normalizeAssetPath(relativePath);
+				return window.location.origin + (normalizedPath.startsWith('/') ? normalizedPath : '/' + normalizedPath);
+			}
+			
+			// Set base href for relative paths (only if not at root)
+			if (basePath) {
+				const base = document.createElement('base');
+				base.href = basePath + '/';
+				document.head.insertBefore(base, document.head.firstChild);
+			}
+			
+			// Load SEO JSON and populate meta tags
+			fetch(`${basePathPrefix}content/seo.json`)
+				.then(response => response.json())
+				.then(seoData => {
+					if (!seoData) return;
+					
+					const currentUrl = window.location.origin + (basePath ? basePath : '') + '/';
+					const site = seoData.site || {};
+					const meta = seoData.meta || {};
+					const openGraph = seoData.openGraph || {};
+					const twitter = seoData.twitter || {};
+					const icons = seoData.icons || {};
+					const structuredData = seoData.structuredData || {};
+					
+					// Update title
+					if (site.title) {
+						document.title = site.title;
+						const titleEl = document.getElementById('seo-title');
+						if (titleEl) titleEl.textContent = site.title;
+					}
+					
+					// Update meta tags
+					function updateMeta(nameOrProperty, content, isProperty = false) {
+						const selector = isProperty ? `meta[property="${nameOrProperty}"]` : `meta[name="${nameOrProperty}"]`;
+						const metaEl = document.querySelector(selector);
+						if (metaEl && content) metaEl.content = content;
+					}
+					
+					// Basic SEO meta tags
+					if (site.description) updateMeta('description', site.description);
+					if (site.keywords) updateMeta('keywords', site.keywords);
+					if (site.author) updateMeta('author', site.author);
+					if (meta.robots) updateMeta('robots', meta.robots);
+					if (meta.googlebot) updateMeta('googlebot', meta.googlebot);
+					if (site.language) updateMeta('language', site.language);
+					if (meta.revisitAfter) updateMeta('revisit-after', meta.revisitAfter);
+					
+					// Open Graph tags
+					if (openGraph.type) updateMeta('og:type', openGraph.type, true);
+					if (openGraph.title) updateMeta('og:title', openGraph.title, true);
+					if (openGraph.description) updateMeta('og:description', openGraph.description, true);
+					if (openGraph.siteName) updateMeta('og:site_name', openGraph.siteName, true);
+					if (openGraph.locale) updateMeta('og:locale', openGraph.locale, true);
+					
+					// Set Open Graph URL
+					updateMeta('og:url', currentUrl, true);
+					
+					// Set Open Graph image with absolute URL
+					if (openGraph.image) {
+						const ogImageUrl = getAbsoluteUrl(openGraph.image);
+						updateMeta('og:image', ogImageUrl, true);
+						if (openGraph.imageWidth) updateMeta('og:image:width', openGraph.imageWidth, true);
+						if (openGraph.imageHeight) updateMeta('og:image:height', openGraph.imageHeight, true);
+						if (openGraph.imageType) updateMeta('og:image:type', openGraph.imageType, true);
+					}
+					
+					// Twitter Card tags
+					if (twitter.card) updateMeta('twitter:card', twitter.card);
+					if (twitter.title) updateMeta('twitter:title', twitter.title);
+					if (twitter.description) updateMeta('twitter:description', twitter.description);
+					if (twitter.image) {
+						const twitterImageUrl = getAbsoluteUrl(twitter.image);
+						updateMeta('twitter:image', twitterImageUrl);
+					}
+					if (twitter.imageAlt) updateMeta('twitter:image:alt', twitter.imageAlt);
+					
+					// Canonical URL
+					const canonical = document.getElementById('seo-canonical');
+					if (canonical) canonical.href = currentUrl;
+					
+					// Theme colors
+					if (meta.themeColor) {
+						const themeColorEl = document.getElementById('theme-color');
+						if (themeColorEl) themeColorEl.content = meta.themeColor;
+					}
+					if (meta.msapplicationTileColor) {
+						const tileColorEl = document.getElementById('msapplication-tile');
+						if (tileColorEl) tileColorEl.content = meta.msapplicationTileColor;
+					}
+					
+					// Icons
+					function updateIcon(id, href) {
+						if (!href) return;
+						const iconEl = document.getElementById(id);
+						if (iconEl) iconEl.href = normalizeAssetPath(href);
+					}
+					
+					if (icons.favicon) updateIcon('favicon', icons.favicon);
+					if (icons.appleTouchIcon) updateIcon('apple-touch-icon', icons.appleTouchIcon);
+					if (icons.shortcutIcon) updateIcon('shortcut-icon', icons.shortcutIcon);
+					
+					// Update Structured Data JSON-LD
+					const websiteSchema = structuredData.website;
+					const orgSchema = structuredData.organization;
+					
+					if (websiteSchema) {
+						const websiteSchemaEl = document.getElementById('website-schema');
+						if (websiteSchemaEl) {
+							try {
+								const websiteData = {
+									"@context": "https://schema.org",
+									"@type": "WebSite",
+									"name": websiteSchema.name || site.name,
+									"url": currentUrl,
+									"description": websiteSchema.description || site.description,
+									"inLanguage": websiteSchema.inLanguage || site.locale || "de-DE",
+									"potentialAction": {
+										"@type": "SearchAction",
+										"target": {
+											"@type": "EntryPoint",
+											"urlTemplate": currentUrl
+										},
+										"query-input": "required name=search_term_string"
+									},
+									"publisher": {
+										"@type": "Organization",
+										"name": websiteSchema.publisher?.name || site.name,
+										"logo": {
+											"@type": "ImageObject",
+											"url": getAbsoluteUrl(websiteSchema.publisher?.logo || openGraph.image || '')
+										}
+									}
+								};
+								websiteSchemaEl.textContent = JSON.stringify(websiteData);
+							} catch (e) {
+								console.warn('Could not update website schema:', e);
+							}
+						}
+					}
+					
+					if (orgSchema) {
+						const orgSchemaEl = document.getElementById('organization-schema');
+						if (orgSchemaEl) {
+							try {
+								const orgData = {
+									"@context": "https://schema.org",
+									"@type": "Organization",
+									"name": orgSchema.name || site.name,
+									"url": currentUrl,
+									"logo": getAbsoluteUrl(orgSchema.logo || openGraph.image || ''),
+									"description": orgSchema.description || site.description,
+									"sameAs": orgSchema.sameAs || [],
+									"contactPoint": {
+										"@type": "ContactPoint",
+										"contactType": orgSchema.contactPoint?.contactType || "customer service",
+										"availableLanguage": orgSchema.contactPoint?.availableLanguage || [site.language || "German"]
+									}
+								};
+								orgSchemaEl.textContent = JSON.stringify(orgData);
+							} catch (e) {
+								console.warn('Could not update organization schema:', e);
+							}
+						}
+					}
+				})
+				.catch(error => {
+					console.warn('Could not load SEO data from JSON:', error);
+					// Fallback: Set basic URLs dynamically
+					const currentUrl = window.location.origin + (basePath ? basePath : '') + '/';
+					const canonical = document.getElementById('seo-canonical');
+					if (canonical) canonical.href = currentUrl;
+					
+					const ogUrl = document.getElementById('og-url');
+					if (ogUrl) ogUrl.content = currentUrl;
+					
+					const ogImage = document.getElementById('og-image');
+					if (ogImage) ogImage.content = getAbsoluteUrl('public/roots-roleplay.svg');
+					
+					const twitterImage = document.getElementById('twitter-image');
+					if (twitterImage) twitterImage.content = getAbsoluteUrl('public/roots_R.png');
+				});
+			
+			// Set CSS custom property for roots_R.png path early (fixes GitHub Pages 404)
 			const rootsRPath = normalizeAssetPath('public/roots_R.png');
 			document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
 		})();
+		
 	</script>
-	<meta name="description" content="Rooted in play">
-	<meta name="theme-color" content="#1f2127">
-	<link rel="icon" type="image/png" href="public/roots_R.png">
 	
-	<!-- Fonts -->
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&family=Roboto+Slab:wght@300;400;700;800&display=swap" rel="stylesheet">
+	<!-- Structured Data (JSON-LD) - Will be populated from content/seo.json -->
+	<script type="application/ld+json" id="website-schema">
+	{
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		"name": "Roots Roleplay",
+		"url": "",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"inLanguage": "de-DE",
+		"potentialAction": {
+			"@type": "SearchAction",
+			"target": {
+				"@type": "EntryPoint",
+				"urlTemplate": ""
+			},
+			"query-input": "required name=search_term_string"
+		},
+		"publisher": {
+			"@type": "Organization",
+			"name": "Roots Roleplay",
+			"logo": {
+				"@type": "ImageObject",
+				"url": ""
+			}
+		}
+	}
+	</script>
+	<script type="application/ld+json" id="organization-schema">
+	{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"name": "Roots Roleplay",
+		"url": "",
+		"logo": "",
+		"description": "Roots Roleplay ist ein FiveM Roleplay Server, der Spielern die Möglichkeit bietet, ihre eigene Geschichte in Los Santos zu schreiben.",
+		"sameAs": [
+			"https://discord.gg/rootsroleplay"
+		],
+		"contactPoint": {
+			"@type": "ContactPoint",
+			"contactType": "customer service",
+			"availableLanguage": ["German"]
+		}
+	}
+	</script>
+	
+	<!-- Fonts with optimized loading -->
+	<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&family=Roboto+Slab:wght@300;400;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+	<noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&family=Roboto+Slab:wght@300;400;700;800&display=swap" rel="stylesheet"></noscript>
 	
 	<!-- Styles -->
 	<link rel="stylesheet" href="css/main.css">
@@ -85,13 +361,13 @@
 		<div id="heroDynamicBg" class="hero-dynamic-bg" aria-hidden="true"></div>
 		<div class="hero-grid">
 			<div class="hero-left">
-				<img src="public/roots-roleplay.svg" alt="Roots Roleplay" class="hero-logo">
+				<img src="public/roots-roleplay.svg" alt="Roots Roleplay Logo" class="hero-logo" loading="eager" decoding="async" fetchpriority="high">
 				<div class="hero-left__content">
 					<div class="hero-tagline-group">
-						<p class="hero-tagline">
+						<h1 class="hero-tagline">
 							<span class="hero-tagline__accent">Alles beginnt</span>
 							<span class="hero-tagline__main">mit einer Entscheidung</span>
-						</p>
+						</h1>
 						<p class="hero-subtext">Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte.</p>
 					</div>
 					<div class="hero-choice" role="group" aria-label="Wähle deinen Weg">
@@ -137,11 +413,11 @@
 			<div class="detail-content-wrapper">
 			<header class="detail-header">
 				<div class="detail-header-top">
-					<img id="detailCompanyLogo" src="" alt="" class="detail-company-logo" style="display: none;">
+					<img id="detailCompanyLogo" src="" alt="" class="detail-company-logo" style="display: none;" loading="lazy" decoding="async">
 					<h1 id="detailTitle"></h1>
 				</div>
 			</header>
-				<img id="detailCharacter" src="" alt="" class="detail-character" style="display: none;">
+				<img id="detailCharacter" src="" alt="" class="detail-character" style="display: none;" loading="lazy" decoding="async">
 
 				<div class="detail-main-content">
 					<div class="detail-media-row">
@@ -158,7 +434,7 @@
 
 				<nav class="crime-detail-nav" id="crimeDetailNav">
 				<button class="crime-nav-btn" id="crimePrev" type="button" aria-label="Zurück">
-					<img id="crimeNavPrevLogo" src="" alt="" class="crime-nav-btn-logo crime-nav-btn-logo--left" style="display: none;">
+					<img id="crimeNavPrevLogo" src="" alt="" class="crime-nav-btn-logo crime-nav-btn-logo--left" style="display: none;" loading="lazy" decoding="async">
 					<span class="crime-nav-btn-text">
 						<small class="crime-nav-status-label">Zurück zu</small>
 						<span class="crime-nav-status-title" id="crimeNavPrevTitle">—</span>
@@ -176,7 +452,7 @@
 						<small class="crime-nav-status-label">Weiter zu</small>
 						<span class="crime-nav-status-title" id="crimeNavNextTitle">—</span>
 					</span>
-					<img id="crimeNavNextLogo" src="" alt="" class="crime-nav-btn-logo crime-nav-btn-logo--right" style="display: none;">
+					<img id="crimeNavNextLogo" src="" alt="" class="crime-nav-btn-logo crime-nav-btn-logo--right" style="display: none;" loading="lazy" decoding="async">
 				</button>
 				</nav>
 			</div>
@@ -186,14 +462,14 @@
 	<!-- Mobile Detection Overlay -->
 	<div id="mobileOverlay" class="mobile-overlay" style="display: none;">
 		<div class="mobile-overlay__content">
-			<img src="public/roots-roleplay.svg" alt="Roots Roleplay" class="mobile-overlay__logo">
+			<img src="public/roots-roleplay.svg" alt="Roots Roleplay" class="mobile-overlay__logo" loading="lazy" decoding="async">
 			<h2 class="mobile-overlay__title">Please visit on a desktop device</h2>
 			<p class="mobile-overlay__message">For the best experience, please enjoy Roots Roleplay on a desktop or laptop computer.</p>
 		</div>
 	</div>
 
 	<!-- Scripts -->
-	<script src="https://www.youtube.com/iframe_api"></script>
-	<script src="js/main.js"></script>
+	<!-- YouTube API is now loaded dynamically by main.js when needed -->
+	<script src="js/main.js" defer></script>
 </body>
 </html>

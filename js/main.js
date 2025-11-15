@@ -1,160 +1,97 @@
 const HERO_RANDOM_MAX_STEPS = 12;
 
-// ==================== VIEWPORT SCALING & MOBILE DETECTION ====================
-
+// Design dimensions (2K resolution - the base design size)
 const DESIGN_WIDTH = 2560;
 const DESIGN_HEIGHT = 1440;
-const MOBILE_BREAKPOINT = 1024; // Consider anything under 1024px width as mobile
 
-function isMobileDevice() {
-	// Check for mobile/tablet devices
-	const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-	const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-	const isMobileWidth = window.innerWidth < MOBILE_BREAKPOINT;
-	const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-	
-	// Consider it mobile if it's mobile UA or has mobile width with touch
-	return isMobileUA || (isMobileWidth && isTouchDevice);
-}
-
-function setupViewportScaling() {
-	const mobileOverlay = document.getElementById('mobileOverlay');
-	const body = document.body;
-	const html = document.documentElement;
-	
-	if (isMobileDevice()) {
-		// Show mobile overlay
-		if (mobileOverlay) {
-			mobileOverlay.style.display = 'flex';
-		}
-		// Hide main content
-		if (body) {
-			body.classList.remove('desktop-scaled');
-			body.style.transform = 'none';
-			body.style.width = 'auto';
-			body.style.height = 'auto';
-			body.style.overflow = 'hidden';
-		}
+// Viewport scaling system for consistent appearance across all resolutions
+function applyViewportScaling() {
+	// Skip scaling on mobile
+	if (window.innerWidth < 1024) {
+		document.body.style.transform = '';
+		document.body.style.width = '';
+		document.body.style.height = '';
+		document.body.classList.remove('desktop-scaled');
 		return;
 	}
+
+	const viewportWidth = window.innerWidth;
+	const viewportHeight = window.innerHeight;
 	
-	// Hide mobile overlay on desktop
-	if (mobileOverlay) {
-		mobileOverlay.style.display = 'none';
+	// Calculate scale factors for both dimensions
+	const scaleX = viewportWidth / DESIGN_WIDTH;
+	const scaleY = viewportHeight / DESIGN_HEIGHT;
+	
+	// Determine which dimension to use for scaling
+	// For widescreen (wider aspect ratio), scale based on width to fill horizontally
+	// For taller displays, scale based on height to fill vertically
+	const viewportAspect = viewportWidth / viewportHeight;
+	const designAspect = DESIGN_WIDTH / DESIGN_HEIGHT;
+	
+	let scale;
+	if (viewportAspect > designAspect) {
+		// Widescreen: scale based on width to fill horizontal space
+		scale = scaleX;
+	} else {
+		// Taller or same aspect: scale based on height to fill vertical space
+		scale = scaleY;
 	}
 	
-	// Scale body to fill viewport while maintaining 2K proportions
-	function applyScaling() {
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight;
-		
-		// Use Math.max to fill entire viewport (might crop slightly on one axis)
-		const scaleX = viewportWidth / DESIGN_WIDTH;
-		const scaleY = viewportHeight / DESIGN_HEIGHT;
-		const scale = Math.max(scaleX, scaleY);
-		
-		// Apply transform to body
-		if (body) {
-			body.classList.add('desktop-scaled');
-			body.style.width = `${DESIGN_WIDTH}px`;
-			body.style.height = `${DESIGN_HEIGHT}px`;
-			
-			// Calculate scaled dimensions
-			const scaledWidth = DESIGN_WIDTH * scale;
-			const scaledHeight = DESIGN_HEIGHT * scale;
-			
-			// Center the scaled content
-			const offsetX = (viewportWidth - scaledWidth) / 2;
-			const offsetY = (viewportHeight - scaledHeight) / 2;
-			
-			body.style.transformOrigin = 'top left';
-			body.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-			
-			// Fix fixed position elements - position them relative to viewport, not scaled body
-			const topCta = document.querySelector('.top-cta');
-			const heroRailControls = document.querySelector('.hero-rail-controls');
-			const crimeBack = document.querySelector('.crime-back');
-			
-			// Calculate inverse scale and offset to compensate for body transform
-			const inverseScale = 1 / scale;
-			const inverseOffsetX = -offsetX * inverseScale;
-			const inverseOffsetY = -offsetY * inverseScale;
-			
-			if (topCta) {
-				// Position at viewport coordinates - ensure it's always in viewport
-				const safeTop = 16;
-				const safeRight = 16;
-				
-				topCta.style.position = 'fixed';
-				topCta.style.top = `${safeTop}px`;
-				topCta.style.right = `${safeRight}px`;
-				topCta.style.transform = `translate(${inverseOffsetX}px, ${inverseOffsetY}px) scale(${inverseScale})`;
-				topCta.style.transformOrigin = 'top right';
-				topCta.style.zIndex = '100000';
-				topCta.style.pointerEvents = 'auto';
-				topCta.style.margin = '0';
-			}
-			
-			if (heroRailControls) {
-				// Position at viewport coordinates - use larger bottom offset to prevent cutoff
-				const controlsBottom = Math.max(120, Math.min(160, viewportHeight * 0.08)); // 8% of viewport height, clamped to 120-160px
-				
-				heroRailControls.style.position = 'fixed';
-				heroRailControls.style.left = '50%';
-				heroRailControls.style.bottom = `${controlsBottom}px`;
-				heroRailControls.style.transform = 'translateX(-50%)';
-				heroRailControls.style.transformOrigin = 'center bottom';
-				heroRailControls.style.zIndex = '100000';
-				heroRailControls.style.pointerEvents = 'auto';
-				heroRailControls.style.margin = '0';
-			}
-			
-			if (crimeBack) {
-				// Position back button at viewport coordinates with inverse scaling
-				const safeTop = 24;
-				const safeLeft = 24;
-				
-				crimeBack.style.position = 'fixed';
-				crimeBack.style.top = `${safeTop}px`;
-				crimeBack.style.left = `${safeLeft}px`;
-				crimeBack.style.transform = `translate(${inverseOffsetX}px, ${inverseOffsetY}px) scale(${inverseScale})`;
-				crimeBack.style.transformOrigin = 'top left';
-				crimeBack.style.zIndex = '100000';
-				crimeBack.style.pointerEvents = 'auto';
-				crimeBack.style.margin = '0';
-			}
-		}
-		
-		// Ensure html and body fill viewport and don't scroll
-		if (html) {
-			html.style.width = '100%';
-			html.style.height = '100%';
-			html.style.overflow = 'hidden';
-			html.style.background = 'var(--bg)';
-		}
-	}
+	// Apply scaling transform to fill the viewport
+	document.body.style.width = `${DESIGN_WIDTH}px`;
+	document.body.style.height = `${DESIGN_HEIGHT}px`;
+	document.body.style.transform = `scale(${scale})`;
+	document.body.style.transformOrigin = 'top left';
+	document.body.classList.add('desktop-scaled');
 	
-	// Apply scaling on load and resize
-	applyScaling();
-	
-	// Debounce resize handler
-	let resizeTimeout;
-	window.addEventListener('resize', () => {
-		clearTimeout(resizeTimeout);
-		resizeTimeout = setTimeout(applyScaling, 100);
-	});
-	
-	// Also apply scaling after a short delay to handle any layout shifts
-	setTimeout(applyScaling, 100);
-	setTimeout(applyScaling, 500);
+	// Update CSS custom property for use in CSS if needed
+	document.documentElement.style.setProperty('--viewport-scale', scale);
+	document.documentElement.style.setProperty('--viewport-width', `${viewportWidth}px`);
+	document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
 }
 
-// Initialize viewport scaling and mobile detection immediately
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', setupViewportScaling);
-} else {
-	setupViewportScaling();
+// Mobile overlay toggle
+const checkMobile = () => {
+	const overlay = document.getElementById('mobileOverlay');
+	if (!overlay) return;
+	const isMobile = window.innerWidth < 1024;
+	overlay.style.display = isMobile ? 'flex' : 'none';
+	if (isMobile) document.body.style.overflow = 'hidden';
+};
+
+// Combined resize handler with requestAnimationFrame for better performance
+let viewportResizeRaf = null;
+function handleViewportResize() {
+	if (viewportResizeRaf !== null) return;
+	viewportResizeRaf = requestAnimationFrame(() => {
+		checkMobile();
+		applyViewportScaling();
+		viewportResizeRaf = null;
+	});
 }
+
+// Initialize on load
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', () => {
+		checkMobile();
+		applyViewportScaling();
+	});
+} else {
+	checkMobile();
+	applyViewportScaling();
+}
+
+window.addEventListener('resize', handleViewportResize, { passive: true });
+window.addEventListener('orientationchange', () => {
+	// Use requestAnimationFrame for orientation changes
+	requestAnimationFrame(() => {
+		checkMobile();
+		applyViewportScaling();
+		if (typeof handleResize === 'function') {
+			handleResize();
+		}
+	});
+}, { passive: true });
 
 function exitSplitMode() {
 	// Restore the hero rail for current category
@@ -165,8 +102,6 @@ function exitSplitMode() {
 }
 // ==================== ROOTS ROLEPLAY – HERO EXPERIENCE ====================
 
-const HOLD_DURATION_MS = 1100;
-const HOLD_RESET_DELAY_MS = 220;
 
 const state = {
 	companies: [],
@@ -206,20 +141,7 @@ const CATEGORY_CONFIG = {
 		},
 		getContent: (item) => item.description || '',
 		getMedia: (item) => {
-			if (Array.isArray(item.videos) && item.videos.length > 0 && item.videos[0].youtubeId) {
-				return { 
-					type: 'video', 
-					youtubeId: item.videos[0].youtubeId,
-					buyUrl: item.videos[0].buyUrl || null,
-					allVideos: item.videos,
-					videoIndex: 0
-				};
-			}
-
-			if (item.image) {
-				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.displayName || item.title || 'Visual' };
-			}
-			return null;
+			return extractVideoMedia(item) || extractImageMedia(item, item.displayName || item.title || 'Visual');
 		},
 		buildCollage: buildCompanyCollage
 	},
@@ -229,30 +151,7 @@ const CATEGORY_CONFIG = {
 		getTagline: (item) => item.tagline || '',
 		getContent: (item) => item.content || '',
 		getMedia: (item) => {
-			// Check for videos array first (like legal items)
-			if (Array.isArray(item.videos) && item.videos.length > 0 && item.videos[0].youtubeId) {
-				return { 
-					type: 'video', 
-					youtubeId: item.videos[0].youtubeId,
-					buyUrl: item.videos[0].buyUrl || item.buyUrl || null,
-					allVideos: item.videos,
-					videoIndex: 0
-				};
-			}
-			// Fallback to videoId property
-			if (item.videoId) {
-				return { 
-					type: 'video', 
-					youtubeId: item.videoId,
-					buyUrl: item.buyUrl || null,
-					allVideos: null,
-					videoIndex: 0
-				};
-			}
-			if (item.image) {
-				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.title || 'Crew' };
-			}
-			return null;
+			return extractVideoMedia(item) || extractImageMedia(item, item.title || 'Crew');
 		},
 		buildCollage: buildCrimeCollage
 	},
@@ -261,12 +160,7 @@ const CATEGORY_CONFIG = {
 		getTitle: (item) => item.title || item.id,
 		getTagline: (item) => item.tagline || '',
 		getContent: (item) => item.content || '',
-		getMedia: (item) => {
-			if (item.image) {
-				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.title || 'Regelwerk' };
-			}
-			return null;
-		},
+		getMedia: (item) => getSimpleImageMedia(item, 'Regelwerk'),
 		buildCollage: buildRegelwerkCollage
 	},
 	whitelist: {
@@ -274,12 +168,7 @@ const CATEGORY_CONFIG = {
 		getTitle: (item) => item.title || item.id,
 		getTagline: (item) => item.tagline || '',
 		getContent: (item) => item.content || '',
-		getMedia: (item) => {
-			if (item.image) {
-				return { type: 'image', src: normalizeAssetPath(item.image), alt: item.title || 'Whitelist' };
-			}
-			return null;
-		},
+		getMedia: (item) => getSimpleImageMedia(item, 'Whitelist'),
 		buildCollage: buildWhitelistCollage
 	}
 };
@@ -314,6 +203,66 @@ const COLLAGE_LAYOUTS = [
 const MAX_COLLAGE_ITEMS = Math.max(...COLLAGE_LAYOUTS.map((layout) => layout.length));
 const COLLAGE_SIZE_SCALE = 0.79;
 
+// Helper function to extract video media from item
+function extractVideoMedia(item) {
+	if (Array.isArray(item.videos) && item.videos.length > 0 && item.videos[0].youtubeId) {
+		return { 
+			type: 'video', 
+			youtubeId: item.videos[0].youtubeId,
+			buyUrl: item.videos[0].buyUrl || item.buyUrl || null,
+			allVideos: item.videos,
+			videoIndex: 0
+		};
+	}
+	if (item.videoId) {
+		return { 
+			type: 'video', 
+			youtubeId: item.videoId,
+			buyUrl: item.buyUrl || null,
+			allVideos: null,
+			videoIndex: 0
+		};
+	}
+	return null;
+}
+
+// Helper function to extract image media from item
+function extractImageMedia(item, altText) {
+	if (item.image) {
+		return { type: 'image', src: normalizeAssetPath(item.image), alt: altText };
+	}
+	return null;
+}
+
+// Helper function for simple image-only media (regelwerk/whitelist pattern)
+function getSimpleImageMedia(item, defaultAlt) {
+	return extractImageMedia(item, item.title || defaultAlt);
+}
+
+// Helper function to add keyboard support (Enter/Space) to clickable elements
+function addKeyboardSupport(element, handler) {
+	if (!element) return;
+	element.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			handler();
+		}
+	});
+}
+
+// Helper function to create intro image cards (image only, no text)
+function createIntroImageCard(id, imagePath) {
+	return {
+		id,
+		title: '',
+		content: '',
+		image: imagePath,
+		tagline: '',
+		showTextLabel: false,
+		isIntroImageCard: true
+	};
+}
+
 // Helper function to build image array from folder with all files
 // Since we can't list files client-side, we try common patterns and known files
 function buildImageArrayFromFolder(folderPath, knownFiles = [], numberedRange = null) {
@@ -331,7 +280,18 @@ function buildImageArrayFromFolder(folderPath, knownFiles = [], numberedRange = 
 	return images;
 }
 
-// All images from random_characters folder (for polaroids) - function to ensure paths work with base tag
+// Helper to normalize image paths based on base tag presence
+function normalizeImagePaths(images) {
+	const baseTag = document.querySelector('base[href]');
+	if (baseTag) {
+		// Base tag exists, return relative paths - browser will resolve them correctly
+		return images;
+	}
+	// No base tag, normalize paths normally
+	return images.map(img => normalizeAssetPath(img));
+}
+
+// All images from random_characters folder (for polaroids)
 function getRandomCharacterImages() {
 	const knownFiles = [
 		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
@@ -340,30 +300,11 @@ function getRandomCharacterImages() {
 		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png'
 	];
 	const images = buildImageArrayFromFolder('public/random_characters', knownFiles, { start: 1, end: 100 });
-	
-	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
-	const baseTag = document.querySelector('base[href]');
-	if (baseTag) {
-		// Base tag exists, return relative paths - browser will resolve them correctly
-		return images;
-	}
-	
-	// No base tag, normalize paths normally
-	return images.map(img => normalizeAssetPath(img));
+	return normalizeImagePaths(images);
 }
 
-// Keep a constant version for backward compatibility (computed once at load for performance)
-const RANDOM_CHARACTER_IMAGES = (() => {
-	const knownFiles = [
-		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
-		'csacas.png', 'daw.png', 'dwa.png', 'fva.png', 'ges.png', 'gse.png',
-		'hed.png', 'jyd.png', 'kitt.png', 'qeeweq.png', 'qeweqw.png', 'qewqe.png',
-		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png'
-	];
-	return buildImageArrayFromFolder('public/random_characters', knownFiles, { start: 1, end: 100 });
-})();
 
-// Company character images - function to ensure paths work with base tag
+// Company character images
 function getCompanyCharacterImages() {
 	const images = [
 		'public/company_characters/admin_character.png',
@@ -389,45 +330,11 @@ function getCompanyCharacterImages() {
 		'public/company_characters/tuner_character.png',
 		'public/company_characters/yellowjack_character.png'
 	];
-	
-	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
-	const baseTag = document.querySelector('base[href]');
-	if (baseTag) {
-		// Base tag exists, return relative paths - browser will resolve them correctly
-		return images;
-	}
-	
-	// No base tag, normalize paths normally
-	return images.map(img => normalizeAssetPath(img));
+	return normalizeImagePaths(images);
 }
 
-// Keep a constant version for backward compatibility
-const COMPANY_CHARACTER_IMAGES = [
-	'public/company_characters/admin_character.png',
-	'public/company_characters/aldente_character.png',
-	'public/company_characters/ambulance_character.png',
-	'public/company_characters/aod_character.png',
-	'public/company_characters/bikes_character.png',
-	'public/company_characters/blockbudz_character.png',
-	'public/company_characters/burgershot_character.png',
-	'public/company_characters/caseys_character.png',
-	'public/company_characters/church_character.png',
-	'public/company_characters/doj_character.png',
-	'public/company_characters/larrys_character.png',
-	'public/company_characters/leapfrog_character.png',
-	'public/company_characters/news_character.png',
-	'public/company_characters/pearls_character.png',
-	'public/company_characters/pier76_character.png',
-	'public/company_characters/police_character.png',
-	'public/company_characters/reds_character.png',
-	'public/company_characters/sheriff_character.png',
-	'public/company_characters/smokeys_character.png',
-	'public/company_characters/taxi_character.png',
-	'public/company_characters/tuner_character.png',
-	'public/company_characters/yellowjack_character.png'
-];
 
-// Crime character images - function to ensure paths work with base tag
+// Crime character images
 function getCrimeCharacterImages() {
 	const images = [
 		'public/crime_characters/aod_character.png',
@@ -437,68 +344,20 @@ function getCrimeCharacterImages() {
 		'public/crime_characters/pit_character.png',
 		'public/crime_characters/rednecks_character.png'
 	];
-	
-	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
-	const baseTag = document.querySelector('base[href]');
-	if (baseTag) {
-		// Base tag exists, return relative paths - browser will resolve them correctly
-		return images;
-	}
-	
-	// No base tag, normalize paths normally
-	return images.map(img => normalizeAssetPath(img));
+	return normalizeImagePaths(images);
 }
 
-// Keep a constant version for backward compatibility
-const CRIME_CHARACTER_IMAGES_ARRAY = [
-	'public/crime_characters/aod_character.png',
-	'public/crime_characters/ballas_character.png',
-	'public/crime_characters/lost_character.png',
-	'public/crime_characters/madrazo_character.png',
-	'public/crime_characters/pit_character.png',
-	'public/crime_characters/rednecks_character.png'
-];
 
-// Crime shuffle images - function to ensure paths are normalized with current base path
+// Crime shuffle images
 function getCrimeShuffleImages() {
-	// Only images from public/crime_shuffle folder (25 images total)
 	const knownFiles = [
-		'addad.png',
-		'afdwdar.png',
-		'agrwrq.png',
-		'awd.png',
-		'awfaqrf.png',
-		'bfd.png',
-		'csacas.png',
-		'daw.png',
-		'dwa.png',
-		'fva.png',
-		'ges.png',
-		'gse.png',
-		'hed.png',
-		'jyd.png',
-		'kitt.png',
-		'qeeweq.png',
-		'qeweqw.png',
-		'qewqe.png',
-		'qweeq.png',
-		'rhtrh.png',
-		'sffeefws.png',
-		'wad.png',
-		'waewq.png',
-		'wda.png',
-		'yk.png'
+		'addad.png', 'afdwdar.png', 'agrwrq.png', 'awd.png', 'awfaqrf.png', 'bfd.png',
+		'csacas.png', 'daw.png', 'dwa.png', 'fva.png', 'ges.png', 'gse.png',
+		'hed.png', 'jyd.png', 'kitt.png', 'qeeweq.png', 'qeweqw.png', 'qewqe.png',
+		'qweeq.png', 'rhtrh.png', 'sffeefws.png', 'wad.png', 'waewq.png', 'wda.png', 'yk.png'
 	];
-	
-	// Check if there's a base tag - if so, return relative paths (browser will resolve relative to base)
-	const baseTag = document.querySelector('base[href]');
-	if (baseTag) {
-		// Base tag exists, return relative paths - browser will resolve them correctly
-		return knownFiles.map(file => `public/crime_shuffle/${file}`);
-	}
-	
-	// No base tag, normalize paths normally
-	return knownFiles.map(file => normalizeAssetPath(`public/crime_shuffle/${file}`));
+	const images = knownFiles.map(file => `public/crime_shuffle/${file}`);
+	return normalizeImagePaths(images);
 }
 
 // Helper function to get unique random images from pool
@@ -511,6 +370,81 @@ function getUniqueRandomImages(pool, count) {
 	}
 	// Return unique images up to the requested count
 	return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+// Helper function to generate guideline grid HTML
+function buildGuidelineGridHTML(guidelineImages, decodingAttr, discordText = 'Lese die Guidelines auf unserem Discord') {
+	const topRow = guidelineImages.slice(0, 4);
+	const row2Left = guidelineImages.slice(4, 5);
+	const row2Right = guidelineImages.slice(5, 6);
+	const row3Left = guidelineImages.slice(6, 7);
+	const row3Right = guidelineImages.slice(7, 8);
+	const bottomRow = guidelineImages.slice(8, 10);
+	
+	const topRowHtml = topRow.map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item">
+			<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('');
+	
+	const row2LeftHtml = row2Left.map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
+			<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('');
+	
+	const ctaHtml = `<div class="hero-card__guideline-item hero-card__guideline-item--cta" style="grid-column: 2 / 4; grid-row: 2 / 4;">
+		<a href="https://discord.gg/rootsroleplay" target="_blank" rel="noopener noreferrer" class="hero-card__guidelines-discord-cta">
+			<svg class="hero-card__discord-icon" width="32" height="32" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+				<path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+			</svg>
+			<span class="hero-card__discord-text">${escapeHtml(discordText)}</span>
+		</a>
+	</div>`;
+	
+	const row2RightHtml = row2Right.map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
+			<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('');
+	
+	const row3LeftHtml = row3Left.map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
+			<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('');
+	
+	const row3RightHtml = row3Right.map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
+			<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('');
+	
+	const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
+			<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('') + 
+	guidelineImages.slice(0, 2).map((imgSrc, idx) => 
+		`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
+			<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
+		</div>`
+	).join('');
+	
+	return `
+		<span class="hero-card__backdrop" aria-hidden="true"></span>
+		<div class="hero-card__guidelines-content">
+			<div class="hero-card__guidelines-grid">
+				${topRowHtml}
+				${row2LeftHtml}
+				${ctaHtml}
+				${row2RightHtml}
+				${row3LeftHtml}
+				${row3RightHtml}
+				${bottomRowHtml}
+			</div>
+		</div>
+	`;
 }
 
 function pickRandomCharacterImage() {
@@ -547,6 +481,9 @@ async function init() {
 	// Set CSS custom properties for roots_R.png paths (fixes GitHub Pages base path issue)
 	setRootsRImagePaths();
 
+	// Apply viewport scaling (in case it wasn't applied on DOMContentLoaded)
+	applyViewportScaling();
+
 	setupEventListeners();
 	setCategory('legal', { skipAutoOpen: true });
 	activateAppShell();
@@ -557,17 +494,8 @@ async function init() {
 
 function setRootsRImagePaths() {
 	// Normalize the roots_R.png path for GitHub Pages compatibility
-	// This must run early to set CSS custom properties before styles are applied
 	const rootsRPath = normalizeAssetPath('public/roots_R.png');
-	// Set CSS custom property for use in CSS background images
 	document.documentElement.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
-	
-	// Also set it immediately if document is already loaded
-	if (document.readyState !== 'loading') {
-		// Ensure it's applied to root element
-		const root = document.documentElement;
-		root.style.setProperty('--roots-r-image', `url('${rootsRPath}')`);
-	}
 }
 
 async function loadContent() {
@@ -590,15 +518,7 @@ async function loadContent() {
 		const nogosSteps = (nogos.steps || []).filter(Boolean);
 		
 		// Create first card with roots_nogo.png image only (no text)
-		const introImageCard = {
-			id: 'regelwerk-intro',
-			title: '',
-			content: '',
-			image: 'public/roots_nogo.png',
-			tagline: '',
-			showTextLabel: false,
-			isIntroImageCard: true // Mark as intro image card (image only, no content)
-		};
+		const introImageCard = createIntroImageCard('regelwerk-intro', 'public/roots_nogo.png');
 		
 		// First step is the introduction (Einleitung)
 		const einleitungCard = nogosSteps.length > 0 ? {
@@ -632,15 +552,7 @@ async function loadContent() {
 		};
 		
 		// Create final card with roots_choice.png image only (no text)
-		const choiceImageCard = {
-			id: 'regelwerk-choice',
-			title: '',
-			content: '',
-			image: 'public/whitelist/roots_choice.png',
-			tagline: '',
-			showTextLabel: false,
-			isIntroImageCard: true // Mark as intro image card (image only, no content)
-		};
+		const choiceImageCard = createIntroImageCard('regelwerk-choice', 'public/whitelist/roots_choice.png');
 		
 		// Combine: einleitung card, intro image card, then nogos, then choice image, then guidelines card
 		state.nogos = [...(einleitungCard ? [einleitungCard] : []), introImageCard, ...nogosCards, choiceImageCard, guidelinesCard];
@@ -649,26 +561,10 @@ async function loadContent() {
 		const whitelistSteps = (whitelist.steps || []).filter(Boolean);
 		
 		// Create first intro card with roots_welcome.png image only (no text)
-		const whitelistWelcomeCard = {
-			id: 'whitelist-welcome',
-			title: '',
-			content: '',
-			image: 'public/whitelist/roots_welcome.png',
-			tagline: '',
-			showTextLabel: false,
-			isIntroImageCard: true // Mark as intro image card (image only, no content)
-		};
+		const whitelistWelcomeCard = createIntroImageCard('whitelist-welcome', 'public/whitelist/roots_welcome.png');
 		
 		// Create second intro card with roots_serverzeiten.png image only (no text)
-		const whitelistServerzeitenCard = {
-			id: 'whitelist-serverzeiten',
-			title: '',
-			content: '',
-			image: 'public/whitelist/roots_serverzeiten.png',
-			tagline: '',
-			showTextLabel: false,
-			isIntroImageCard: true // Mark as intro image card (image only, no content)
-		};
+		const whitelistServerzeitenCard = createIntroImageCard('whitelist-serverzeiten', 'public/whitelist/roots_serverzeiten.png');
 		
 		// Transform all steps into whitelist cards
 		const whitelistCards = whitelistSteps.map((step, index) => {
@@ -697,15 +593,7 @@ async function loadContent() {
 		
 		// Create final card with roots_beginyourstory.png image only (no text)
 		// This will be inserted between step 6 and step 7 (after Sicheres RP, before FiveM Server)
-		const whitelistFinalCard = {
-			id: 'whitelist-final',
-			title: '',
-			content: '',
-			image: 'public/whitelist/roots_beginyourstory.png',
-			tagline: '',
-			showTextLabel: false,
-			isIntroImageCard: true // Mark as intro image card (image only, no content)
-		};
+		const whitelistFinalCard = createIntroImageCard('whitelist-final', 'public/whitelist/roots_beginyourstory.png');
 		
 		// Combine: welcome image, serverzeiten image, steps 1-6, final image, then step 7
 		// Step 6 is at index 5 (0-based), so we insert the final image after index 5
@@ -762,12 +650,7 @@ function wireChoiceButton(button, { autoOpenDetail = false } = {}) {
 			setCategory(choice, { autoOpen: autoOpenDetail });
 		};
 		button.addEventListener('click', handleChoice);
-		button.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' || event.key === ' ') {
-				event.preventDefault();
-				handleChoice();
-			}
-		});
+		addKeyboardSupport(button, handleChoice);
 	} else if (button.dataset.link) {
 		const handleLink = (event) => {
 			if (event) event.preventDefault();
@@ -776,12 +659,7 @@ function wireChoiceButton(button, { autoOpenDetail = false } = {}) {
 			window.open(targetUrl, '_blank', 'noopener');
 		};
 		button.addEventListener('click', handleLink);
-		button.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' || event.key === ' ') {
-				event.preventDefault();
-				handleLink();
-			}
-		});
+		addKeyboardSupport(button, handleLink);
 	}
 
 	button.dataset[guardKey] = '1';
@@ -795,34 +673,19 @@ function setupEventListeners() {
 	const closeBtn = document.getElementById('crimeBack');
 	if (closeBtn) {
 		closeBtn.addEventListener('click', () => closeDetail());
-		closeBtn.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' || event.key === ' ') {
-				event.preventDefault();
-				closeDetail();
-			}
-		});
+		addKeyboardSupport(closeBtn, () => closeDetail());
 	}
 
 	const prevBtn = document.getElementById('crimePrev');
 	if (prevBtn) {
 		prevBtn.addEventListener('click', () => navigateDetail(-1));
-		prevBtn.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' || event.key === ' ') {
-				event.preventDefault();
-				navigateDetail(-1);
-			}
-		});
+		addKeyboardSupport(prevBtn, () => navigateDetail(-1));
 	}
 
 	const nextBtn = document.getElementById('crimeNext');
 	if (nextBtn) {
 		nextBtn.addEventListener('click', () => navigateDetail(1));
-		nextBtn.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' || event.key === ' ') {
-				event.preventDefault();
-				navigateDetail(1);
-			}
-		});
+		addKeyboardSupport(nextBtn, () => navigateDetail(1));
 	}
 
 	document.addEventListener('keydown', (event) => {
@@ -849,11 +712,11 @@ function setupEventListeners() {
 		}
 		// Re-align hero rail auto-scroll when resizing
 		resetHeroRailIdle();
-	});
+	}, { passive: true });
 
 	// Subtle 3D tilt on hero cards
-	document.addEventListener('pointermove', handleCardTiltMove);
-	document.addEventListener('pointerleave', resetCardTilt, true);
+	document.addEventListener('pointermove', handleCardTiltMove, { passive: true });
+	document.addEventListener('pointerleave', resetCardTilt, { passive: true, capture: true });
 
 	// Ensure bottom controls are wired even before rail controls initialize
 	initHeroRailButtons();
@@ -1149,87 +1012,7 @@ function createHeroCard(item, index, category) {
 			} else if (item?.showGuidelines) {
 				// Guidelines card - show all guideline images with Discord CTA in middle
 				const guidelineImages = item.guidelineImages || [];
-				// Create grid: 4 columns x 4 rows = 16 slots
-				// Layout: Discord (2x2) centered (cols 2-3, rows 2-3), guidelines around it filling all space
-				// Row 1: 4 guidelines (cells 1,2,3,4)
-				// Row 2: 1 guideline (cell 1), Discord 2x2 (cells 2-3), 1 guideline (cell 4)
-				// Row 3: 1 guideline (cell 1), Discord continues (cells 2-3), 1 guideline (cell 4)
-				// Row 4: 2 guidelines (cells 1,2), 2 guidelines (cells 3,4)
-				const topRow = guidelineImages.slice(0, 4);
-				const row2Left = guidelineImages.slice(4, 5);
-				const row2Right = guidelineImages.slice(5, 6);
-				const row3Left = guidelineImages.slice(6, 7);
-				const row3Right = guidelineImages.slice(7, 8);
-				const bottomRow = guidelineImages.slice(8, 10);
-				// We have 10 images total, using 8 so far (4 top + 1 row2 left + 1 row2 right + 1 row3 left + 1 row3 right)
-				// Bottom row needs 4 cells, but we only have 2 images left, so we'll use those 2
-				
-				const topRowHtml = topRow.map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item">
-						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('');
-				
-				const row2LeftHtml = row2Left.map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('');
-				
-				const ctaHtml = `<div class="hero-card__guideline-item hero-card__guideline-item--cta" style="grid-column: 2 / 4; grid-row: 2 / 4;">
-					<a href="https://discord.gg/rootsroleplay" target="_blank" rel="noopener noreferrer" class="hero-card__guidelines-discord-cta">
-						<svg class="hero-card__discord-icon" width="32" height="32" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
-							<path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
-						</svg>
-						<span class="hero-card__discord-text">Lese die Guidelines auf unserem Discord</span>
-					</a>
-				</div>`;
-				
-				const row2RightHtml = row2Right.map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('');
-				
-				const row3LeftHtml = row3Left.map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('');
-				
-				const row3RightHtml = row3Right.map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('');
-				
-				// Bottom row: use remaining 2 images, fill remaining 2 cells with first 2 images again to fill the grid
-				const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('') + 
-				// Fill remaining 2 bottom cells by reusing first 2 images
-				guidelineImages.slice(0, 2).map((imgSrc, idx) => 
-					`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
-						<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-					</div>`
-				).join('');
-				
-				mainContentHtml = `
-					<span class="hero-card__backdrop" aria-hidden="true"></span>
-					<div class="hero-card__guidelines-content">
-						<div class="hero-card__guidelines-grid">
-							${topRowHtml}
-							${row2LeftHtml}
-							${ctaHtml}
-							${row2RightHtml}
-							${row3LeftHtml}
-							${row3RightHtml}
-							${bottomRowHtml}
-						</div>
-					</div>
-				`;
+				mainContentHtml = buildGuidelineGridHTML(guidelineImages, decodingAttr);
 			} else if (item?.showTextLabel) {
 				const content = CATEGORY_CONFIG[category].getContent(item) || '';
 				// Format content - replace double newlines with paragraph breaks, single newlines with spaces
@@ -1259,78 +1042,7 @@ function createHeroCard(item, index, category) {
 					// Handle guidelines card (similar to regelwerk)
 					if (item?.showGuidelines) {
 						const guidelineImages = item.guidelineImages || [];
-						// Create grid: 4 columns x 4 rows = 16 slots
-						const topRow = guidelineImages.slice(0, 4);
-						const row2Left = guidelineImages.slice(4, 5);
-						const row2Right = guidelineImages.slice(5, 6);
-						const row3Left = guidelineImages.slice(6, 7);
-						const row3Right = guidelineImages.slice(7, 8);
-						const bottomRow = guidelineImages.slice(8, 10);
-						
-						const topRowHtml = topRow.map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item">
-								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('');
-						
-						const row2LeftHtml = row2Left.map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 2;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 8}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('');
-						
-						const ctaHtml = `<div class="hero-card__guideline-item hero-card__guideline-item--cta" style="grid-column: 2 / 4; grid-row: 2 / 4;">
-							<a href="https://discord.gg/rootsroleplay" target="_blank" rel="noopener noreferrer" class="hero-card__guidelines-discord-cta">
-								<svg class="hero-card__discord-icon" width="32" height="32" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
-									<path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
-								</svg>
-								<span class="hero-card__discord-text">Komm auf unseren Discord</span>
-							</a>
-						</div>`;
-						
-						const row2RightHtml = row2Right.map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 2;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 9}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('');
-						
-						const row3LeftHtml = row3Left.map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item" style="grid-column: 1; grid-row: 3;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 10}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('');
-						
-						const row3RightHtml = row3Right.map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item" style="grid-column: 4; grid-row: 3;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 11}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('');
-						
-						const bottomRowHtml = bottomRow.map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item" style="grid-column: ${idx + 1}; grid-row: 4;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 12}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('') + 
-						guidelineImages.slice(0, 2).map((imgSrc, idx) => 
-							`<div class="hero-card__guideline-item" style="grid-column: ${idx + 3}; grid-row: 4;">
-								<img src="${imgSrc}" alt="Guideline ${idx + 4}" loading="lazy" ${decodingAttr} class="hero-card__guideline-image">
-							</div>`
-						).join('');
-						
-						mainContentHtml = `
-							<span class="hero-card__backdrop" aria-hidden="true"></span>
-							<div class="hero-card__guidelines-content">
-								<div class="hero-card__guidelines-grid">
-									${topRowHtml}
-									${row2LeftHtml}
-									${ctaHtml}
-									${row2RightHtml}
-									${row3LeftHtml}
-									${row3RightHtml}
-									${bottomRowHtml}
-								</div>
-							</div>
-						`;
+						mainContentHtml = buildGuidelineGridHTML(guidelineImages, decodingAttr, 'Komm auf unseren Discord');
 					} else {
 					
 					// Build buttons for links
@@ -1701,11 +1413,15 @@ function createHeroCard(item, index, category) {
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getCharacterAltFromSrc(src);
+								img.loading = 'lazy';
+								img.decoding = 'async';
 							} else {
 								const src = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getCharacterAltFromSrc(src);
+								img.loading = 'lazy';
+								img.decoding = 'async';
 							}
 							// Retry with different image if current one fails
 							img.onerror = () => {
@@ -1882,11 +1598,15 @@ function createHeroCard(item, index, category) {
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getRandomCharacterAlt(src);
+								img.loading = 'lazy';
+								img.decoding = 'async';
 							} else {
 								const src = normalizeAssetPath(availablePool[Math.floor(Math.random() * availablePool.length)]);
 								usedDuringAnimation.add(src);
 								img.src = src;
 								img.alt = getRandomCharacterAlt(src);
+								img.loading = 'lazy';
+								img.decoding = 'async';
 							}
 						});
 						// Clear used images after each animation step
@@ -2075,12 +1795,7 @@ function createHeroCard(item, index, category) {
 				openDetail(category, index);
 			};
 			card.addEventListener('click', activate);
-			card.addEventListener('keydown', (event) => {
-				if (event.key === 'Enter' || event.key === ' ') {
-					event.preventDefault();
-					activate();
-				}
-			});
+			addKeyboardSupport(card, activate);
 		}
 	}
 
@@ -2797,34 +2512,10 @@ function resetCardTilt(e) {
     });
 }
 
-// Hold-to-open removed; function kept as a no-op to preserve references
-function attachHoldHandler() {}
 
 // ==================== DETAIL OVERLAY ====================
 
 function openDetail(category, index) {
-	const detailBg = document.getElementById('detailDynamicBg');
-	if (detailBg) {
-		// Spawn flying logos for legal and illegal categories, polaroids for regelwerk
-		if (category === 'illegal') {
-			// Clear any fog/damage effects and police lights first
-			detailBg.querySelectorAll('.fog-container, .crime-damage-container, .police-light').forEach(el => el.remove());
-			spawnFogEffect(detailBg);
-			spawnCrimeDamage(detailBg);
-			// Spawn crime logos (no police lights)
-			spawnDetailFlyingLogos(detailBg, 'illegal');
-		} else if (category === 'regelwerk' || category === 'whitelist') {
-			// Clear any fog/damage effects first
-			detailBg.querySelectorAll('.fog-container, .crime-damage-container, .detail-flying-logo').forEach(el => el.remove());
-			// Use the same polaroid effect as legal
-			spawnDetailPolaroids(detailBg);
-		} else {
-			// Legal category - flying logos
-			// Clear any fog/damage effects first
-			detailBg.querySelectorAll('.fog-container, .crime-damage-container').forEach(el => el.remove());
-			spawnDetailFlyingLogos(detailBg);
-		}
-	}
 	const config = CATEGORY_CONFIG[category];
 	if (!config) return;
 
@@ -2840,6 +2531,36 @@ function openDetail(category, index) {
 
 	state.currentCategory = category;
 	state.currentIndex = safeIndex;
+	
+	const detailBg = document.getElementById('detailDynamicBg');
+	if (detailBg) {
+		// Spawn flying logos for legal and illegal categories, polaroids for regelwerk
+		// Disable fog and damage effects when video is present (they cause lag)
+		const media = config.getMedia(item);
+		const hasVideo = media && media.type === 'video' && media.youtubeId;
+		
+		if (category === 'illegal') {
+			// Clear any fog/damage effects and police lights first
+			detailBg.querySelectorAll('.overlay-container, .police-light').forEach(el => el.remove());
+			// Only spawn fog/damage if no video (they cause lag with videos)
+			if (!hasVideo) {
+				spawnFogEffect(detailBg);
+				spawnCrimeDamage(detailBg);
+			}
+			// Spawn crime logos (no police lights) - keep logos, they're fine
+			spawnDetailFlyingLogos(detailBg, 'illegal');
+		} else if (category === 'regelwerk' || category === 'whitelist') {
+			// Clear any fog/damage effects first
+			detailBg.querySelectorAll('.overlay-container, .detail-flying-logo').forEach(el => el.remove());
+			// Use the same polaroid effect as legal
+			spawnDetailPolaroids(detailBg);
+		} else {
+			// Legal category - flying logos
+			// Clear any fog/damage effects first
+			detailBg.querySelectorAll('.overlay-container').forEach(el => el.remove());
+			spawnDetailFlyingLogos(detailBg);
+		}
+	}
 	
 	// Add class to crime-detail for illegal category and set data-category
 	const detailEl = document.getElementById('detailOverlay') || document.querySelector('.crime-detail');
@@ -3009,11 +2730,29 @@ function queueYouTubePlayerInit(initialiser) {
 		}
 		return;
 	}
+	// Ensure YouTube API is loading
+	ensureYouTubeAPI();
 	state.youtubeInitQueue.push(initialiser);
 }
 
-window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
-	state.youtubeReady = true;
+// Lazy load YouTube API if not already loaded
+function ensureYouTubeAPI() {
+	if (typeof window !== 'undefined' && window.YT && typeof window.YT.Player === 'function') {
+		state.youtubeReady = true;
+		processYouTubeQueue();
+		return;
+	}
+	if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+		const script = document.createElement('script');
+		script.src = 'https://www.youtube.com/iframe_api';
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	}
+}
+
+function processYouTubeQueue() {
+	if (!state.youtubeReady) return;
 	const queue = Array.isArray(state.youtubeInitQueue) ? state.youtubeInitQueue.slice() : [];
 	state.youtubeInitQueue = [];
 	queue.forEach((fn) => {
@@ -3021,10 +2760,16 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
 			try {
 				fn();
 			} catch (error) {
-				console.warn('⚠️ Deferred YouTube player initialisation failed:', error);
+				console.warn('⚠️ Failed to initialise YouTube player:', error);
 			}
 		}
 	});
+}
+
+// YouTube API ready callback
+window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
+	state.youtubeReady = true;
+	processYouTubeQueue();
 };
 
 function destroyDetailVideoPlayer() {
@@ -3052,18 +2797,7 @@ function destroyDetailVideoPlayer() {
 	if (current.playerHost && current.playerHost.parentElement === current.wrapper) {
 		current.wrapper.removeChild(current.playerHost);
 	}
-	if (current.wrapper && current.handlers) {
-		const { pointerEnter, pointerMove, pointerLeave, focusIn, focusOut, controlsEnter, controlsLeave } = current.handlers;
-		if (pointerEnter) current.wrapper.removeEventListener('pointerenter', pointerEnter);
-		if (pointerMove) current.wrapper.removeEventListener('pointermove', pointerMove);
-		if (pointerLeave) current.wrapper.removeEventListener('pointerleave', pointerLeave);
-		if (focusIn) current.wrapper.removeEventListener('focusin', focusIn);
-		if (focusOut) current.wrapper.removeEventListener('focusout', focusOut);
-		if (current.controls?.element) {
-			if (controlsEnter) current.controls.element.removeEventListener('pointerenter', controlsEnter);
-			if (controlsLeave) current.controls.element.removeEventListener('pointerleave', controlsLeave);
-		}
-	}
+	// No event handlers to clean up - simplified approach
 	state.detailVideo = null;
 }
 
@@ -3075,6 +2809,8 @@ function mountDetailVideoPlayer({ youtubeId, title, buyUrl, allVideos = null, vi
 	host.className = 'detail-video-player__host';
 	const hostId = `detailVideoPlayer_${youtubeId}_${Math.random().toString(36).slice(2, 9)}`;
 	host.id = hostId;
+	// Set loading attribute for better performance
+	host.setAttribute('loading', 'eager');
 
 	container.appendChild(host);
 	const controls = buildDetailVideoControls(buyUrl, allVideos, videoIndex);
@@ -3099,7 +2835,8 @@ function mountDetailVideoPlayer({ youtubeId, title, buyUrl, allVideos = null, vi
 		handlers: null,
 		controls,
 		lastVolume: 60,
-		isMuted: true
+		isMuted: true,
+		controlsShown: false
 	};
 
 	state.detailVideo = detailVideoState;
@@ -3122,25 +2859,32 @@ function mountDetailVideoPlayer({ youtubeId, title, buyUrl, allVideos = null, vi
 		});
 	}
 
+	// Use YouTube API for sound control - direct iframe can't control volume
 	const initialisePlayer = () => {
+		// Minimal player config - no event handlers for maximum performance
 		detailVideoState.player = new YT.Player(hostId, {
 			videoId: youtubeId,
 			playerVars: {
 				autoplay: 1,
 				controls: 0,
-				rel: 0,
-				modestbranding: 1,
-				playsinline: 1,
+				mute: 1,
 				loop: 1,
 				playlist: youtubeId,
+				playsinline: 1,
+				rel: 0,
+				fs: 0,
+				modestbranding: 1,
+				disablekb: 1,
+				iv_load_policy: 3,
+				cc_load_policy: 0,
+				enablejsapi: 1,
 				origin: window.location.origin,
-				mute: 1
-			},
-			events: {
-				onReady: (event) => handleDetailVideoReady(detailVideoState, event?.target),
-				onStateChange: (event) => handleDetailVideoStateChange(detailVideoState, event)
+				quality: 'highres'
 			}
+			// No events - just play the video
 		});
+		// Set initial UI state immediately without waiting for events
+		updateDetailVideoUi(detailVideoState, { muted: true, volume: 0 });
 	};
 
 	queueYouTubePlayerInit(initialisePlayer);
@@ -3199,8 +2943,7 @@ function switchDetailVideo(detailVideoState, direction) {
 		}
 	}
 	
-	// Show controls briefly
-	showDetailVideoControls(detailVideoState, { autoHide: true });
+	// Controls stay visible - no auto-hide needed
 }
 
 // Helper function to create SVG icons
@@ -3372,24 +3115,8 @@ function wireDetailVideoControls(detailVideoState) {
 	const { wrapper, controls } = detailVideoState;
 	if (!wrapper || !controls?.element) return;
 
-	const show = () => showDetailVideoControls(detailVideoState, { autoHide: true });
-	const hide = () => hideDetailVideoControls(detailVideoState);
-
-	const pointerEnter = () => show();
-	const pointerMove = () => show();
-	const pointerLeave = () => hide();
-	const focusIn = () => show();
-	const focusOut = () => hide();
-	const controlsEnter = () => show();
-	const controlsLeave = () => hide();
-
-	wrapper.addEventListener('pointerenter', pointerEnter);
-	wrapper.addEventListener('pointermove', pointerMove);
-	wrapper.addEventListener('pointerleave', pointerLeave);
-	wrapper.addEventListener('focusin', focusIn);
-	wrapper.addEventListener('focusout', focusOut);
-	controls.element.addEventListener('pointerenter', controlsEnter);
-	controls.element.addEventListener('pointerleave', controlsLeave);
+	// Keep controls always visible - no hover/show/hide logic
+	controls.element.classList.add('is-visible');
 
 	const onMute = () => {
 		const player = state.detailVideo?.player;
@@ -3408,7 +3135,6 @@ function wireDetailVideoControls(detailVideoState) {
 			} catch {}
 			updateDetailVideoUi(detailVideoState, { muted: true, volume: 0 });
 		}
-		show();
 	};
 
 	const onVolume = (event) => {
@@ -3417,7 +3143,6 @@ function wireDetailVideoControls(detailVideoState) {
 		const player = state.detailVideo?.player;
 		detailVideoState.lastVolume = volume > 0 ? volume : detailVideoState.lastVolume;
 		
-		// Update CSS variable for progress visualization
 		if (event?.target) {
 			event.target.style.setProperty('--volume-percent', `${volume}%`);
 		}
@@ -3438,7 +3163,6 @@ function wireDetailVideoControls(detailVideoState) {
 		} else {
 			updateDetailVideoUi(detailVideoState, { muted: volume === 0, volume });
 		}
-		show();
 	};
 
 	controls.muteBtn.addEventListener('click', onMute);
@@ -3447,7 +3171,7 @@ function wireDetailVideoControls(detailVideoState) {
 	controls.onMute = onMute;
 	controls.onVolume = onVolume;
 
-	detailVideoState.handlers = { pointerEnter, pointerMove, pointerLeave, focusIn, focusOut, controlsEnter, controlsLeave };
+	detailVideoState.handlers = {};
 	updateDetailVideoUi(detailVideoState, { muted: true, volume: 0 });
 }
 
@@ -3480,81 +3204,9 @@ function updateDetailVideoUi(detailVideoState, { muted, volume } = {}) {
 	detailVideoState.isMuted = isMuted;
 }
 
-function showDetailVideoControls(detailVideoState, { autoHide = false } = {}) {
-	const controls = detailVideoState?.controls?.element;
-	if (!controls) return;
-	controls.classList.add('is-visible');
-	if (detailVideoState.hideTimer) {
-		clearTimeout(detailVideoState.hideTimer);
-		detailVideoState.hideTimer = null;
-	}
-	if (autoHide) {
-		detailVideoState.hideTimer = setTimeout(() => {
-			hideDetailVideoControls(detailVideoState);
-		}, 2400);
-	}
-}
+// Removed show/hide functions - controls are always visible for performance
 
-function hideDetailVideoControls(detailVideoState) {
-	const controls = detailVideoState?.controls?.element;
-	const wrapper = detailVideoState?.wrapper;
-	if (!controls) return;
-	if (controls.matches(':hover') || wrapper?.matches(':hover')) {
-		return;
-	}
-	if (detailVideoState.hideTimer) {
-		clearTimeout(detailVideoState.hideTimer);
-		detailVideoState.hideTimer = null;
-	}
-	controls.classList.remove('is-visible');
-}
-
-function handleDetailVideoReady(detailVideoState, player) {
-	if (!player) return;
-	try {
-		player.mute();
-		// Small delay to ensure player is fully ready before playing
-		setTimeout(() => {
-			try {
-				if (player && typeof player.playVideo === 'function') {
-					player.playVideo();
-				}
-			} catch (error) {
-				console.warn('⚠️ Unable to start detail video automatically:', error);
-			}
-		}, 100);
-	} catch (error) {
-		console.warn('⚠️ Unable to mute or prepare detail video:', error);
-	}
-	updateDetailVideoUi(detailVideoState, { muted: true, volume: 0 });
-	showDetailVideoControls(detailVideoState, { autoHide: true });
-}
-
-function handleDetailVideoStateChange(detailVideoState, event) {
-	if (!event || !detailVideoState?.player || typeof YT === 'undefined') return;
-	const stateValue = event.data;
-	
-	// If video is cued but not playing, start it
-	if (stateValue === YT.PlayerState.CUED) {
-		try {
-			if (detailVideoState.player && typeof detailVideoState.player.playVideo === 'function') {
-				detailVideoState.player.playVideo();
-			}
-		} catch (error) {
-			console.warn('⚠️ Failed to start cued video:', error);
-		}
-	}
-	
-	// Loop video when it ends
-	if (stateValue === YT.PlayerState.ENDED) {
-		try {
-			detailVideoState.player.seekTo(0, true);
-			detailVideoState.player.playVideo();
-		} catch (error) {
-			console.warn('⚠️ Failed to loop detail video:', error);
-		}
-	}
-}
+// Removed event handlers - video just plays without any callbacks
 
 function renderDetailCollage(items, seed = '', detailItem = null, category = state.currentCategory) {
 	const collage = document.getElementById('detailCollage');
@@ -3676,10 +3328,12 @@ function updateDetailNav() {
 			nextLogoEl.style.display = 'none';
 		} else {
 			const nextLogo = getHeroCardLogo(dataset[nextIndex], state.currentCategory);
-			if (nextLogo) {
-				nextLogoEl.src = nextLogo;
-				nextLogoEl.alt = nextTitleText + ' Logo';
-				nextLogoEl.style.display = 'block';
+		if (nextLogo) {
+			nextLogoEl.src = nextLogo;
+			nextLogoEl.alt = nextTitleText + ' Logo';
+			nextLogoEl.loading = 'lazy';
+			nextLogoEl.decoding = 'async';
+			nextLogoEl.style.display = 'block';
 			} else {
 				nextLogoEl.style.display = 'none';
 			}
@@ -3693,10 +3347,12 @@ function updateDetailNav() {
 			prevLogoEl.style.display = 'none';
 		} else {
 			const prevLogo = getHeroCardLogo(dataset[prevIndex], state.currentCategory);
-			if (prevLogo) {
-				prevLogoEl.src = prevLogo;
-				prevLogoEl.alt = prevTitleText + ' Logo';
-				prevLogoEl.style.display = 'block';
+		if (prevLogo) {
+			prevLogoEl.src = prevLogo;
+			prevLogoEl.alt = prevTitleText + ' Logo';
+			prevLogoEl.loading = 'lazy';
+			prevLogoEl.decoding = 'async';
+			prevLogoEl.style.display = 'block';
 			} else {
 				prevLogoEl.style.display = 'none';
 			}
@@ -3758,6 +3414,7 @@ function closeDetail(options = {}) {
     overlay.classList.remove('active');
     document.body.style.overflow = '';
     document.body.classList.remove('is-detail-open');
+    // Scaling removed - no longer needed
 
     if (!options.silent) {
         highlightHeroCard(null);
@@ -4045,9 +3702,9 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 	
 	if (logos.length === 0) return;
 	
-	// Create floating logos with random positions and animations - limit to 15 for performance
-	const logoCount = Math.min(logos.length * 2, 15);
-	const shuffledLogos = shuffleArray([...logos, ...logos]).slice(0, logoCount);
+	// Create floating logos - REDUCED COUNT for performance (was 15, now 8)
+	const logoCount = Math.min(logos.length, 8);
+	const shuffledLogos = shuffleArray([...logos]).slice(0, logoCount);
 	
 	// Create all logos immediately (no stagger delay)
 	shuffledLogos.forEach((logo, index) => {
@@ -4061,8 +3718,8 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 		// Random position - keep logos more centered and avoid edges
 		const left = 15 + Math.random() * 70; // 15-85% (avoid edges)
 		const top = 15 + Math.random() * 70; // 15-85% (avoid edges)
-		const size = 45 + Math.random() * 55; // 45-100px
-		const duration = 100 + Math.random() * 100; // 100-200s (slower, smoother)
+		const size = 50 + Math.random() * 40; // 50-90px (smaller range)
+		const duration = 120 + Math.random() * 80; // 120-200s (slower, smoother)
 		const delay = 0; // No delay - start immediately
 		const direction = Math.random() > 0.5 ? 1 : -1;
 		
@@ -4070,14 +3727,19 @@ function spawnDetailFlyingLogos(container, category = 'legal') {
 		logoEl.style.top = `${top}%`;
 		logoEl.style.width = `${size}px`;
 		logoEl.style.height = 'auto';
-		logoEl.style.opacity = '0.08';
+		logoEl.style.opacity = '0.12';
 		logoEl.style.setProperty('--fly-duration', `${duration}s`);
 		logoEl.style.setProperty('--fly-delay', `${delay}s`);
 		logoEl.style.setProperty('--fly-direction', direction);
+		// Force GPU acceleration
+		logoEl.style.transform = 'translateZ(0)';
+		logoEl.style.willChange = 'transform';
 		
 		// Append immediately and set src
 		container.appendChild(logoEl);
 		logoEl.src = logo.src;
+		logoEl.loading = 'lazy';
+		logoEl.decoding = 'async';
 	});
 }
 
@@ -4167,7 +3829,7 @@ function spawnFogEffect(container) {
 	let fogContainer = container.querySelector('.fog-container');
 	if (!fogContainer) {
 		fogContainer = document.createElement('div');
-		fogContainer.className = 'fog-container';
+		fogContainer.className = 'overlay-container fog-container';
 		fogContainer.setAttribute('aria-hidden', 'true');
 		container.appendChild(fogContainer);
 	}
@@ -4213,7 +3875,7 @@ function spawnCrimeDamage(container) {
 	let damageContainer = container.querySelector('.crime-damage-container');
 	if (!damageContainer) {
 		damageContainer = document.createElement('div');
-		damageContainer.className = 'crime-damage-container';
+		damageContainer.className = 'overlay-container crime-damage-container';
 		damageContainer.setAttribute('aria-hidden', 'true');
 		container.appendChild(damageContainer);
 	}
@@ -4914,64 +4576,36 @@ function createCollageItem(entry, category, index) {
 	};
 }
 
-function buildCompanyCollage(company) {
-	const datasetRaw = getDataset('legal');
+// Generic collage builder for all categories
+function buildCategoryCollage(item, category) {
+	const datasetRaw = getDataset(category);
 	const dataset = Array.isArray(datasetRaw) ? datasetRaw : [];
-	const index = dataset.findIndex((entry) => entry?.id === company?.id);
-	const featured = index >= 0 ? createCollageItem(dataset[index], 'legal', index) : null;
-	const remainingLimit = MAX_COLLAGE_ITEMS;
+	const index = dataset.findIndex((entry) => entry?.id === item?.id);
+	const featured = index >= 0 ? createCollageItem(dataset[index], category, index) : null;
 	const others = buildSharedCollageItemsFromDataset({
 		dataset,
-		category: 'legal',
+		category,
 		excludeKey: featured?.key || null,
-		limit: remainingLimit
+		limit: MAX_COLLAGE_ITEMS
 	});
 	return others.slice(0, MAX_COLLAGE_ITEMS);
+}
+
+// Category-specific wrapper functions for backward compatibility
+function buildCompanyCollage(company) {
+	return buildCategoryCollage(company, 'legal');
 }
 
 function buildCrimeCollage(faction) {
-	const datasetRaw = getDataset('illegal');
-	const dataset = Array.isArray(datasetRaw) ? datasetRaw : [];
-	const index = dataset.findIndex((entry) => entry?.id === faction?.id);
-	const featured = index >= 0 ? createCollageItem(dataset[index], 'illegal', index) : null;
-	const remainingLimit = MAX_COLLAGE_ITEMS;
-	const others = buildSharedCollageItemsFromDataset({
-		dataset,
-		category: 'illegal',
-		excludeKey: featured?.key || null,
-		limit: remainingLimit
-	});
-	return others.slice(0, MAX_COLLAGE_ITEMS);
+	return buildCategoryCollage(faction, 'illegal');
 }
 
 function buildRegelwerkCollage(item) {
-	const datasetRaw = getDataset('regelwerk');
-	const dataset = Array.isArray(datasetRaw) ? datasetRaw : [];
-	const index = dataset.findIndex((entry) => entry?.id === item?.id);
-	const featured = index >= 0 ? createCollageItem(dataset[index], 'regelwerk', index) : null;
-	const remainingLimit = MAX_COLLAGE_ITEMS;
-	const others = buildSharedCollageItemsFromDataset({
-		dataset,
-		category: 'regelwerk',
-		excludeKey: featured?.key || null,
-		limit: remainingLimit
-	});
-	return others.slice(0, MAX_COLLAGE_ITEMS);
+	return buildCategoryCollage(item, 'regelwerk');
 }
 
 function buildWhitelistCollage(item) {
-	const datasetRaw = getDataset('whitelist');
-	const dataset = Array.isArray(datasetRaw) ? datasetRaw : [];
-	const index = dataset.findIndex((entry) => entry?.id === item?.id);
-	const featured = index >= 0 ? createCollageItem(dataset[index], 'whitelist', index) : null;
-	const remainingLimit = MAX_COLLAGE_ITEMS;
-	const others = buildSharedCollageItemsFromDataset({
-		dataset,
-		category: 'whitelist',
-		excludeKey: featured?.key || null,
-		limit: remainingLimit
-	});
-	return others.slice(0, MAX_COLLAGE_ITEMS);
+	return buildCategoryCollage(item, 'whitelist');
 }
 
 function buildSharedCollageItemsFromDataset({ dataset = [], category, excludeKey = null, limit = MAX_COLLAGE_ITEMS } = {}) {
@@ -5132,7 +4766,7 @@ function handleResize() {
 	}, 150);
 }
 
-window.addEventListener('resize', handleResize);
+// Note: resize event is handled by the combined handler above
 
 // ==================== STARTUP ====================
 

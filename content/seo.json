@@ -1,0 +1,65 @@
+{
+	"site": {
+		"name": "Roots Roleplay",
+		"title": "Roots Roleplay | Alles beginnt mit einer Entscheidung",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"keywords": "Roots Roleplay, FiveM Roleplay, GTA V Roleplay, Roleplay Server, Teamspeak, Discord, Los Santos, Whitelist, Regelwerk",
+		"author": "Roots Roleplay",
+		"language": "German",
+		"locale": "de_DE"
+	},
+	"meta": {
+		"robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+		"googlebot": "index, follow",
+		"revisitAfter": "7 days",
+		"themeColor": "#1f2127",
+		"msapplicationTileColor": "#1f2127"
+	},
+	"openGraph": {
+		"type": "website",
+		"title": "Roots Roleplay | Alles beginnt mit einer Entscheidung",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"image": "public/whitelist/roots_choice.png",
+		"imageWidth": "1200",
+		"imageHeight": "630",
+		"imageType": "image/png",
+		"siteName": "Roots Roleplay",
+		"locale": "de_DE"
+	},
+	"twitter": {
+		"card": "summary_large_image",
+		"title": "Roots Roleplay | Alles beginnt mit einer Entscheidung",
+		"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+		"image": "public/whitelist/roots_choice.png",
+		"imageAlt": "Roots Roleplay - Alles beginnt mit einer Entscheidung"
+	},
+	"icons": {
+		"favicon": "public/roots_R.png",
+		"appleTouchIcon": "public/roots_R.png",
+		"shortcutIcon": "public/roots_R.png"
+	},
+	"structuredData": {
+		"website": {
+			"name": "Roots Roleplay",
+			"description": "Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Fraktionen und werde Teil einer einzigartigen FiveM Roleplay Community.",
+			"inLanguage": "de-DE",
+			"publisher": {
+				"name": "Roots Roleplay",
+				"logo": "public/whitelist/roots_choice.png"
+			}
+		},
+		"organization": {
+			"name": "Roots Roleplay",
+			"description": "Roots Roleplay ist ein FiveM Roleplay Server, der Spielern die Möglichkeit bietet, ihre eigene Geschichte in Los Santos zu schreiben.",
+			"logo": "public/whitelist/roots_choice.png",
+			"sameAs": [
+				"https://discord.gg/rootsroleplay"
+			],
+			"contactPoint": {
+				"contactType": "customer service",
+				"availableLanguage": ["German"]
+			}
+		}
+	}
+}
+

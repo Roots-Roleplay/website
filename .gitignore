@@ -1,7 +1,30 @@
-node_modules
-.next
-.env*
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs (optional - you can commit these if you want)
+# Uncomment the lines below if you don't want to commit minified files
+# css/main.min.css
+# css/main.min.css.map
+# js/main.min.js
+# js/main.min.js.map
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
 npm-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-dist
+
+# Environment variables
+.env
+.env.local
