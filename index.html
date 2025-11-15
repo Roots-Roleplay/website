@@ -118,18 +118,30 @@
 	</script>
 	
 	<!-- Open Graph / Facebook -->
-	<!-- Note: og:image, og:image:secure_url, og:url, twitter:image, and canonical are written by document.write() above -->
-	<meta id="og-type" property="og:type" content="website">
-	<meta id="og-title" property="og:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
-	<meta id="og-description" property="og:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
-	<meta id="og-site-name" property="og:site_name" content="Roots Roleplay">
-	<meta id="og-locale" property="og:locale" content="de_DE">
+	<!-- Static meta tags for Discord (Discord doesn't execute JavaScript, so these must be in static HTML) -->
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
+	<meta property="og:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta property="og:site_name" content="Roots Roleplay">
+	<meta property="og:locale" content="de_DE">
+	<meta property="og:url" content="https://www.roots-rp.de/">
+	<meta property="og:image" content="https://www.roots-rp.de/public/whitelist/roots_choice.png">
+	<meta property="og:image:secure_url" content="https://www.roots-rp.de/public/whitelist/roots_choice.png">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:type" content="image/png">
+	<meta property="og:image:alt" content="Roots Roleplay - Alles beginnt mit einer Entscheidung">
 	
 	<!-- Twitter Card -->
-	<meta id="twitter-card" name="twitter:card" content="summary_large_image">
-	<meta id="twitter-title" name="twitter:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
-	<meta id="twitter-description" name="twitter:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
-	<meta id="twitter-image-alt" name="twitter:image:alt" content="Roots Roleplay - Alles beginnt mit einer Entscheidung">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Roots Roleplay | Alles beginnt mit einer Entscheidung">
+	<meta name="twitter:description" content="Finde deinen Platz auf Roots Roleplay – vom ersten Job bis zur großen Geschichte. Entdecke legale Unternehmen, illegale Gruppierungen und werde Teil einer einzigartigen FiveM Roleplay Community.">
+	<meta name="twitter:image" content="https://www.roots-rp.de/public/whitelist/roots_choice.png">
+	<meta name="twitter:image:alt" content="Roots Roleplay - Alles beginnt mit einer Entscheidung">
+	
+	<!-- Canonical URL -->
+	<link rel="canonical" href="https://www.roots-rp.de/">
+	<!-- Note: The JavaScript updateMeta function will update the static meta tags above if needed -->
 	
 	<!-- Theme and Icons -->
 	<meta id="theme-color" name="theme-color" content="#1f2127">
@@ -269,13 +281,12 @@
 					if (openGraph.siteName) updateMeta('og:site_name', openGraph.siteName, true);
 					if (openGraph.locale) updateMeta('og:locale', openGraph.locale, true);
 					
-					// Set Open Graph URL (updateMeta will find the document.write() tag)
+					// Set Open Graph URL (updates static meta tag)
 					updateMeta('og:url', currentUrl, true);
 					
-					// Set Open Graph image with absolute URL (update the document.write() tags if JSON has different image)
+					// Set Open Graph image with absolute URL (updates static meta tags)
 					if (openGraph.image) {
 						const ogImageUrl = getAbsoluteUrl(openGraph.image);
-						// Update the tags created by document.write()
 						updateMeta('og:image', ogImageUrl, true);
 						updateMeta('og:image:secure_url', ogImageUrl, true);
 						if (openGraph.imageWidth) updateMeta('og:image:width', openGraph.imageWidth, true);
@@ -284,18 +295,17 @@
 						if (openGraph.imageAlt) updateMeta('og:image:alt', openGraph.imageAlt, true);
 					}
 					
-					// Twitter Card tags
+					// Twitter Card tags (updates static meta tags)
 					if (twitter.card) updateMeta('twitter:card', twitter.card);
 					if (twitter.title) updateMeta('twitter:title', twitter.title);
 					if (twitter.description) updateMeta('twitter:description', twitter.description);
 					if (twitter.image) {
 						const twitterImageUrl = getAbsoluteUrl(twitter.image);
-						// Update the tag created by document.write()
 						updateMeta('twitter:image', twitterImageUrl);
 					}
 					if (twitter.imageAlt) updateMeta('twitter:image:alt', twitter.imageAlt);
 					
-					// Canonical URL (updateMeta will find the document.write() link)
+					// Canonical URL (updates static canonical link)
 					const canonicalLinks = document.querySelectorAll('link[rel="canonical"]');
 					if (canonicalLinks.length > 0) {
 						canonicalLinks[0].setAttribute('href', currentUrl);
